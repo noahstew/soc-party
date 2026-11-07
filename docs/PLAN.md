@@ -7,6 +7,9 @@ of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
 ## Current milestone: M1
 
+M0 is verified. M1 is the next planned milestone, not authorization to start it;
+the Phase 0 boundary in AGENTS.md remains until explicitly advanced by the user.
+
 ## Milestones
 
 ### M0, Bootstrap [status: done]
@@ -208,6 +211,11 @@ of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
 - [x] Import neobrutalism.dev theme and starter components, apply to the status page,
   document dependencies/extension, and verify with `make check` and frontend build.
+
+## Requested agent instruction maintenance
+
+- [x] Reduce repeated agent context, preserve engineering safeguards, clarify the M1
+  authorization boundary, and verify with `make check`.
 
 ## Parking lot (ideas explicitly not scheduled)
 

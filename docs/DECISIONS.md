@@ -2,6 +2,17 @@
 
 ADR-lite: date, decision, reason, alternatives. All dates use the project timezone (America/Vancouver).
 
+## 2026-11-07 — Focused agent context
+Keep shared invariants and verification requirements once in root AGENTS.md; directory
+files contain stack-specific guidance. Read supporting docs and large/generated files
+only when relevant, while checking the active plan and applicable instructions each task.
+This reduces repeated context without dropping security, tests or milestone constraints.
+M1 in the plan identifies the next milestone; it does not override Phase 0 authorization.
+Alternative: aggressive abbreviation or deleting safeguards saves text but risks ambiguity.
+The three instruction files shrink from 5,778 to 4,278 bytes (26%); this is a context-size
+proxy, not a measured token or latency reduction. No runtime/dependency/model changes.
+Reference: https://learn.chatgpt.com/docs/agent-configuration/agents-md
+
 ## 2026-11-07 — Neobrutalism UI foundation
 At the user's request, adopt neobrutalism.dev's Tailwind v4 blue theme and copy its
 Button, Card, Badge, and Alert registry sources into frontend/src/components/ui.
