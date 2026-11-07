@@ -56,3 +56,10 @@ plugin support and upgrade before extending frontend tooling. Goose runs via a
 small application command using its library, avoiding an unused multi-driver CLI.
 Sources checked: https://go.dev/dl/, https://nextjs.org/blog/, official package
 registries and upstream GitHub release APIs.
+
+## 2026-11-07 — Verification boundaries
+Integration tests intentionally use the development/CI database, apply goose migrations
+without dropping data, seed twice, and roll back test-only queries. They must receive a
+disposable DATABASE_URL. Docker smoke runs a dev/prod matrix in CI and checks configured
+non-root runtime users for prod. CI itself can only be exercised on GitHub after pushing;
+validate the workflow locally with actionlint and execute its underlying checks here.
