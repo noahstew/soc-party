@@ -4,15 +4,14 @@ package main
 
 import (
 	"context"
-	"database/sql"
+
 	"os"
 	"testing"
 	"time"
 
+	"example.com/soc-party/backend/internal/database"
 	"example.com/soc-party/backend/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/pressly/goose/v3"
 )
 
 // This test targets a disposable development/CI database. It never drops data.
@@ -23,27 +22,22 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	db, err := sql.Open("pgx", url)
+	if err := database.Migrate(ctx, url, "../../migrations", "../../game_migrations"); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.Migrate(ctx, url, "../../migrations", "../../game_migrations"); err != nil {
+		t.Fatal(err)
+	}
+	url, err := database.GameURL(url)
 	if err != nil {
 		t.Fatal(err)
-	}
-	defer func() { _ = db.Close() }()
-	provider, err := goose.NewProvider(goose.DialectPostgres, db, os.DirFS("../../migrations"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := provider.Up(ctx); err != nil {
-		t.Fatal(err)
-	}
-	if results, err := provider.Up(ctx); err != nil || len(results) != 0 {
-		t.Fatalf("second migration: %v %v", results, err)
 	}
 	pool, err := pgxpool.New(ctx, url)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer pool.Close()
-	path := "../../data/official_pack.json"
+	path := "../../data/og_pack.json"
 	if err := seed(ctx, pool, path); err != nil {
 		t.Fatal(err)
 	}
@@ -68,14 +62,14 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 	}
 	found := false
 	for _, p := range packs {
-		if p.Slug == "small-talk-big-nonsense" {
+		if p.Slug == "og" {
 			found = true
 			count, err := q.CountPrompts(ctx, p.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if count != 24 {
-				t.Fatalf("seed prompt count=%d, want 24", count)
+			if count != 5 {
+				t.Fatalf("seed prompt count=%d, want 5", count)
 			}
 		}
 	}

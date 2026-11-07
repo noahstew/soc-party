@@ -12,6 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"example.com/soc-party/backend/internal/database"
 	"example.com/soc-party/backend/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -32,12 +33,16 @@ func main() {
 func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	pool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+	gameURL, err := database.GameURL(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		return err
+	}
+	pool, err := pgxpool.New(ctx, gameURL)
 	if err != nil {
 		return err
 	}
 	defer pool.Close()
-	return seed(ctx, pool, "data/official_pack.json")
+	return seed(ctx, pool, "data/og_pack.json")
 }
 
 func readPack(path string) (pack, error) {

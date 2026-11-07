@@ -51,3 +51,20 @@ func TestOfficialPack(t *testing.T) {
 		seen[text] = true
 	}
 }
+
+func TestOGPack(t *testing.T) {
+	p, err := readPack("../../data/og_pack.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Slug != "og" || p.Title != "OG" || len(p.Prompts) != 5 {
+		t.Fatalf("invalid OG metadata: %+v", p)
+	}
+	seen := map[string]bool{}
+	for _, prompt := range p.Prompts {
+		if seen[prompt] {
+			t.Fatalf("duplicate OG prompt: %s", prompt)
+		}
+		seen[prompt] = true
+	}
+}
