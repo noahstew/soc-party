@@ -23,6 +23,7 @@ WORKDIR /app
 COPY --from=build /out/ /app/
 COPY migrations /app/migrations
 COPY data /app/data
+COPY game_migrations /app/game_migrations
 USER 65532:65532
 EXPOSE 8080
 CMD ["/app/server"]

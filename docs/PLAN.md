@@ -1,14 +1,15 @@
 # Plan
 
 ## How to use this file
-One task per session/PR. Follow milestone order; tick only verified work. Put discoveries in
+One focused task per diff; the requested MVP foundation spans four ordered commits. Follow milestone order; tick only verified work. Put discoveries in
 Backlog, ideas in Parking lot. Refine later milestones when reached. Never begin M1 as part
 of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
 ## Current milestone: M1
 
-M0 is verified. M1 is the next planned milestone, not authorization to start it;
-the Phase 0 boundary in AGENTS.md remains until explicitly advanced by the user.
+M0 is verified. User authorized M1 and MVP persistence design on 2026-11-07.
+Implement migrations, original OG seed, generated store/API/socket, then lobby UI.
+M2 gameplay remains next; its schema is prepared but rules are not implemented.
 
 ## Milestones
 
@@ -33,7 +34,7 @@ the Phase 0 boundary in AGENTS.md remains until explicitly advanced by the user.
 
 **Done when:** All acceptance checks in docs/VERIFICATION.md pass, docs match files, then set current milestone to M1.
 
-### M1, Rooms and lobby [status: not started]
+### M1, Rooms and lobby [status: in progress]
 
 **Goal:** Create, join and manage a room from individual browsers.
 

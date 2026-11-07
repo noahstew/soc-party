@@ -3,8 +3,9 @@
 ## Scope
 Browser multiplayer party games; each player uses their own device, rooms shared by
 code/link, no host screen. First game: **Wit Parade** (working title). Original content only.
-Phase 0 only: no gameplay, sockets, accounts, ads, or infrastructure. M0 is verified;
-M1 is next in `docs/PLAN.md` but requires explicit authorization to begin.
+M0 is verified. The user authorized M1 rooms/lobby plus MVP persistence models and
+original OG seed. Gameplay implementation, accounts, ads and infrastructure remain out
+of scope. Work through the requested migration, seed, backend and frontend commits.
 
 ## Workflow
 - Read the plan's current milestone and applicable `backend/AGENTS.md` or
@@ -34,7 +35,7 @@ M1 is next in `docs/PLAN.md` but requires explicit authorization to begin.
   through committed sqlc output. Never hand-edit generated Go.
 - Protocol authority: `backend/internal/protocol`, mirrored in
   `frontend/src/lib/protocol.ts`; `{type, id?, payload}`, snake_case types,
-  camelCase payload fields. No message types until M1.
+  camelCase payload fields. M1 message types must be mirrored.
 - Validate input/size limits; WebSockets require origin checks; room codes use CSPRNG.
   Never commit secrets or inject user content with `dangerouslySetInnerHTML`.
 

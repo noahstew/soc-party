@@ -115,3 +115,22 @@ During verification Docker storage filled and PostgreSQL could not write; with e
 approval, pruned build cache unused for over 30 days (9.372 GB reclaimed), then recreated
 only this project's disposable volumes. Subsequent migration/integration checks passed.
 No images or database volumes from other projects were removed.
+
+## 2026-11-07 — Authorized MVP persistence and lobby
+User explicitly advances Phase 0 to M1 and requests four commits: schema, OG seed,
+generated SQL/API/WebSocket, frontend. Game records are designed now; M2 rules and
+M3 playable pack selection remain unchecked until implemented and verified.
+Use a second database `wit_parade` in the same instance as requested. Platform rooms
+and guest membership stay in `party`; content and game history live in `wit_parade`.
+Separate databases cannot have cross-database foreign keys or atomic transactions:
+Go validates platform IDs when future games start. Per-game schemas in one database
+would be simpler for joins/transactions, but separate databases preserve the requested
+isolation. A fixed CREATE DATABASE in migration bootstrap needs CREATEDB on first run;
+goose owns all tables and each database has its own migration history.
+Preserve M0 packs in the platform database for rollback/data retention; the API and
+seed switch to the game database. The legacy tables are unused after that switch.
+Sessions, participants, rounds, prompt snapshots, two answer slots and votes cover
+MVP persistence. Composite keys prevent cross-game/cross-matchup writes; voter
+eligibility and phase/scoring rules will be enforced by M2, not exposed as CRUD.
+Live rooms use one actor per room. DB membership is a durable audit, not restart
+recovery; restart closes old rooms and invalidates their tokens. No accounts yet.
