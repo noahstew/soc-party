@@ -57,6 +57,7 @@ services:
     environment:
       API_INTERNAL_URL: http://backend:8080
       NEXT_TELEMETRY_DISABLED: '1'
+      CI: 'true'
     ports:
       - '${FRONTEND_PORT:-3000}:3000'
     volumes:

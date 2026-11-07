@@ -63,3 +63,18 @@ without dropping data, seed twice, and roll back test-only queries. They must re
 disposable DATABASE_URL. Docker smoke runs a dev/prod matrix in CI and checks configured
 non-root runtime users for prod. CI itself can only be exercised on GitHub after pushing;
 validate the workflow locally with actionlint and execute its underlying checks here.
+
+## 2026-11-07 — Noninteractive container dependency installation
+Set frontend CI=true so pnpm never waits for a TTY. Explicitly keep pnpm's store at
+/pnpm/store in the image and runtime: CI otherwise changes its default to a directory
+under the source mount and forces a dependency reinstall. Ignore any local package store
+in Git, Docker context and formatting. Named node_modules and .next volumes keep Linux
+dependencies/build output separate from host tools.
+
+## 2026-11-07 — Local module identity and environment repair
+Use example.com/soc-party/backend until an actual repository/module hostname is chosen.
+PostgreSQL 17.7 is a pinned development baseline, not a claim to be the newest major.
+During verification Docker storage filled and PostgreSQL could not write; with explicit
+approval, pruned build cache unused for over 30 days (9.372 GB reclaimed), then recreated
+only this project's disposable volumes. Subsequent migration/integration checks passed.
+No images or database volumes from other projects were removed.

@@ -5,11 +5,11 @@ One task per session/PR. Follow milestone order; tick only verified work. Put di
 Backlog, ideas in Parking lot. Refine later milestones when reached. Never begin M1 as part
 of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
-## Current milestone: M0
+## Current milestone: M1
 
 ## Milestones
 
-### M0, Bootstrap [status: in progress]
+### M0, Bootstrap [status: done]
 
 **Goal:** Prove the development and verification wiring.
 
@@ -19,12 +19,12 @@ of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
 **Tasks:**
 
-- [ ] Write agent instructions and planning docs
-- [ ] Scaffold containers, Make commands, CI and PR template
-- [ ] Generate store from goose schema and add idempotent original seed
-- [ ] Build health/packs API and status page
-- [ ] Add unit/integration tests and static checks
-- [ ] Run all acceptance checks and record real results
+- [x] Write agent instructions and planning docs
+- [x] Scaffold containers, Make commands, CI and PR template
+- [x] Generate store from goose schema and add idempotent original seed
+- [x] Build health/packs API and status page
+- [x] Add unit/integration tests and static checks
+- [x] Run all acceptance checks and record real results
 
 **Tests required:** Go config/handler table tests, database migrations/queries/seed integration, page success/error tests, Docker smoke and prod-like non-root checks.
 
