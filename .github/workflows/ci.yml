@@ -43,7 +43,9 @@ jobs:
         run: make sqlc-check
       - name: Real PostgreSQL integration
         working-directory: backend
-        run: go test -race -tags=integration ./...
+        run: |
+          go run ./cmd/migrate
+          go test -race -tags=integration ./...
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -86,9 +88,9 @@ jobs:
           curl --fail --retry 20 --retry-delay 3 --retry-all-errors http://localhost:8080/healthz | tee /tmp/health.json
           python3 -c 'import json; d=json.load(open("/tmp/health.json")); assert d == {"status":"ok","database":"ok"}'
           curl --fail http://localhost:8080/api/packs | tee /tmp/packs.json
-          python3 -c 'import json; d=json.load(open("/tmp/packs.json")); assert d[0]["title"] == "Small Talk, Big Nonsense"'
+          python3 -c 'import json; d=json.load(open("/tmp/packs.json")); assert any(p["title"] == "OG" for p in d)'
           curl --fail http://localhost:3000 | tee /tmp/page.html
-          grep -q 'Small Talk, Big Nonsense' /tmp/page.html
+          grep -q 'OG' /tmp/page.html
       - name: Verify production runtime users
         if: matrix.mode == 'prod'
         run: |

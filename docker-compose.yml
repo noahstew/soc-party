@@ -6,6 +6,7 @@ x-backend: &backend
   environment: &backend-env
     DATABASE_URL: postgres://${POSTGRES_USER:-party}:${POSTGRES_PASSWORD:-party}@db:5432/${POSTGRES_DB:-party}?sslmode=disable
     HTTP_ADDR: :8080
+    ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
   volumes:
     - ./backend:/app
     - go_modules:/go/pkg/mod

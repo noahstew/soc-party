@@ -20,8 +20,7 @@ test:
 	$(BACK) go test -race ./...
 	$(FRONT) pnpm test
 
-integration:
-	$(DC) up -d --wait db
+integration: migrate
 	$(DC) run --rm --no-deps backend go test -race -tags=integration ./...
 
 lint:
@@ -40,8 +39,8 @@ sqlc:
 	$(DC) run --rm --no-deps sqlc generate
 
 sqlc-check: sqlc
-	git diff --exit-code -- backend/internal/store
-	@test -z "$$(git ls-files --others --exclude-standard backend/internal/store)" || (echo 'Untracked generated SQL files'; exit 1)
+	git diff --exit-code -- backend/internal/store backend/internal/gamestore
+	@test -z "$$(git ls-files --others --exclude-standard backend/internal/store backend/internal/gamestore)" || (echo 'Untracked generated SQL files'; exit 1)
 
 migrate:
 	$(DC) up -d --wait db

@@ -44,12 +44,12 @@ M2 gameplay remains next; its schema is prepared but rules are not implemented.
 
 **Tasks:**
 
-- [ ] Define typed Go protocol envelope and mirrored TS types; validate size/type/origin limits
-- [ ] Implement CSPRNG codes and room registry with one actor/channel per room
+- [x] Define typed Go protocol envelope and mirrored TS types; validate size/type/origin limits
+- [x] Implement CSPRNG codes and room registry with one actor/channel per room
 - [ ] Add create/join HTTP intents and minimal mobile lobby with one socket per tab
-- [ ] Add owner settings, start eligibility and kick with explicit authorization
-- [ ] Add reconnect token issuance, rotation/expiry and identity recovery policy
-- [ ] Add disconnect grace, room expiry and bounded connection cleanup
+- [x] Add owner settings, start eligibility and kick with explicit authorization
+- [x] Add reconnect token issuance, rotation/expiry and identity recovery policy
+- [x] Add disconnect grace, room expiry and bounded connection cleanup
 
 **Tests required:** Protocol decoding/invalid input; room-code collision; race-tested actors; unauthorized controls/kick; per-player lobby projections; reconnect abuse/expiry; fake-clock cleanup; browser lobby integration.
 

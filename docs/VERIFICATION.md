@@ -93,3 +93,21 @@ remaining tooling compatibility concern are recorded in DECISIONS.md and PLAN.md
 
 No schema/store changes; database integration checks were not required for this task.
 No browser visual or end-to-end verification was performed.
+
+## 2026-11-07 — Requested MVP database and backend
+
+- Migration bootstrap created `wit_parade` without resetting existing dev data and
+  applied platform rooms/membership and all game persistence tables.
+- `make seed` loaded OG with five original prompts. `make integration` passed repeat
+  migration/seed, generated query and DB constraint scenarios. Invalid duplicate votes,
+  cross-matchup votes, duplicate answer slots, foreign participants and duplicate live
+  games are rejected; test-only records roll back.
+- Go race tests and golangci-lint pass for typed protocol validation, bounded actors,
+  concurrent capacity, collisions, DB failure rollback, authorization, token rotation,
+  kick revocation, grace/owner transfer and expiry policies.
+- An httptest server with real WebSocket clients verifies create/join, distinct player
+  projections, live roster broadcast, origin denial and kicked-socket closure/revocation.
+- Gameplay rules and browser lobby acceptance are not claimed by the backend stage.
+
+Backend stage: full `make check` and `make integration` passed after generation;
+Go API compiled successfully. Frontend at this stage still shows the status page.

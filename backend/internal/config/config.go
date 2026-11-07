@@ -2,15 +2,19 @@
 package config
 
 import (
+	"example.com/soc-party/backend/internal/database"
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 	"time"
 )
 
 type Config struct {
 	HTTPAddr        string
 	DatabaseURL     string
+	GameDatabaseURL string
+	AllowedOrigins  []string
 	ShutdownTimeout time.Duration
 }
 
@@ -30,6 +34,22 @@ func Load(getenv func(string) string) (Config, error) {
 	u, err := url.Parse(cfg.DatabaseURL)
 	if err != nil || u == nil || (u.Scheme != "postgres" && u.Scheme != "postgresql") || u.Hostname() == "" || u.Path == "" || u.Path == "/" {
 		return Config{}, fmt.Errorf("DATABASE_URL must be a postgres URL with host and database")
+	}
+	cfg.GameDatabaseURL, err = database.GameURL(cfg.DatabaseURL)
+	if err != nil {
+		return Config{}, err
+	}
+	origins := getenv("ALLOWED_ORIGINS")
+	if origins == "" {
+		origins = "http://localhost:3000"
+	}
+	for _, origin := range strings.Split(origins, ",") {
+		origin = strings.TrimSpace(origin)
+		u, err := url.Parse(origin)
+		if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.User != nil {
+			return Config{}, fmt.Errorf("ALLOWED_ORIGINS must contain exact HTTP(S) origins")
+		}
+		cfg.AllowedOrigins = append(cfg.AllowedOrigins, origin)
 	}
 	if v := getenv("SHUTDOWN_TIMEOUT"); v != "" {
 		d, err := time.ParseDuration(v)

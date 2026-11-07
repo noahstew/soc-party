@@ -27,3 +27,26 @@ type PromptPack struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
+
+type Room struct {
+	ID         string             `json:"id"`
+	Code       string             `json:"code"`
+	OwnerID    string             `json:"owner_id"`
+	GameID     string             `json:"game_id"`
+	PackSlug   string             `json:"pack_slug"`
+	MaxPlayers int32              `json:"max_players"`
+	Status     string             `json:"status"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ExpiresAt  pgtype.Timestamptz `json:"expires_at"`
+}
+
+type RoomPlayer struct {
+	ID         string             `json:"id"`
+	RoomID     string             `json:"room_id"`
+	Name       string             `json:"name"`
+	TokenHash  []byte             `json:"token_hash"`
+	Connected  bool               `json:"connected"`
+	Status     string             `json:"status"`
+	JoinedAt   pgtype.Timestamptz `json:"joined_at"`
+	LastSeenAt pgtype.Timestamptz `json:"last_seen_at"`
+}

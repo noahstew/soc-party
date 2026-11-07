@@ -1,7 +1,8 @@
 # Architecture
 
-Implemented in M0: PostgreSQL migrations, generated store, JSON seed, two read-only HTTP
-endpoints, status page. Everything labeled planned is a design direction, not shipped code.
+Implemented: platform/game PostgreSQL migrations and generated stores, original OG seed,
+health/packs endpoints, create/join/reconnect HTTP intents and room actors/WebSockets.
+Gameplay is still planned.
 
 ## System context
 ```mermaid
@@ -9,14 +10,14 @@ flowchart LR
   Browser[Player browser] --> Next[Next.js page]
   Next -->|internal HTTP| Go[Go API]
   Go -->|pgx / sqlc| DB[(PostgreSQL)]
-  Browser -. planned WebSocket .-> Go
+  Browser -->|WebSocket| Go
   Go -. planned provider interface .-> Ads[Ad provider]
 ```
 No host screen. Each participant eventually renders shared state and personal controls.
 Browser URLs use localhost; service-to-service URLs use Docker DNS. Current server-rendered
 page fetches /healthz and /api/packs without a browser CORS dependency.
 
-## Room actor flow — planned
+## Room actor flow — implemented
 ```mermaid
 flowchart LR
   Socket[Socket reader] -->|validated intent| Channel[Room event channel]
@@ -61,10 +62,10 @@ flowchart LR
 `backend/internal/games` holds only this contract and an unimplemented registry signature.
 Wit Parade is an empty placeholder. No game engine is implemented.
 Protocol convention: JSON `{type, id?, payload}`, snake_case types, camelCase fields.
-Go protocol package is authoritative; frontend lib/protocol.ts mirrors it. No messages yet.
+Go protocol package is authoritative; frontend lib/protocol.ts mirrors it. Lobby message types are in protocol.go and mirrored in frontend/src/lib/protocol.ts.
 
-## Data model
-prompt_packs/prompts exist now; users, sessions, prompt_reports and ownership FKs are planned.
+## Content and planned account model
+prompt_packs/prompts exist in wit_parade; users, sessions, prompt_reports and ownership FKs are planned.
 ```mermaid
 erDiagram
   users ||--o{ sessions : "planned owns"
@@ -80,5 +81,16 @@ erDiagram
 ```
 Published official packs are exposed publicly. Prompt approval and account ownership arrive
 in M3–M5; current constraints allow draft/published packs and pending/approved/rejected prompts.
-Room/session reconnect tokens are separate from future account sessions. Live rooms are in
-memory for v1 (planned), not database records. See deployment plan for scaling implications.
+Room/session reconnect tokens are separate from future account sessions. Live state is
+actor-owned in memory; rooms/membership are persisted as audit records. Restart closes
+old rooms; actors are not reconstructed. One API process only.
+
+## Authorized MVP database split
+`party`: legacy M0 content tables (retained, unused), rooms, room_players.
+`wit_parade`: prompt_packs, prompts, game_sessions, game_players, rounds, matchups,
+answers and votes. Goose histories and sqlc output packages are separate. The fixed game
+database name is derived from DATABASE_URL by replacing its database path. Migration
+bootstrap creates it, then migrates both databases. Go must validate cross-database IDs.
+The game schema is ready for M2; no answer/vote endpoints or game execution exist yet.
+Pack API and seed use the game database. The old 24-prompt fixture remains as a reference;
+only the five-prompt OG fixture is seeded by startup.

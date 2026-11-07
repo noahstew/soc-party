@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"example.com/soc-party/backend/internal/store"
+	"example.com/soc-party/backend/internal/gamestore"
 )
 
 type fakeDB struct{ err error }
@@ -23,11 +23,11 @@ func (f fakeDB) Ping(ctx context.Context) error {
 }
 
 type fakePacks struct {
-	rows []store.ListOfficialPacksRow
+	rows []gamestore.ListOfficialPacksRow
 	err  error
 }
 
-func (f fakePacks) ListOfficialPacks(ctx context.Context) ([]store.ListOfficialPacksRow, error) {
+func (f fakePacks) ListOfficialPacks(ctx context.Context) ([]gamestore.ListOfficialPacksRow, error) {
 	if _, ok := ctx.Deadline(); !ok {
 		return nil, errors.New("missing query timeout")
 	}
@@ -39,13 +39,13 @@ func TestHandlers(t *testing.T) {
 	tests := []struct {
 		name, method, path string
 		dbErr, packErr     error
-		rows               []store.ListOfficialPacksRow
+		rows               []gamestore.ListOfficialPacksRow
 		status             int
 		body               string
 	}{
 		{name: "healthy", method: "GET", path: "/healthz", status: 200, body: `{"database":"ok","status":"ok"}`},
 		{name: "database down", method: "GET", path: "/healthz", dbErr: secretErr, status: 503, body: `{"database":"unavailable","status":"error"}`},
-		{name: "packs", method: "GET", path: "/api/packs", rows: []store.ListOfficialPacksRow{{ID: 1, Slug: "original", Title: "Original pack"}}, status: 200, body: `[{"id":1,"slug":"original","title":"Original pack"}]`},
+		{name: "packs", method: "GET", path: "/api/packs", rows: []gamestore.ListOfficialPacksRow{{ID: 1, Slug: "original", Title: "Original pack"}}, status: 200, body: `[{"id":1,"slug":"original","title":"Original pack"}]`},
 		{name: "empty packs", method: "GET", path: "/api/packs", status: 200, body: `[]`},
 		{name: "packs unavailable", method: "GET", path: "/api/packs", packErr: secretErr, status: 503, body: `{"error":"packs unavailable"}`},
 		{name: "wrong method", method: "POST", path: "/api/packs", status: 405},

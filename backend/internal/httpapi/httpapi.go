@@ -1,4 +1,4 @@
-// Package httpapi exposes the Phase 0 read-only HTTP surface.
+// Package httpapi exposes the health, content and lobby HTTP surface.
 package httpapi
 
 import (
@@ -8,25 +8,34 @@ import (
 	"net/http"
 	"time"
 
-	"example.com/soc-party/backend/internal/store"
+	"example.com/soc-party/backend/internal/gamestore"
 )
 
 type Pinger interface{ Ping(context.Context) error }
 type PackStore interface {
-	ListOfficialPacks(context.Context) ([]store.ListOfficialPacksRow, error)
+	ListOfficialPacks(context.Context) ([]gamestore.ListOfficialPacksRow, error)
 }
 
 type api struct {
 	db    Pinger
 	packs PackStore
 	log   *slog.Logger
+	rooms *RoomOptions
 }
 
-func New(db Pinger, packs PackStore, log *slog.Logger) http.Handler {
+func New(db Pinger, packs PackStore, log *slog.Logger, options ...RoomOptions) http.Handler {
 	a := api{db: db, packs: packs, log: log}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", a.health)
 	mux.HandleFunc("GET /api/packs", a.listPacks)
+	if len(options) > 0 {
+		a.rooms = &options[0]
+		for _, path := range []string{"/api/rooms", "/api/rooms/{code}/join", "/api/rooms/{code}/reconnect"} {
+			mux.HandleFunc("POST "+path, a.roomIntent)
+			mux.HandleFunc("OPTIONS "+path, a.roomIntent)
+		}
+		mux.HandleFunc("GET /api/rooms/{code}/ws", a.socket)
+	}
 	return mux
 }
 
@@ -51,7 +60,7 @@ func (a api) listPacks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if packs == nil {
-		packs = []store.ListOfficialPacksRow{}
+		packs = []gamestore.ListOfficialPacksRow{}
 	}
 	respond(w, http.StatusOK, packs)
 }

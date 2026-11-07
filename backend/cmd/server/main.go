@@ -1,4 +1,4 @@
-// Command server runs the read-only API with structured logs and graceful shutdown.
+// Command server runs the HTTP and WebSocket API with structured logs and graceful shutdown.
 package main
 
 import (
@@ -15,8 +15,9 @@ import (
 	"time"
 
 	"example.com/soc-party/backend/internal/config"
+	"example.com/soc-party/backend/internal/gamestore"
 	"example.com/soc-party/backend/internal/httpapi"
-	"example.com/soc-party/backend/internal/store"
+	"example.com/soc-party/backend/internal/platform"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -71,7 +72,21 @@ func run(log *slog.Logger) error {
 		return err
 	}
 	defer pool.Close()
-	srv := &http.Server{Addr: cfg.HTTPAddr, Handler: httpapi.New(pool, store.New(pool), log), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	gamePool, err := pgxpool.New(ctx, cfg.GameDatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer gamePool.Close()
+	repo := platform.PostgresRepository{Pool: pool}
+	resetCtx, resetCancel := context.WithTimeout(ctx, 5*time.Second)
+	err = repo.Reset(resetCtx)
+	resetCancel()
+	if err != nil {
+		return err
+	}
+	rooms := platform.NewRegistry(repo)
+	defer rooms.Close()
+	srv := &http.Server{Addr: cfg.HTTPAddr, Handler: httpapi.New(databaseHealth{pool, gamePool}, gamestore.New(gamePool), log, httpapi.RoomOptions{Registry: rooms, Origins: cfg.AllowedOrigins}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	errCh := make(chan error, 1)
 	go func() { log.Info("HTTP server starting", "addr", cfg.HTTPAddr); errCh <- srv.ListenAndServe() }()
 	select {
@@ -94,4 +109,13 @@ func run(log *slog.Logger) error {
 		}
 		return err
 	}
+}
+
+type databaseHealth struct{ platform, game *pgxpool.Pool }
+
+func (h databaseHealth) Ping(ctx context.Context) error {
+	if err := h.platform.Ping(ctx); err != nil {
+		return err
+	}
+	return h.game.Ping(ctx)
 }

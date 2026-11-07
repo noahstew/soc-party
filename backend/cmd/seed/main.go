@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 
 	"example.com/soc-party/backend/internal/database"
-	"example.com/soc-party/backend/internal/store"
+	"example.com/soc-party/backend/internal/gamestore"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -81,13 +81,13 @@ func seed(ctx context.Context, pool *pgxpool.Pool, path string) error {
 		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-	q := store.New(tx)
-	id, err := q.CreatePack(ctx, store.CreatePackParams{Slug: p.Slug, Title: p.Title, IsOfficial: true, Status: "published"})
+	q := gamestore.New(tx)
+	id, err := q.CreatePack(ctx, gamestore.CreatePackParams{Slug: p.Slug, Title: p.Title, IsOfficial: true, Status: "published"})
 	if err != nil {
 		return fmt.Errorf("create pack: %w", err)
 	}
 	for i, text := range p.Prompts {
-		if _, err := q.CreatePrompt(ctx, store.CreatePromptParams{PackID: id, Position: int32(i), Text: text, Status: "approved"}); err != nil {
+		if _, err := q.CreatePrompt(ctx, gamestore.CreatePromptParams{PackID: id, Position: int32(i), Text: text, Status: "approved"}); err != nil {
 			return fmt.Errorf("create prompt %d: %w", i, err)
 		}
 	}

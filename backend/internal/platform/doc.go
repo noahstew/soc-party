@@ -1,2 +1,2 @@
-// Package platform reserves the reusable room and connection layer for M1.
+// Room actors own live state; PostgreSQL stores room membership audit records.
 package platform

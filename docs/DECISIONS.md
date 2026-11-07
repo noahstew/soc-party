@@ -134,3 +134,21 @@ MVP persistence. Composite keys prevent cross-game/cross-matchup writes; voter
 eligibility and phase/scoring rules will be enforced by M2, not exposed as CRUD.
 Live rooms use one actor per room. DB membership is a durable audit, not restart
 recovery; restart closes old rooms and invalidates their tokens. No accounts yet.
+
+## 2026-11-07 — Guest lobby policy and WebSocket dependency
+Add exact github.com/coder/websocket v1.8.15 for maintained RFC6455 framing, context
+cancellation and read limits; net/http remains the HTTP server. Source/release checked:
+https://github.com/coder/websocket/releases/tag/v1.8.15 .
+Allow exact configured HTTP(S) origins for both admission and sockets. Authenticate
+within five seconds using the first session_auth message, never a URL token. Bound
+messages to 4 KiB, reads to 45 seconds, writes to five seconds, actor queues to 32,
+rooms to 256, players to eight and total memberships per room to 128. Slow readers
+receive only the latest bounded projection. Clients send ping every 20 seconds.
+Guest tokens contain 256 CSPRNG bits; only SHA-256 hashes enter PostgreSQL. Each
+browser tab stores its credential in sessionStorage, reconnect rotates it atomically
+and revokes the old token; kicks/leave revoke membership. A second socket replaces
+the previous socket for the same credential. Disconnect grace is 60 seconds, owner
+transfers to the earliest remaining member, idle expiry 30 minutes, hard expiry two
+hours. No identity recovery after grace/restart/expiry. All state writes precede
+publication; failures preserve actor state. Three connected players make a room
+eligible, but starting gameplay remains M2. One process only; no multi-replica claims.
