@@ -45,3 +45,14 @@ No global live registry, actor implementation, room allocation, protocol types, 
 The provided directory was empty and not a Git repository; initialize locally and create
 six focused commits as requested. M0 stays pending until real acceptance results permit
 a done status; never mark unverifiable Docker checks passed. No remote repository is assumed.
+
+## 2026-11-07 — Exact verified versions
+Pin Go 1.27.3, sqlc 1.31.1, goose 3.29.0, pgx 5.12.0, Air 1.67.4,
+golangci-lint 2.15.0, Node 24.22.1 and pnpm 10.34.9. Frontend resolves Next
+16.4.5/React 19.3.1; exact transitive JS dependencies are in pnpm-lock.yaml.
+TypeScript 6.0.3 and ESLint 9.39.5 match Next plugin peer ranges; the current
+TypeScript 7/ESLint 10 releases do not. ESLint 9 is upstream-deprecated; track
+plugin support and upgrade before extending frontend tooling. Goose runs via a
+small application command using its library, avoiding an unused multi-driver CLI.
+Sources checked: https://go.dev/dl/, https://nextjs.org/blog/, official package
+registries and upstream GitHub release APIs.

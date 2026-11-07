@@ -42,7 +42,7 @@ first after a clean checkout if using checks before `up`.
 | --- | --- |
 | `make up`, `make down`, `make logs` | Start detached, stop, follow logs |
 | `make test` | Go race tests and frontend unit tests |
-| `make integration` | Migrate isolated test schema in real Postgres and exercise queries/seed |
+| `make integration` | Apply migrations in development/CI Postgres and exercise queries/seed |
 | `make lint`, `make typecheck` | Go vet/golangci/gofmt, ESLint/Prettier, TypeScript |
 | `make fmt` | Format source |
 | `make sqlc`, `make sqlc-check` | Regenerate committed store; reject drift/untracked output |

@@ -202,7 +202,7 @@ of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
 ## Backlog
 
-- None yet; record discoveries here without expanding the current task.
+- Upgrade ESLint/TypeScript when Next lint plugin peer ranges support current majors.
 
 ## Parking lot (ideas explicitly not scheduled)
 

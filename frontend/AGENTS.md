@@ -1,4 +1,5 @@
 # Frontend conventions
+
 Follow root AGENTS.md. App Router routes/layout in src/app; reusable UI in src/components;
 shared utilities and mirrored protocol in src/lib; platform/game UI in their own directories.
 Use strict TypeScript and Tailwind, semantic accessible HTML, mobile-first layouts.

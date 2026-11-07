@@ -7,8 +7,7 @@ RUN go mod download
 
 FROM base AS dev
 COPY --from=lint-tool /usr/bin/golangci-lint /usr/local/bin/golangci-lint
-RUN go install github.com/air-verse/air@v1.67.4 && \
-    go install github.com/pressly/goose/v3/cmd/goose@v3.29.0
+RUN go install github.com/air-verse/air@v1.67.4
 COPY . .
 EXPOSE 8080
 CMD ["air", "-c", ".air.toml"]

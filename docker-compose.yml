@@ -44,7 +44,7 @@ services:
       seed:
         condition: service_completed_successfully
     healthcheck:
-      test: [CMD, go, run, ./cmd/healthcheck]
+      test: [CMD, go, run, ./cmd/server, -healthcheck]
       start_period: 30s
       interval: 10s
       timeout: 10s
