@@ -1,0 +1,27 @@
+# Requires Docker Compose >= 2.24.4 for !reset / !override.
+x-prod: &prod
+  build:
+    context: ./backend
+    target: prod
+  volumes: !reset []
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  migrate:
+    <<: *prod
+    command: [/app/migrate]
+  seed:
+    <<: *prod
+    command: [/app/seed]
+  backend:
+    <<: *prod
+    command: [/app/server]
+    healthcheck:
+      test: [CMD, /app/server, -healthcheck]
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    volumes: !reset []
+    command: [node, server.js]

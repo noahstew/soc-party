@@ -1,0 +1,88 @@
+name: soc-party
+x-backend: &backend
+  build:
+    context: ./backend
+    target: dev
+  environment: &backend-env
+    DATABASE_URL: postgres://${POSTGRES_USER:-party}:${POSTGRES_PASSWORD:-party}@db:5432/${POSTGRES_DB:-party}?sslmode=disable
+    HTTP_ADDR: :8080
+  volumes:
+    - ./backend:/app
+    - go_modules:/go/pkg/mod
+    - go_build:/root/.cache/go-build
+services:
+  db:
+    image: postgres:17.7-bookworm
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-party}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-party}
+      POSTGRES_DB: ${POSTGRES_DB:-party}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  migrate:
+    <<: *backend
+    command: [go, run, ./cmd/migrate]
+    depends_on:
+      db:
+        condition: service_healthy
+  seed:
+    <<: *backend
+    command: [go, run, ./cmd/seed]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  backend:
+    <<: *backend
+    ports:
+      - '${BACKEND_PORT:-8080}:8080'
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, go, run, ./cmd/healthcheck]
+      start_period: 30s
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    stop_grace_period: 15s
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      API_INTERNAL_URL: http://backend:8080
+      NEXT_TELEMETRY_DISABLED: '1'
+    ports:
+      - '${FRONTEND_PORT:-3000}:3000'
+    volumes:
+      - ./frontend:/app
+      - frontend_modules:/app/node_modules
+      - frontend_next:/app/.next
+    command: [sh, -c, 'pnpm install --frozen-lockfile && pnpm dev --hostname 0.0.0.0']
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      start_period: 45s
+      interval: 10s
+      timeout: 10s
+      retries: 15
+  sqlc:
+    image: sqlc/sqlc:1.31.1
+    profiles: [tools]
+    working_dir: /src
+    volumes:
+      - ./backend:/src
+    command: [generate]
+volumes:
+  postgres_data:
+  go_modules:
+  go_build:
+  frontend_modules:
+  frontend_next:

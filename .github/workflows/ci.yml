@@ -1,0 +1,86 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.7-bookworm
+        env:
+          POSTGRES_USER: party
+          POSTGRES_PASSWORD: party
+          POSTGRES_DB: party
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U party -d party"
+          --health-interval 3s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgres://party:party@localhost:5432/party?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Formatting, vet and race tests
+        working-directory: backend
+        run: |
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go test -race ./...
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.15.0
+          working-directory: backend
+      - name: sqlc drift
+        run: make sqlc-check
+      - name: Real PostgreSQL integration
+        working-directory: backend
+        run: go test -race -tags=integration ./...
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start
+        run: |
+          cp .env.example .env
+          docker compose up --build -d
+          docker compose up --wait --wait-timeout 600 backend frontend
+      - name: Verify health and page
+        run: |
+          curl --fail --retry 20 --retry-delay 3 --retry-all-errors http://localhost:8080/healthz | tee /tmp/health.json
+          python3 -c 'import json; d=json.load(open("/tmp/health.json")); assert d == {"status":"ok","database":"ok"}'
+          curl --fail http://localhost:8080/api/packs | tee /tmp/packs.json
+          python3 -c 'import json; d=json.load(open("/tmp/packs.json")); assert d[0]["title"] == "Small Talk, Big Nonsense"'
+          curl --fail http://localhost:3000 | tee /tmp/page.html
+          grep -q 'Small Talk, Big Nonsense' /tmp/page.html
+      - name: Logs
+        if: always()
+        run: docker compose logs --no-color
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
