@@ -1,0 +1,47 @@
+# Decisions
+
+ADR-lite: date, decision, reason, alternatives. All dates use the project timezone (America/Vancouver).
+
+## 2026-11-07 — Scope and working title
+Phase 0 is a walking skeleton only. “Wit Parade” is an original placeholder title, not a
+trademark clearance. Empty platform/protocol packages document later work. Alternative:
+one-shot implementation rejected by scope. No accounts, WebSockets, ads, AWS code, or game rules.
+
+## 2026-11-07 — Stack and dependencies
+Use Go latest stable (verify against go.dev at bootstrap), net/http, slog, PostgreSQL 17,
+pgx/v5, goose SQL migrations, sqlc; Next.js App Router, React, strict TypeScript, Tailwind,
+pnpm; Vitest, React Testing Library and jsdom. Keep exact JS versions and lockfile.
+Air is a dev-only hot reloader; golangci-lint is a pinned tool. Goose is also a Go dependency
+for real migration integration tests. No ORM, web framework, websocket library, or Playwright
+until needed. Alternatives: ORM and additional web frameworks add no Phase 0 value.
+
+## 2026-11-07 — Generated SQL is committed
+Goose SQL is the schema authority. sqlc reads migrations/ and queries/, emits pgx/v5 code
+into internal/store. Commit output so reviewers see query/API changes and builds need no
+code generator. Pinned sqlc runs in Docker. `make sqlc-check` regenerates, checks tracked
+changes with git diff --exit-code, and rejects untracked generated files; CI repeats it.
+Alternative: generating only at build time obscures drift and increases build dependencies.
+
+## 2026-11-07 — Docker lifecycle and seed
+One-shot migrate precedes one-shot seed, then backend and frontend. Automatic seeding makes
+the initial page useful with Docker alone. Seed is transactional and idempotent using stable
+pack slug and prompt position, including repeated runs; unrelated prompts remain intact.
+Default credentials are local development examples only. No host database port is published.
+Prod-like override clears source mounts/dev commands, uses non-root standalone images,
+and requires an explicit database password. It is a local rehearsal, not AWS deployment.
+
+## 2026-11-07 — Networking and page
+Next server fetches backend using API_INTERNAL_URL=http://backend:8080; browser-visible
+API/WS examples use localhost:8080 (WS planned). Server rendering avoids CORS and exposes
+no internal hostname to browser fetch. Render health and pack failures visibly; never fail
+the build because the DB is unavailable. No remote fonts/assets or speculative UI.
+
+## 2026-11-07 — Module boundary
+Only an interface and registration stub exist. State/events/effects are opaque Go values
+until M2; transition inputs include supplied time and RNG. Project separately per player.
+No global live registry, actor implementation, room allocation, protocol types, or rules yet.
+
+## 2026-11-07 — Repository and completion
+The provided directory was empty and not a Git repository; initialize locally and create
+six focused commits as requested. M0 stays pending until real acceptance results permit
+a done status; never mark unverifiable Docker checks passed. No remote repository is assumed.
