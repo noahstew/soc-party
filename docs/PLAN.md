@@ -204,6 +204,11 @@ of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
 - Upgrade ESLint/TypeScript when Next lint plugin peer ranges support current majors.
 
+## Requested frontend foundation work
+
+- [x] Import neobrutalism.dev theme and starter components, apply to the status page,
+  document dependencies/extension, and verify with `make check` and frontend build.
+
 ## Parking lot (ideas explicitly not scheduled)
 
 - Spectators, localization, tournament modes, custom art, social login.

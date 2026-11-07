@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import Home from "./page";
 
@@ -26,6 +26,15 @@ describe("foundation page", () => {
     expect(screen.getByText("Reachable")).toBeInTheDocument();
     expect(screen.getByText("Healthy")).toBeInTheDocument();
     expect(screen.getByText("Small Talk, Big Nonsense")).toBeInTheDocument();
+    const status = screen.getByRole("region", { name: "Connection status" });
+    const refresh = within(status).getByRole("button", {
+      name: "Refresh status",
+    });
+    expect(refresh).toHaveAttribute("type", "submit");
+    expect(refresh.closest("form")).toHaveAttribute("action", "/");
+    expect(
+      screen.getByRole("region", { name: "Official starter pack" }),
+    ).toHaveTextContent("Small Talk, Big Nonsense");
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(
       fetch.mock.calls.map(([url]) => new URL(url).pathname).sort(),

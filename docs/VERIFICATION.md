@@ -58,3 +58,18 @@ remaining tooling compatibility concern are recorded in DECISIONS.md and PLAN.md
 1. Guest identity/reconnect policy: token storage, expiry/rotation, recovery and kick revocation.
 2. Room policy: player cap, owner departure/transfer, disconnect grace and idle expiry.
 3. Single-process durability: accept lost live rooms on restart, and define drain/restart behavior.
+
+## 2026-11-07 — Requested neobrutalism frontend integration
+
+- [x] `make fmt` and `make check` pass: lint, formatting, TypeScript, Go race tests,
+  seven frontend tests (page success/failure/empty data and Button activation/disabled
+  behavior), and sqlc drift checks.
+- [x] `docker build --target build -t soc-party-frontend-ui-check ./frontend` passes
+  with a frozen lockfile and optimized Next.js production compilation.
+- [x] HTTP smoke against the running frontend returns 200 and renders the status
+  section, imported cards/badges and Refresh status submit control.
+- [x] Upstream MIT notice, exact dependency reasons, source attribution and commands
+  for importing additional components are documented.
+
+No schema/store changes; database integration checks were not required for this task.
+No browser visual or end-to-end verification was performed.

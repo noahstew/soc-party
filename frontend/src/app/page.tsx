@@ -1,3 +1,7 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { fetchHealth, fetchPacks } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -7,64 +11,73 @@ export default async function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-16">
       <header>
-        <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-emerald-300">
+        <Badge variant="neutral" className="mb-4 uppercase tracking-widest">
           Soc Party / Phase 0
-        </p>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+        </Badge>
+        <h1 className="text-4xl font-heading tracking-tight sm:text-5xl">
           A little groundwork.
           <br />A lot of future nonsense.
         </h1>
-        <p className="mt-4 text-slate-300">
+        <p className="mt-4">
           Original party games, on everyone’s own device. The foundation is
           here; rooms and games come next.
         </p>
       </header>
-      <section
-        aria-labelledby="status-title"
-        className="rounded-2xl border border-slate-700 bg-slate-800 p-6"
-      >
-        <h2 id="status-title" className="text-xl font-semibold">
-          Connection status
-        </h2>
-        <dl className="mt-4 grid grid-cols-2 gap-3">
-          <dt>API</dt>
-          <dd>{health ? "Reachable" : "Unavailable"}</dd>
-          <dt>Database</dt>
-          <dd>
-            {health?.database === "ok"
-              ? "Healthy"
-              : health
-                ? "Unavailable"
-                : "Unknown"}
-          </dd>
-        </dl>
+      <section aria-labelledby="status-title">
+        <Card className="bg-secondary-background">
+          <CardHeader>
+            <h2 id="status-title" className="text-xl font-heading">
+              Connection status
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-2 items-center gap-3">
+              <dt>API</dt>
+              <dd>
+                <Badge>{health ? "Reachable" : "Unavailable"}</Badge>
+              </dd>
+              <dt>Database</dt>
+              <dd>
+                <Badge>
+                  {health?.database === "ok"
+                    ? "Healthy"
+                    : health
+                      ? "Unavailable"
+                      : "Unknown"}
+                </Badge>
+              </dd>
+            </dl>
+            <form action="/" className="mt-6">
+              <Button type="submit">Refresh status</Button>
+            </form>
+          </CardContent>
+        </Card>
       </section>
       <section aria-labelledby="pack-title">
-        <h2 id="pack-title" className="text-xl font-semibold">
+        <h2 id="pack-title" className="text-xl font-heading">
           Official starter pack
         </h2>
         {packs === null ? (
-          <p role="alert" className="mt-3 text-amber-200">
-            Packs are unavailable. Try refreshing shortly.
-          </p>
+          <Alert variant="destructive" className="mt-3">
+            <AlertDescription>
+              Packs are unavailable. Try refreshing shortly.
+            </AlertDescription>
+          </Alert>
         ) : packs.length === 0 ? (
-          <p className="mt-3 text-slate-300">
-            No official packs yet. Run the starter seed.
-          </p>
+          <p className="mt-3">No official packs yet. Run the starter seed.</p>
         ) : (
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-3 space-y-4">
             {packs.map((pack) => (
-              <li
-                key={pack.id}
-                className="rounded-xl border border-slate-700 p-4 text-emerald-200"
-              >
-                {pack.title}
+              <li key={pack.id}>
+                <Card size="sm" className="bg-main text-main-foreground">
+                  <CardContent>{pack.title}</CardContent>
+                </Card>
               </li>
             ))}
           </ul>
         )}
       </section>
-      <p className="text-sm text-slate-400">
+      <p className="text-sm">
         Wit Parade is a working title. Gameplay is planned for a later
         milestone.
       </p>

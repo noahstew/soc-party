@@ -2,6 +2,21 @@
 
 ADR-lite: date, decision, reason, alternatives. All dates use the project timezone (America/Vancouver).
 
+## 2026-11-07 — Neobrutalism UI foundation
+At the user's request, adopt neobrutalism.dev's Tailwind v4 blue theme and copy its
+Button, Card, Badge, and Alert registry sources into frontend/src/components/ui.
+Apply them to the existing foundation page and retain its health/pack failure states.
+Keep this a frontend foundation task; no room or gameplay features are introduced.
+Configure components.json for future selective shadcn imports rather than installing
+the entire catalog. Preserve upstream MIT attribution in docs/licenses.
+
+Add exact runtime dependencies @base-ui/react (accessible Button/Badge primitives),
+class-variance-authority (variants), clsx (conditional class names), and tailwind-merge
+(Tailwind class overrides). Retain the system font; omit unused animation/icon
+dependencies from the full style preset. Alternative: a custom imitation would lose
+compatibility with the requested upstream components. Source and extension instructions
+live in frontend/src/components/README.md.
+
 ## 2026-11-07 — Scope and working title
 Phase 0 is a walking skeleton only. “Wit Parade” is an original placeholder title, not a
 trademark clearance. Empty platform/protocol packages document later work. Alternative:
