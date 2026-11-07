@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { RoomLobby } from "@/platform/room-lobby";
 import { fetchHealth, fetchPacks } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -12,17 +13,21 @@ export default async function Home() {
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-16">
       <header>
         <Badge variant="neutral" className="mb-4 uppercase tracking-widest">
-          Soc Party / Phase 0
+          Soc Party / Wit Parade
         </Badge>
         <h1 className="text-4xl font-heading tracking-tight sm:text-5xl">
-          A little groundwork.
-          <br />A lot of future nonsense.
+          Good company.
+          <br />
+          Questionable answers.
         </h1>
         <p className="mt-4">
-          Original party games, on everyone’s own device. The foundation is
-          here; rooms and games come next.
+          Original party games, on everyone’s own device. Bring your friends;
+          we’ll keep a place for everyone.
         </p>
       </header>
+      <RoomLobby
+        apiURL={process.env.API_PUBLIC_URL ?? "http://localhost:8080"}
+      />
       <section aria-labelledby="status-title">
         <Card className="bg-secondary-background">
           <CardHeader>

@@ -1,7 +1,8 @@
 # Phase 0 verification
 
-Verified 2026-11-07 on macOS/Apple Silicon with Docker Desktop. M0 is complete;
-current milestone is M1, which has **not** been started. Six focused local commits
+Bootstrap snapshot from 2026-11-07 on macOS/Apple Silicon with Docker Desktop.
+At this snapshot M0 was complete and M1 had not started; later sections record M1.
+Six focused local commits
 record documentation, scaffold, database, skeleton/tests, CI and final verification.
 
 ## Acceptance results
@@ -111,3 +112,33 @@ No browser visual or end-to-end verification was performed.
 
 Backend stage: full `make check` and `make integration` passed after generation;
 Go API compiled successfully. Frontend at this stage still shows the status page.
+
+## 2026-11-07 — MVP frontend and M1 acceptance
+
+- [x] Final `make check` passes: formatting, vet, golangci-lint (zero issues), ESLint,
+  strict TypeScript, Go race tests, 14 frontend tests and both sqlc output drift checks.
+- [x] `make integration` passes platform membership persistence/reset and game
+  content/record query and constraint coverage against real PostgreSQL.
+- [x] Production frontend compilation passes. All four updated production images
+  build, including separate game migrations in the non-root backend image.
+- [x] Development stack rebuild/start passes. `/healthz`, `/api/packs`, and rendered
+  home page pass smoke checks, with OG and create/join controls visible.
+- [x] Two real socket clients against the running development API/Postgres verify
+  distinct identities, live rosters, reconnect rotation, old-token rejection, kick
+  revocation and owner departure.
+- [x] Fresh production-image startup in isolated `soc-party-mvp-prod` creates both
+  databases, migrates/seeds, and serves healthy API/homepage with runtime public URL.
+  The same socket smoke succeeds against that production API. No dev data was reset.
+- [x] Installed headless Chrome 157, driven through CDP from the Docker toolchain,
+  verifies two isolated browser contexts at 390px mobile width: create/join, both
+  live rosters, guest permissions, refresh identity recovery with token rotation,
+  owner capacity broadcast, kick returning the guest to admission, and leave.
+  No page exceptions. Captured and visually inspected mobile lobby screenshot.
+  This was an ad hoc acceptance harness in /private/tmp, not a committed E2E suite.
+- [x] Isolated production rehearsal and browser process are stopped after checks;
+  the development stack remains available at http://localhost:3000.
+
+M1 acceptance is complete; current milestone is M2. The game schema includes sessions,
+participants/scores, rounds, prompt snapshots/matchups, answer slots and votes. No
+playable phases, answer/vote API, game start or scoring engine is claimed. No cloud
+infrastructure or deployment. Updated hosted CI is pending a push; local checks passed.

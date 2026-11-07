@@ -3,9 +3,9 @@
 ## Scope
 Browser multiplayer party games; each player uses their own device, rooms shared by
 code/link, no host screen. First game: **Wit Parade** (working title). Original content only.
-M0 is verified. The user authorized M1 rooms/lobby plus MVP persistence models and
-original OG seed. Gameplay implementation, accounts, ads and infrastructure remain out
-of scope. Work through the requested migration, seed, backend and frontend commits.
+M0 and M1 are verified. The user authorized rooms/lobby plus MVP persistence models
+and original OG seed, now complete. M2 gameplay implementation, accounts, ads and
+infrastructure remain out of scope until explicitly authorized.
 
 ## Workflow
 - Read the plan's current milestone and applicable `backend/AGENTS.md` or
@@ -31,7 +31,7 @@ of scope. Work through the requested migration, seed, backend and frontend commi
 - Each room has one goroutine/channel owning its state; only the registry is shared.
 - Modules register by ID via a Go interface: deterministic state + event -> state +
   effects, injected clock/RNG, no I/O.
-- Goose migrations define schema; SQL lives only in `backend/queries/*.sql` and runs
+- Goose migrations define schema; SQL lives only in `backend/queries/{platform,game}/*.sql` and runs
   through committed sqlc output. Never hand-edit generated Go.
 - Protocol authority: `backend/internal/protocol`, mirrored in
   `frontend/src/lib/protocol.ts`; `{type, id?, payload}`, snake_case types,

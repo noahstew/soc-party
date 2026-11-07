@@ -1,7 +1,8 @@
 # Architecture
 
 Implemented: platform/game PostgreSQL migrations and generated stores, original OG seed,
-health/packs endpoints, create/join/reconnect HTTP intents and room actors/WebSockets.
+health/packs endpoints, create/join/reconnect HTTP intents, room actors/WebSockets and
+a mobile home/lobby with live membership and owner controls.
 Gameplay is still planned.
 
 ## System context
@@ -14,17 +15,18 @@ flowchart LR
   Go -. planned provider interface .-> Ads[Ad provider]
 ```
 No host screen. Each participant eventually renders shared state and personal controls.
-Browser URLs use localhost; service-to-service URLs use Docker DNS. Current server-rendered
-page fetches /healthz and /api/packs without a browser CORS dependency.
+Browser URLs use localhost; service-to-service URLs use Docker DNS. The server-rendered
+page fetches /healthz and /api/packs. The client lobby uses API_PUBLIC_URL and exact
+ALLOWED_ORIGINS CORS checks; sockets also require an allowed origin.
 
 ## Room actor flow — implemented
 ```mermaid
 flowchart LR
   Socket[Socket reader] -->|validated intent| Channel[Room event channel]
-  Timer[Injected timer] --> Channel
+  Timer[Cleanup ticker] --> Actor
   Channel --> Actor[One goroutine owns room]
-  Actor --> Game[Pure game transition]
-  Game --> Actor
+  Actor -. M2 .-> Game[Pure game transition]
+  Game -. planned effects .-> Actor
   Actor --> Projection[Per-player projections]
   Projection --> Writer[Bounded socket writers]
   Registry[Shared registry] --> Actor
@@ -48,7 +50,7 @@ sequenceDiagram
   R-->>P: Session token + authorized projection
 ```
 M1 joins directly; M6 inserts AdGate, never during a round. Server validates admission;
-client success claims are not authority. Reconnect policy is decided before M1.
+client success claims are not authority. M1 guest reconnect policy is recorded in Decisions.
 
 ## Game module — interface stub only; lifecycle planned
 ```mermaid

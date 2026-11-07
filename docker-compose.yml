@@ -57,6 +57,7 @@ services:
       target: dev
     environment:
       API_INTERNAL_URL: http://backend:8080
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
       NEXT_TELEMETRY_DISABLED: '1'
       CI: 'true'
     ports:

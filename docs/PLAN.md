@@ -5,11 +5,11 @@ One focused task per diff; the requested MVP foundation spans four ordered commi
 Backlog, ideas in Parking lot. Refine later milestones when reached. Never begin M1 as part
 of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
-## Current milestone: M1
+## Current milestone: M2
 
-M0 is verified. User authorized M1 and MVP persistence design on 2026-11-07.
-Implement migrations, original OG seed, generated store/API/socket, then lobby UI.
-M2 gameplay remains next; its schema is prepared but rules are not implemented.
+M0 and M1 are verified. User authorized M1 and MVP persistence design on 2026-11-07.
+The requested four-stage foundation is implemented and verified. M2 gameplay is next;
+its schema is prepared but rules are not implemented or authorized by this request.
 
 ## Milestones
 
@@ -34,7 +34,7 @@ M2 gameplay remains next; its schema is prepared but rules are not implemented.
 
 **Done when:** All acceptance checks in docs/VERIFICATION.md pass, docs match files, then set current milestone to M1.
 
-### M1, Rooms and lobby [status: in progress]
+### M1, Rooms and lobby [status: done]
 
 **Goal:** Create, join and manage a room from individual browsers.
 
@@ -46,7 +46,7 @@ M2 gameplay remains next; its schema is prepared but rules are not implemented.
 
 - [x] Define typed Go protocol envelope and mirrored TS types; validate size/type/origin limits
 - [x] Implement CSPRNG codes and room registry with one actor/channel per room
-- [ ] Add create/join HTTP intents and minimal mobile lobby with one socket per tab
+- [x] Add create/join HTTP intents and minimal mobile lobby with one socket per tab
 - [x] Add owner settings, start eligibility and kick with explicit authorization
 - [x] Add reconnect token issuance, rotation/expiry and identity recovery policy
 - [x] Add disconnect grace, room expiry and bounded connection cleanup
@@ -206,6 +206,9 @@ M2 gameplay remains next; its schema is prepared but rules are not implemented.
 
 ## Backlog
 
+- Room audit last_seen_at currently reflects the latest persisted room snapshot;
+  pass each member's injected Seen timestamp through SQL before using it for analytics.
+
 - Upgrade ESLint/TypeScript when Next lint plugin peer ranges support current majors.
 
 ## Requested frontend foundation work
@@ -226,3 +229,13 @@ M2 gameplay remains next; its schema is prepared but rules are not implemented.
 ## Parking lot (ideas explicitly not scheduled)
 
 - Spectators, localization, tournament modes, custom art, social login.
+
+## Requested MVP foundation
+
+- [x] Add platform rooms/membership and a second `wit_parade` database with MVP game models.
+- [x] Seed OG with five original prompts, verifying idempotency.
+- [x] Generate both sqlc stores and build/test the Go API and authenticated room sockets.
+- [x] Build/test a home page for creating/joining rooms and seeing live members.
+
+Four ordered local commits; no gameplay rules, accounts, ads or deployment added.
+Schema preparation does not complete or skip M2/M3 behavior and acceptance.

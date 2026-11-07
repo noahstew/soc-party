@@ -16,7 +16,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open http://localhost:3000. The page shows API/DB health and **OG**.
+Open http://localhost:3000. The page lets you create/join a room, shows live players, API/DB health and **OG**.
 Backend: http://localhost:8080/healthz and http://localhost:8080/api/packs.
 First build downloads pinned tools/dependencies and can take several minutes.
 Postgres becomes healthy, one-shot migrate and seed succeed, then the backend and frontend start.
@@ -101,3 +101,18 @@ Owner transfers on departure; rooms need three connected players to be eligible.
 All live rooms close on backend restart. Database records are audit records, not
 restart recovery. Run exactly one backend process. Game record models are prepared
 for the future engine; there is no public answer/vote/history CRUD API.
+
+## Try the lobby
+
+Open http://localhost:3000, enter a name and choose **Create a room**. In another
+browser/tab, use a different name and the six-character room code, or open the
+shared link. Both players appear live. The owner can change capacity or remove
+players; anyone can leave. Refreshing within the reconnect grace restores identity.
+The page shows readiness at three connected players; game rounds are not built yet.
+
+For phones on your LAN, set `API_PUBLIC_URL=http://YOUR_LAN_IP:8080` and
+`ALLOWED_ORIGINS=http://YOUR_LAN_IP:3000`, then rerun `make up`. Open
+`http://YOUR_LAN_IP:3000` on each phone. Match these URLs to your configured ports;
+use HTTPS/WSS for any shared deployment. `API_INTERNAL_URL` remains Docker-only.
+Room credentials live in sessionStorage per tab. Joining a fresh tab creates a new
+player; duplicating a tab may copy its credential and replace the original socket.
