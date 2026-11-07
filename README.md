@@ -54,6 +54,9 @@ first after a clean checkout if using checks before `up`.
 Run the production frontend compile with `docker compose run --rm --no-deps frontend pnpm build`.
 CI also runs integration tests, frontend build, and Docker smoke. See
 [verification evidence](docs/VERIFICATION.md) for actual bootstrap results.
+Every push (including to main) and pull request runs these checks. Both smoke modes
+start disposable stacks on the GitHub runner; `prod` means production images, not a
+deployment. No cloud infrastructure or deployment secrets are required.
 
 ## Prod-like local rehearsal
 

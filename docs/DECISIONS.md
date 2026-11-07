@@ -2,6 +2,17 @@
 
 ADR-lite: date, decision, reason, alternatives. All dates use the project timezone (America/Vancouver).
 
+## 2026-11-07 — Portable production Compose resets
+GitHub's Compose 2.38.2 loses the volumes reset inherited through x-prod; the retained
+source mount hides /app/migrate in the production image. Compose 5.3.1 locally does
+not reproduce this. Put !reset directly on migrate/seed/backend services, matching
+frontend, and regression-check merged production targets/mounts before CI builds.
+Keep both smoke modes on pushes and PRs; disable matrix fail-fast so one failure does
+not cancel the other. Both stacks are runner-local and require no cloud deployment.
+Alternative: skipping smoke until deployment would hide broken container packaging;
+requiring everyone to upgrade Compose would leave the override fragile.
+Related upstream issue: https://github.com/docker/compose/issues/11706
+
 ## 2026-11-07 — Focused agent context
 Keep shared invariants and verification requirements once in root AGENTS.md; directory
 files contain stack-specific guidance. Read supporting docs and large/generated files

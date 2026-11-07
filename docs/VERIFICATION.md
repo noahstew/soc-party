@@ -40,9 +40,29 @@ record documentation, scaffold, database, skeleton/tests, CI and final verificat
 
 ## Limits and repairs
 
-Hosted GitHub Actions has **not** run: this local repository has no configured remote.
-The workflow was validated with actionlint and its underlying builds/checks ran locally.
+Initial bootstrap evidence predates the first hosted GitHub Actions run. The workflow
+was validated with actionlint and its underlying builds/checks ran locally at that point.
 No AWS deployment, browser E2E suite, load test, sockets or gameplay is claimed.
+
+## GitHub Docker smoke repair — 2026-11-07
+
+First hosted run: https://github.com/noahstew/soc-party/actions/runs/42404917013.
+Backend/frontend jobs passed; production smoke failed starting /app/migrate, and the
+development matrix entry was cancelled by fail-fast. No external infrastructure was involved.
+
+- Reproduced retained production source mounts using the runner's Compose 2.38.2;
+  the same original files resolve without mounts on local Compose 5.3.1.
+- Added scripts/check-prod-compose.py to reject development volumes/build targets;
+  it fails on the original 2.38.2 merged configuration and passes after the service-level
+  resets on both versions. CI runs it before production builds.
+- Production smoke with Compose 2.38.2 in an isolated project passes migrations,
+  seed, service health, health/packs HTTP responses and rendered pack title.
+  Actual runtime users are 65532:65532/node and both application containers have no mounts.
+- Development smoke with Compose 2.38.2 in a separate fresh project also passes
+  migrations, seed, service health, health/packs responses and rendered pack title.
+- `make check` and actionlint 1.7.12 pass. Both matrix modes remain enabled for
+  pushes/PRs; fail-fast is disabled to preserve independent results.
+- Hosted validation of this repair remains pending the next push.
 
 The first startup failed because Docker storage was full. With explicit approval,
 pruned build cache unused for over 30 days (9.372 GB reclaimed); repeated checks passed.

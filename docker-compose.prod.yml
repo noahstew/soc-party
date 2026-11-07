@@ -3,19 +3,22 @@ x-prod: &prod
   build:
     context: ./backend
     target: prod
-  volumes: !reset []
 services:
   db:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
   migrate:
     <<: *prod
+    # Keep reset tags on services: Compose 2.x can lose tags inherited via anchors.
+    volumes: !reset []
     command: [/app/migrate]
   seed:
     <<: *prod
+    volumes: !reset []
     command: [/app/seed]
   backend:
     <<: *prod
+    volumes: !reset []
     command: [/app/server]
     healthcheck:
       test: [CMD, /app/server, -healthcheck]

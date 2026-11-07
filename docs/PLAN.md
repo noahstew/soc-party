@@ -217,6 +217,11 @@ the Phase 0 boundary in AGENTS.md remains until explicitly advanced by the user.
 - [x] Reduce repeated agent context, preserve engineering safeguards, clarify the M1
   authorization boundary, and verify with `make check`.
 
+## Requested CI repair
+
+- [x] Fix production mount resets on the GitHub runner's Compose version; verify
+  configuration regression, dev/prod smoke and `make check` without deployment.
+
 ## Parking lot (ideas explicitly not scheduled)
 
 - Spectators, localization, tournament modes, custom art, social login.

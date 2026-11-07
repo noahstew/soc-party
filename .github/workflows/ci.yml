@@ -64,12 +64,18 @@ jobs:
   docker-smoke:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         mode: [dev, prod]
     env:
       COMPOSE_FILE: ${{ matrix.mode == 'prod' && 'docker-compose.yml:docker-compose.prod.yml' || 'docker-compose.yml' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Verify production Compose configuration
+        if: matrix.mode == 'prod'
+        run: |
+          docker compose version
+          POSTGRES_PASSWORD=party docker compose config --format json | python3 scripts/check-prod-compose.py
       - name: Build and start
         run: |
           cp .env.example .env
