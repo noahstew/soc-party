@@ -20,6 +20,12 @@ describe("home", () => {
     expect(
       screen.queryByRole("region", { name: "Connection status" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByText("Soc Party")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Great game nights.",
+    );
+    expect(screen.getByText(/choose a game together/)).toBeInTheDocument();
+    expect(screen.queryByText(/Zinger/)).not.toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();
   });
 });

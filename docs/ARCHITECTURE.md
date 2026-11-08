@@ -2,7 +2,8 @@
 
 Implemented: platform/game PostgreSQL migrations and generated stores, original OG seed,
 health/packs endpoints, create/join/reconnect HTTP intents, room actors/WebSockets and
-a mobile home/lobby with live membership and owner controls.
+a general Soc Party home/lobby with live membership and owner controls.
+Health and content diagnostics live on /health, separate from room admission.
 Gameplay is still planned.
 
 ## System context

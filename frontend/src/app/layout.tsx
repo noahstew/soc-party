@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Soc Party — bring your friends",
   description:
-    "Create a room, invite your friends, and gather for original party games.",
+    "Your home for original party games. Create a room, invite friends, and choose a game together.",
 };
 export default function RootLayout({
   children,

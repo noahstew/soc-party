@@ -154,3 +154,8 @@ Physical game storage retains its legacy name and existing seed data.
 `make check` passes with all status/pack success, unavailable, empty and malformed
 payload coverage moved to /health. Home tests verify diagnostic fetches/card are absent.
 Live HTTP smoke passes for / and /health; CI smoke now checks both routes.
+
+## General Soc Party home
+
+`make check` passes. The home test verifies platform branding, game-neutral welcome
+copy and admission controls; diagnostics remain on /health. No gameplay changes.
