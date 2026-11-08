@@ -248,3 +248,8 @@ Schema preparation does not complete or skip M2/M3 behavior and acceptance.
 - [x] Add room game selection with Zinger and a disabled coming-soon option.
 
 One commit per task; gameplay remains outside this request.
+
+## Requested custom theme
+
+- [x] Apply and verify a fixed dark neobrutalist theme with coral primary accents
+  across home, lobby, health, form controls and error/focus/disabled states.

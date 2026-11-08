@@ -159,3 +159,12 @@ migration updates existing rooms and their default/check constraint; historical
 migrations remain unchanged. Retain the physical `wit_parade` database name as a
 legacy storage identifier to preserve content and avoid disrupting active database
 connections. The database name is not exposed as the game name in the UI/protocol.
+
+## 2026-11-08 — Fixed dark coral theme
+Customize the existing neobrutalism components with charcoal backgrounds, coral primary
+accents, warm-white text, muted lavender copy, chunky outlines and solid offset shadows.
+Root CSS tokens and constant dark viewport metadata define one palette: no theme toggle,
+light-mode media palette or browser-storage theme state. Keep local font fallbacks and
+CSS-only dots/sticker styling; no dependencies, remote fonts or generated art needed.
+Semantic tokens cover input, error and focus states. Reduced motion suppresses button
+translation/transition. Components retain upstream attribution and existing behavior.

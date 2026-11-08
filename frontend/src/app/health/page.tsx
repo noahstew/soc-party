@@ -12,11 +12,11 @@ export default async function HealthPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-16">
       <header>
-        <Badge variant="neutral" className="mb-4">
+        <Badge variant="neutral" className="mb-4 border-main text-main">
           Soc Party
         </Badge>
         <h1 className="text-4xl font-heading">System health</h1>
-        <Link href="/" className="mt-4 inline-block underline">
+        <Link href="/" className="mt-4 inline-block text-main underline">
           Back to Soc Party
         </Link>
       </header>

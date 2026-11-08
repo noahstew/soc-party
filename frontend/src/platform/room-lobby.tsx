@@ -295,7 +295,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
   }
   const owner = lobby?.youId === lobby?.ownerId;
   const inputStyle =
-    "mt-2 w-full rounded-base border-2 border-border bg-secondary-background px-3 py-3 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+    "mt-2 w-full rounded-base border-2 border-border bg-input-background px-3 py-3 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-background disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <section aria-labelledby="room-title">
@@ -322,13 +322,13 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
                 <div>
                   <p className="text-sm">Room code</p>
                   <p
-                    className="font-mono text-4xl font-bold tracking-widest"
+                    className="font-mono text-4xl font-bold tracking-widest text-main"
                     aria-label={`Room code ${lobby.code}`}
                   >
                     {lobby.code}
                   </p>
                 </div>
-                <Badge variant="neutral">
+                <Badge variant="neutral" className="border-main text-main">
                   {connection === "connected"
                     ? "Live"
                     : connection === "connecting"
@@ -358,13 +358,13 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
                   {lobby.players.map((player) => (
                     <li
                       key={player.id}
-                      className="flex items-center justify-between gap-3 rounded-base border-2 border-border p-3"
+                      className="flex items-center justify-between gap-3 rounded-base border-2 border-border bg-input-background p-3"
                     >
                       <div>
                         <span className="font-heading">{player.name}</span>
                         {player.id === lobby.youId && <span> (you)</span>}
                         {player.id === lobby.ownerId && (
-                          <span className="ml-2 text-sm">Owner</span>
+                          <span className="ml-2 text-sm text-main">Owner</span>
                         )}
                         <p className="text-sm">
                           {player.connected
@@ -414,7 +414,10 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
                     Coming soon
                   </option>
                 </select>
-                <p id="game-description" className="mt-2 text-sm">
+                <p
+                  id="game-description"
+                  className="mt-2 text-sm text-muted-foreground"
+                >
                   {owner
                     ? "Choose a game for your group."
                     : "The room owner chooses the game."}{" "}

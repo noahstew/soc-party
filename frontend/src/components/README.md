@@ -4,9 +4,17 @@ Reusable accessible UI components belong here. `ui/` contains Button, Card, Badg
 and Alert imported from the [neobrutalism.dev registry](https://www.neobrutalism.dev/docs/installation).
 Use these shared components rather than duplicating their styles in platform/game UI.
 
-The blue palette and Tailwind v4 tokens live in `src/app/globals.css`; change those
-tokens to customize colors, borders, shadows, and weights. Fonts use the local
-system stack. No theme switcher or remote font is required.
+The custom dark/coral palette and Tailwind v4 tokens live in `src/app/globals.css`.
+The theme is fixed: `color-scheme: dark` and constant root tokens, with no toggle or
+system-preference palette. Layout viewport metadata matches the dark page background.
+Coral is the primary accent with dark ink on filled buttons; charcoal surfaces,
+warm-white text, muted lavender copy, visible outlines and solid offset shadows
+retain the neobrutalist foundation. Rounded corners, a quiet dotted backdrop and
+local system typography keep it playful without remote fonts or assets.
+
+Use semantic tokens for component colors, including focus rings, input surfaces and
+errors; avoid hard-coded white/black focus styles. Reduced motion removes button
+translation/transition. Preserve dark native form controls and visible keyboard focus.
 
 `components.json` configures shadcn aliases and the `@neobrutalism` registry. To add
 another component from the repository root using Docker:

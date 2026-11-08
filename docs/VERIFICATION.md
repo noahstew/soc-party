@@ -175,3 +175,19 @@ copy and admission controls; diagnostics remain on /health. No gameplay changes.
   exceptions. Mobile screenshot inspected; temporary browser closed after acceptance.
 - Development stack remains running. Existing game data is preserved under the
   legacy physical database name. Gameplay remains unimplemented and unauthorized.
+
+## 2026-11-08 — Custom dark/coral theme
+
+- `make check` passes: lint/format/types, Go race tests, 15 frontend tests and sqlc drift.
+- Browser acceptance passes in two isolated Chrome contexts: fixed dark root/native
+  controls under emulated light and dark OS preferences, reduced-motion transitions,
+  no mobile horizontal overflow, and existing create/join/reconnect/owner/health flows.
+- Captured and visually inspected desktop home plus mobile home, lobby and health.
+  Ad hoc browser harness/screenshots remain in /private/tmp; no new runtime dependencies.
+- Calculated WCAG contrast for the chosen palette: body 16.24:1, muted text on surface
+  7.72:1, primary button text 7.39:1, control border against surface 3.72:1, error text
+  11:1. This is targeted color verification, not a full accessibility audit.
+- No backend/schema behavior changes; database integration is not required for this theme.
+
+Production frontend compilation passed for both / and /health. The temporary browser
+was closed and the development frontend restarted after the production build check.
