@@ -55,7 +55,7 @@ its schema is prepared but rules are not implemented or authorized by this reque
 
 **Done when:** Two independent browsers create/join, owner can kick, valid reconnect restores identity, expired rooms disappear, race and check suites pass.
 
-### M2, Wit Parade engine and UI [status: not started]
+### M2, Zinger engine and UI [status: not started]
 
 **Goal:** Play an original answer-and-vote game end to end.
 
@@ -239,3 +239,12 @@ its schema is prepared but rules are not implemented or authorized by this reque
 
 Four ordered local commits; no gameplay rules, accounts, ads or deployment added.
 Schema preparation does not complete or skip M2/M3 behavior and acceptance.
+
+## Requested platform presentation updates
+
+- [x] Rename the first game to Zinger, preserving existing content.
+- [ ] Move home status card to /health.
+- [ ] Make the home page a general Soc Party entry point.
+- [ ] Add room game selection with Zinger and a disabled coming-soon option.
+
+One commit per task; gameplay remains outside this request.

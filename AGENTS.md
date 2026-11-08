@@ -2,7 +2,7 @@
 
 ## Scope
 Browser multiplayer party games; each player uses their own device, rooms shared by
-code/link, no host screen. First game: **Wit Parade** (working title). Original content only.
+code/link, no host screen. First game: **Zinger** (working title). Original content only.
 M0 and M1 are verified. The user authorized rooms/lobby plus MVP persistence models
 and original OG seed, now complete. M2 gameplay implementation, accounts, ads and
 infrastructure remain out of scope until explicitly authorized.

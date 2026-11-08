@@ -4,7 +4,7 @@ export type Lobby = {
   code: string;
   ownerId: string;
   youId: string;
-  gameId: "wit_parade";
+  gameId: "zinger";
   packSlug: string;
   maxPlayers: number;
   canStart: boolean;
@@ -29,7 +29,7 @@ export function isLobby(value: unknown): value is Lobby {
     /^[A-Z2-9]{6}$/.test(p.code) &&
     typeof p.ownerId === "string" &&
     typeof p.youId === "string" &&
-    p.gameId === "wit_parade" &&
+    p.gameId === "zinger" &&
     typeof p.packSlug === "string" &&
     typeof p.maxPlayers === "number" &&
     p.maxPlayers >= 3 &&

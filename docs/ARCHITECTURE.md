@@ -62,7 +62,7 @@ flowchart LR
   Registry[Modules keyed by ID] --> Transition
 ```
 `backend/internal/games` holds only this contract and an unimplemented registry signature.
-Wit Parade is an empty placeholder. No game engine is implemented.
+Zinger is an empty placeholder. No game engine is implemented.
 Protocol convention: JSON `{type, id?, payload}`, snake_case types, camelCase fields.
 Go protocol package is authoritative; frontend lib/protocol.ts mirrors it. Lobby message types are in protocol.go and mirrored in frontend/src/lib/protocol.ts.
 

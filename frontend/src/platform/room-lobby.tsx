@@ -425,7 +425,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
                 {lobby.canStart
                   ? "The group is ready."
                   : "Gather at least 3 connected players."}{" "}
-                Wit Parade gameplay is coming next.
+                Zinger gameplay is coming next.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button variant="neutral" onClick={leave}>

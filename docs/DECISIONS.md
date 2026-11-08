@@ -152,3 +152,10 @@ transfers to the earliest remaining member, idle expiry 30 minutes, hard expiry 
 hours. No identity recovery after grace/restart/expiry. All state writes precede
 publication; failures preserve actor state. Three connected players make a room
 eligible, but starting gameplay remains M2. One process only; no multi-replica claims.
+
+## 2026-11-07 — Zinger game identity
+Rename the game to Zinger and its public/persisted game ID to `zinger`. A new goose
+migration updates existing rooms and their default/check constraint; historical
+migrations remain unchanged. Retain the physical `wit_parade` database name as a
+legacy storage identifier to preserve content and avoid disrupting active database
+connections. The database name is not exposed as the game name in the UI/protocol.

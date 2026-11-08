@@ -13,7 +13,7 @@ export default async function Home() {
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-16">
       <header>
         <Badge variant="neutral" className="mb-4 uppercase tracking-widest">
-          Soc Party / Wit Parade
+          Soc Party / Zinger
         </Badge>
         <h1 className="text-4xl font-heading tracking-tight sm:text-5xl">
           Good company.
@@ -83,8 +83,7 @@ export default async function Home() {
         )}
       </section>
       <p className="text-sm">
-        Wit Parade is a working title. Gameplay is planned for a later
-        milestone.
+        Zinger is a working title. Gameplay is planned for a later milestone.
       </p>
     </main>
   );

@@ -142,3 +142,9 @@ M1 acceptance is complete; current milestone is M2. The game schema includes ses
 participants/scores, rounds, prompt snapshots/matchups, answer slots and votes. No
 playable phases, answer/vote API, game start or scoring engine is claimed. No cloud
 infrastructure or deployment. Updated hosted CI is pending a push; local checks passed.
+
+## Zinger rename
+
+`make check` and `make integration` pass. The new migration updates room game IDs
+and defaults to `zinger`; integration verifies newly persisted room identity.
+Physical game storage retains its legacy name and existing seed data.

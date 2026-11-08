@@ -9,6 +9,6 @@ small packages. Bound requests/timeouts. Use table-driven tests, handler fakes a
 `go test -race ./...` (`make test` includes this).
 
 Schema changes: add sequential `migrations/NNNNN_description.sql` (platform) or
-`game_migrations/NNNNN_description.sql` (Wit Parade) with goose Up/Down,
+`game_migrations/NNNNN_description.sql` (Zinger) with goose Up/Down,
 add named SQL in `queries/platform/*.sql` or `queries/game/*.sql`, run `make sqlc` and commit generated store files.
 Add integration coverage; `make migrate` applies schema, `make seed` loads starter data.

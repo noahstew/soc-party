@@ -1,7 +1,7 @@
 # Soc Party
 
 Foundation for a multiplayer party-game website. Every player uses their own browser;
-there is no host screen. The first planned game is **Wit Parade** (working title).
+there is no host screen. The first planned game is **Zinger** (working title).
 Implemented: room create/join/reconnect API and WebSocket lobby service, health/packs
 API, separate platform/game databases, generated models and original OG seed.
 Gameplay, accounts and ads remain planned.
@@ -84,6 +84,7 @@ commit generated store changes. Do not begin gameplay as part of this bootstrap.
 
 `DATABASE_URL` identifies the platform database (default `party`). Startup migration
 creates `wit_parade` on the same PostgreSQL instance and migrates it separately.
+This legacy database name stores Zinger content; the game ID is `zinger`.
 The migration role needs CREATEDB to provision it. Existing platform content is
 preserved for data retention; new content and `/api/packs` use the game database.
 `make seed` idempotently loads **OG** with five original comedy prompts.

@@ -14,7 +14,7 @@ const lobby: Lobby = {
   code: "ABCDEF",
   ownerId: "owner",
   youId: "owner",
-  gameId: "wit_parade",
+  gameId: "zinger",
   packSlug: "og",
   maxPlayers: 8,
   canStart: false,

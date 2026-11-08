@@ -212,7 +212,7 @@ func authenticate(s *Record, token string) (*Member, error) {
 	return nil, ErrUnauthorized
 }
 func project(s Record, you string) protocol.Lobby {
-	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: "wit_parade", PackSlug: "og", MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
+	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: "zinger", PackSlug: "og", MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
 	connected := 0
 	for _, m := range s.Members {
 		if m.Status != "active" {

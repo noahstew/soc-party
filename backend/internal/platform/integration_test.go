@@ -46,7 +46,7 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if record.OwnerID != owner.Lobby.YouID || len(players) != 2 {
+	if record.GameID != "zinger" || record.OwnerID != owner.Lobby.YouID || len(players) != 2 {
 		t.Fatal("membership/owner not persisted")
 	}
 	for _, p := range players {
