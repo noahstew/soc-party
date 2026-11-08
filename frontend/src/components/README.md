@@ -39,3 +39,22 @@ Button declares a Next.js client boundary; Badge omits an unused React import;
 the theme omits unused animation/scrollbar styles and adds reduced-motion support.
 The MIT notice is preserved in
 [`docs/licenses/neobrutalism-components.txt`](../../../../docs/licenses/neobrutalism-components.txt).
+
+## Notifications
+
+`ToastProvider` is mounted once in the root layout. Use the custom hook from
+`@/lib/use-toast`: `const { notify, dismiss } = useToast()`, then
+`notify(message, "info" | "warning" | "error" | "success")`. This is the default
+for action feedback and validation throughout platform/game UI. Do not add inline
+alerts or browser validation bubbles; custom-validated forms use `noValidate`.
+Persistent page content, such as the health diagnostic report, remains in the page.
+
+The latest notification replaces the previous one at the bottom-right of the viewport,
+with mobile gutters/safe-area clearance, charcoal fill, chunky outline and offset shadow.
+Event accents complement coral without reusing it: blue info, yellow warning, pink error,
+and mint success. Labels and icons supplement color. Errors/warnings announce assertively;
+info/success announce politely. Every event slides in over 300ms, stays for three seconds,
+then fades out over 250ms. Hover/focus pauses dismissal and grants three seconds afterward.
+Reduced motion disables animation. All events have a keyboard-accessible dismiss button;
+notifications do not steal focus. Use `dismiss()` when retrying or invalidating old feedback.
+No additional package is required.

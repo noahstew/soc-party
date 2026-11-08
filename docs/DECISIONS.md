@@ -168,3 +168,15 @@ light-mode media palette or browser-storage theme state. Keep local font fallbac
 CSS-only dots/sticker styling; no dependencies, remote fonts or generated art needed.
 Semantic tokens cover input, error and focus states. Reduced motion suppresses button
 translation/transition. Components retain upstream attribution and existing behavior.
+
+## 2026-11-08 — Global feedback notifications
+
+Use one root ToastProvider and the custom `useToast` hook with `notify(message, event)`
+for all action feedback. The latest notification replaces old feedback rather than
+accumulating stale errors. All four events auto-dismiss after three seconds, with
+hover/focus pausing. Bottom-right toasts slide in over 300ms and fade over 250ms;
+reduced motion disables animation. Error/warning announcements are assertive and
+info/success polite, without moving focus. Complement the coral theme with distinct
+blue/yellow/pink/mint event accents and the existing outlined surfaces/offset shadow.
+No dependencies added. Health diagnostics remain persistent page content. Frontend
+agent guidance makes this hook the default for future feature work.

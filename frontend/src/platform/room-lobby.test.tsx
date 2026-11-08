@@ -1,7 +1,9 @@
+import { ToastProvider } from "@/components/ui/toast";
+import type { ReactNode } from "react";
 import {
   act,
   fireEvent,
-  render,
+  render as rtlRender,
   screen,
   waitFor,
   within,
@@ -175,6 +177,11 @@ describe("room lobby", () => {
     render(<RoomLobby apiURL="http://localhost:8080" />);
     fireEvent.click(screen.getByRole("button", { name: "Create a room" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a name");
+    const notifications = screen.getByRole("region", { name: "Notifications" });
+    expect(notifications).toContainElement(screen.getByRole("alert"));
+    expect(
+      screen.getByRole("region", { name: "Get the group together" }),
+    ).not.toContainElement(screen.getByRole("alert"));
     expect(fetch).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Your name"), {
       target: { value: "Alex" },
@@ -266,3 +273,7 @@ describe("room lobby", () => {
     expect(FakeSocket.instances).toHaveLength(0);
   });
 });
+
+function render(ui: ReactNode) {
+  return rtlRender(<ToastProvider>{ui}</ToastProvider>);
+}

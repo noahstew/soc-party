@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/lib/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -68,7 +68,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
   const [credential, setCredential] = useState<Credential | null>(null);
   const [lobby, setLobby] = useState<Lobby | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const { notify, dismiss } = useToast();
   const [connection, setConnection] = useState<Connection>("connecting");
   const [retry, setRetry] = useState(0);
   const [shareURL, setShareURL] = useState("");
@@ -122,8 +122,9 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       } catch {
         remember(null);
         if (!cancelled)
-          setError(
+          notify(
             "Your previous room has expired. Create or join a room below.",
+            "error",
           );
       } finally {
         if (!cancelled) setBusy(false);
@@ -132,7 +133,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     return () => {
       cancelled = true;
     };
-  }, [apiURL]);
+  }, [apiURL, notify]);
 
   useEffect(() => {
     if (!credential) return;
@@ -196,10 +197,10 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
             "message" in message.payload &&
             typeof message.payload.message === "string"
           ) {
-            setError(message.payload.message);
+            notify(message.payload.message, "error");
           } else throw new Error("invalid message");
         } catch {
-          setError("A room update could not be read. Please reconnect.");
+          notify("A room update could not be read. Please reconnect.", "error");
           ws.close();
         }
       };
@@ -211,15 +212,17 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
           remember(null);
           setCredential(null);
           setLobby(null);
-          setError(
+          notify(
             "Your room session ended. You can create or join a room again.",
+            "error",
           );
         } else if (retries < 3) {
           retries += 1;
           timer = setTimeout(connect, 1000 * retries);
         } else {
-          setError(
+          notify(
             "Connection lost. Try reconnecting, or return home to join again.",
+            "error",
           );
         }
       };
@@ -235,22 +238,22 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       if (socket.current === current) socket.current = null;
       current?.close();
     };
-  }, [apiURL, credential, retry]);
+  }, [apiURL, credential, retry, notify]);
 
   async function enter(action: "create" | "join") {
     if (busy) return;
     const cleanName = name.trim();
     const cleanCode = code.trim().toUpperCase();
     if (!cleanName || Array.from(cleanName).length > 24) {
-      setError("Enter a name with 1–24 characters.");
+      notify("Enter a name with 1–24 characters.", "error");
       return;
     }
     if (action === "join" && !/^[A-Z2-9]{6}$/.test(cleanCode)) {
-      setError("Enter the six-character room code.");
+      notify("Enter the six-character room code.", "error");
       return;
     }
     setBusy(true);
-    setError("");
+    dismiss();
     try {
       accept(
         await intent(
@@ -260,10 +263,11 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
         ),
       );
     } catch (err) {
-      setError(
+      notify(
         err instanceof Error
           ? err.message
           : "Unable to reach the server. Try again.",
+        "error",
       );
     } finally {
       setBusy(false);
@@ -274,10 +278,10 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       socket.current?.readyState !== WebSocket.OPEN ||
       connection !== "connected"
     ) {
-      setError("Wait for the room to reconnect.");
+      notify("Wait for the room to reconnect.", "error");
       return;
     }
-    setError("");
+    dismiss();
     socket.current.send(JSON.stringify(message));
   }
   function leave() {
@@ -291,7 +295,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     remember(null);
     setCredential(null);
     setLobby(null);
-    setError("");
+    dismiss();
   }
   const owner = lobby?.youId === lobby?.ownerId;
   const inputStyle =
@@ -311,11 +315,6 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
           {lobby ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -466,7 +465,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
                 {connection === "disconnected" && (
                   <Button
                     onClick={() => {
-                      setError("");
+                      dismiss();
                       setRetry((v) => v + 1);
                     }}
                   >
@@ -477,6 +476,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
             </>
           ) : (
             <form
+              noValidate
               onSubmit={(event: FormEvent<HTMLFormElement>) => {
                 event.preventDefault();
                 void enter("join");

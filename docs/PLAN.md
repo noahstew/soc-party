@@ -253,3 +253,9 @@ One commit per task; gameplay remains outside this request.
 
 - [x] Apply and verify a fixed dark neobrutalist theme with coral primary accents
   across home, lobby, health, form controls and error/focus/disabled states.
+
+## Requested global notifications
+
+- [x] Replace lobby action/validation alerts with a shared bottom-right animated toast for error,
+  info, warning and success; auto-dismiss with distinct pastel accents, document the agent default,
+  and verify with regression coverage and `make check`.

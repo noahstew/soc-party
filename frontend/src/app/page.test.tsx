@@ -1,4 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { ToastProvider } from "@/components/ui/toast";
+import type { ReactNode } from "react";
+import { render as rtlRender, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import Home from "./page";
 
@@ -29,3 +31,7 @@ describe("home", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 });
+
+function render(ui: ReactNode) {
+  return rtlRender(<ToastProvider>{ui}</ToastProvider>);
+}

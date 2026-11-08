@@ -191,3 +191,17 @@ copy and admission controls; diagnostics remain on /health. No gameplay changes.
 
 Production frontend compilation passed for both / and /health. The temporary browser
 was closed and the development frontend restarted after the production build check.
+
+## 2026-11-08 — Global animated notifications
+
+- `make check` passes: lint/format, TypeScript, Go race/unit tests, sqlc drift and
+  26 frontend tests. Toast regressions cover all four events, three-second timeout,
+  250ms exit cleanup, manual dismissal, hover/focus pause, repeated feedback and
+  superseding a toast during its exit. Lobby coverage proves validation errors
+  render in the global notification region outside the form/card.
+- Temporary Chrome acceptance passes at 390px and 1280px: bottom-right placement,
+  entry/exit animations, auto/manual dismissal, four distinct non-coral pastel
+  accents, readable icon foreground, reduced-motion behavior, no horizontal overflow
+  and no runtime exceptions. Screenshots/harness remain in /private/tmp;
+  the temporary browser was closed after acceptance.
+- No backend/schema changes or new dependencies; database integration is not required.
