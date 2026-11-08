@@ -148,3 +148,9 @@ infrastructure or deployment. Updated hosted CI is pending a push; local checks 
 `make check` and `make integration` pass. The new migration updates room game IDs
 and defaults to `zinger`; integration verifies newly persisted room identity.
 Physical game storage retains its legacy name and existing seed data.
+
+## Dedicated health page
+
+`make check` passes with all status/pack success, unavailable, empty and malformed
+payload coverage moved to /health. Home tests verify diagnostic fetches/card are absent.
+Live HTTP smoke passes for / and /health; CI smoke now checks both routes.

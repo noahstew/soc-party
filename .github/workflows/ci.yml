@@ -90,7 +90,10 @@ jobs:
           curl --fail http://localhost:8080/api/packs | tee /tmp/packs.json
           python3 -c 'import json; d=json.load(open("/tmp/packs.json")); assert any(p["title"] == "OG" for p in d)'
           curl --fail http://localhost:3000 | tee /tmp/page.html
-          grep -q 'OG' /tmp/page.html
+          grep -q 'Create a room' /tmp/page.html
+          curl --fail http://localhost:3000/health | tee /tmp/health-page.html
+          grep -q 'Connection status' /tmp/health-page.html
+          grep -q 'OG' /tmp/health-page.html
       - name: Verify production runtime users
         if: matrix.mode == 'prod'
         run: |

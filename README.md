@@ -16,7 +16,8 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open http://localhost:3000. The page lets you create/join a room, shows live players, API/DB health and **OG**.
+Open http://localhost:3000. The home page lets you create/join a room and shows live players.
+API/DB status and **OG** pack diagnostics are at http://localhost:3000/health.
 Backend: http://localhost:8080/healthz and http://localhost:8080/api/packs.
 First build downloads pinned tools/dependencies and can take several minutes.
 Postgres becomes healthy, one-shot migrate and seed succeed, then the backend and frontend start.
