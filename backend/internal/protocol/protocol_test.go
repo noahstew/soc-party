@@ -13,6 +13,8 @@ func TestDecode(t *testing.T) {
 		{"auth", `{"type":"session_auth","payload":{"token":"secret"}}`, true},
 		{"ping", `{"type":"ping","id":"1","payload":{}}`, true},
 		{"kick", `{"type":"kick_player","payload":{"playerId":"id"}}`, true},
+		{"game selection", `{"type":"select_game","payload":{"gameId":"zinger"}}`, true},
+		{"bad game payload", `{"type":"select_game","payload":{"gameId":4}}`, false},
 		{"settings", `{"type":"update_settings","payload":{"maxPlayers":4}}`, true},
 		{"unknown", `{"type":"start_game","payload":{}}`, false},
 		{"missing payload", `{"type":"ping"}`, false},

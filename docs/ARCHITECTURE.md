@@ -97,3 +97,11 @@ bootstrap creates it, then migrates both databases. Go must validate cross-datab
 The game schema is ready for M2; no answer/vote endpoints or game execution exist yet.
 Pack API and seed use the game database. The old 24-prompt fixture remains as a reference;
 only the five-prompt OG fixture is seeded by startup.
+
+## Room game selection
+The room actor stores `gameId`, persists it through sqlc, and broadcasts it in each
+lobby projection. Only the owner may send `select_game` with `{gameId:"zinger"}`.
+Unknown/unavailable games are rejected before persistence. The UI shows Zinger and
+a disabled Coming soon option; guests see the same selector disabled. Selecting a
+game does not start it or implement M2 phases. The database constraint currently
+allows only `zinger`; adding another game requires an explicit migration and module.

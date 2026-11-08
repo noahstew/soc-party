@@ -13,6 +13,7 @@ export type Lobby = {
 };
 export type Session = { token: string; lobby: Lobby };
 export type ClientMessage =
+  | { type: "select_game"; id?: string; payload: { gameId: string } }
   | { type: "session_auth"; id?: string; payload: { token: string } }
   | { type: "ping" | "leave_room"; id?: string; payload: Record<string, never> }
   | { type: "kick_player"; id?: string; payload: { playerId: string } }

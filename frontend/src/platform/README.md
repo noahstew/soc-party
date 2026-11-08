@@ -14,3 +14,7 @@ The Next server passes API_PUBLIC_URL to the client. API_INTERNAL_URL stays on
 the server. For another device, set both the public backend URL and the exact
 browser origin in ALLOWED_ORIGINS; Docker hostnames are never public URLs.
 Tests mock fetch and WebSocket boundaries and assert rendered player outcomes.
+
+The room game selector is visible to all members. Only the connected owner may
+choose a game; `select_game` is authorized and validated by the Go actor. Zinger is
+the only available choice. Coming soon stays disabled and is rejected by the server.

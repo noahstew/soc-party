@@ -24,6 +24,9 @@ type Kick struct {
 type Settings struct {
 	MaxPlayers int `json:"maxPlayers"`
 }
+type GameSelection struct {
+	GameID string `json:"gameId"`
+}
 type Empty struct{}
 type Player struct {
 	ID        string `json:"id"`
@@ -80,6 +83,8 @@ func Decode(data []byte) (Envelope, any, error) {
 		payload = &Kick{}
 	case "update_settings":
 		payload = &Settings{}
+	case "select_game":
+		payload = &GameSelection{}
 	case "ping", "leave_room":
 		payload = &Empty{}
 	default:

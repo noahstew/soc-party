@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"example.com/soc-party/backend/internal/protocol"
 	"example.com/soc-party/backend/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -35,6 +36,9 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 	}
 	guest, err := r.Join(ctx, owner.Lobby.Code, "Guest")
 	if err != nil {
+		t.Fatal(err)
+	}
+	if err = r.Command(ctx, owner.Lobby.Code, owner.Token, "select_game", &protocol.GameSelection{GameID: "zinger"}); err != nil {
 		t.Fatal(err)
 	}
 	q := store.New(tx)

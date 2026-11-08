@@ -148,7 +148,7 @@ func (q *Queries) SavePlayer(ctx context.Context, arg SavePlayerParams) error {
 }
 
 const saveRoom = `-- name: SaveRoom :exec
-UPDATE rooms SET owner_id = $2, max_players = $3, expires_at = $4, status = $5 WHERE id = $1
+UPDATE rooms SET owner_id = $2, max_players = $3, expires_at = $4, status = $5, game_id = $6 WHERE id = $1
 `
 
 type SaveRoomParams struct {
@@ -157,6 +157,7 @@ type SaveRoomParams struct {
 	MaxPlayers int32              `json:"max_players"`
 	ExpiresAt  pgtype.Timestamptz `json:"expires_at"`
 	Status     string             `json:"status"`
+	GameID     string             `json:"game_id"`
 }
 
 func (q *Queries) SaveRoom(ctx context.Context, arg SaveRoomParams) error {
@@ -166,6 +167,7 @@ func (q *Queries) SaveRoom(ctx context.Context, arg SaveRoomParams) error {
 		arg.MaxPlayers,
 		arg.ExpiresAt,
 		arg.Status,
+		arg.GameID,
 	)
 	return err
 }

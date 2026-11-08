@@ -245,6 +245,6 @@ Schema preparation does not complete or skip M2/M3 behavior and acceptance.
 - [x] Rename the first game to Zinger, preserving existing content.
 - [x] Move home status card to /health.
 - [x] Make the home page a general Soc Party entry point.
-- [ ] Add room game selection with Zinger and a disabled coming-soon option.
+- [x] Add room game selection with Zinger and a disabled coming-soon option.
 
 One commit per task; gameplay remains outside this request.

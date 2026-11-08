@@ -159,3 +159,19 @@ Live HTTP smoke passes for / and /health; CI smoke now checks both routes.
 
 `make check` passes. The home test verifies platform branding, game-neutral welcome
 copy and admission controls; diagnostics remain on /health. No gameplay changes.
+
+## Room game selection and final presentation acceptance
+
+- `make check` passes: Go vet/lint/race tests, ESLint/format, TypeScript, 15 frontend
+  tests and generated sqlc drift checks. `make integration` passes with selected
+  game persistence. Frontend production build includes both / and /health.
+- Protocol and actor tests cover typed selection, owner authorization, rejection of
+  empty/unknown/legacy/unavailable IDs, persisted state and guest broadcasts.
+- UI tests cover the owner's selection intent, the disabled Coming soon option,
+  and the guest's disabled selector showing the same selected game.
+- Two isolated mobile Chrome sessions verify general home create/join, Zinger game
+  selector and guest permissions, disabled placeholder, live roster, refresh/token
+  rotation, room size changes, kick/leave, and the dedicated /health route. No page
+  exceptions. Mobile screenshot inspected; temporary browser closed after acceptance.
+- Development stack remains running. Existing game data is preserved under the
+  legacy physical database name. Gameplay remains unimplemented and unauthorized.

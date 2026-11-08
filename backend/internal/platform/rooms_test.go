@@ -212,3 +212,39 @@ func TestReconnectRejectsGraceExpired(t *testing.T) {
 		t.Fatalf("expired identity restored: %v", err)
 	}
 }
+
+func TestGameSelectionAuthorizationAndProjection(t *testing.T) {
+	r, repo, owner := fixture(t)
+	ctx := context.Background()
+	code := owner.Lobby.Code
+	guest, err := r.Join(ctx, code, "Guest")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, ch, err := r.Subscribe(ctx, code, guest.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := readLobby(t, ch); got.GameID != "zinger" {
+		t.Fatal("wrong default game")
+	}
+	if err = r.Command(ctx, code, guest.Token, "select_game", &protocol.GameSelection{GameID: "zinger"}); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("guest selected game: %v", err)
+	}
+	for _, id := range []string{"", "coming_soon", "wit_parade", "unknown"} {
+		if err = r.Command(ctx, code, owner.Token, "select_game", &protocol.GameSelection{GameID: id}); err == nil {
+			t.Fatalf("unavailable game accepted: %q", id)
+		}
+	}
+	if err = r.Command(ctx, code, owner.Token, "select_game", &protocol.GameSelection{GameID: "zinger"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := readLobby(t, ch); got.GameID != "zinger" {
+		t.Fatal("game selection not broadcast")
+	}
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	if repo.records[code].GameID != "zinger" {
+		t.Fatal("selected game not persisted")
+	}
+}

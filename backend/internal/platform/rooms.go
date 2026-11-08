@@ -39,6 +39,7 @@ type Member struct {
 	Seen             time.Time
 }
 type Record struct {
+	GameID                    string
 	ID, Code, OwnerID, Status string
 	MaxPlayers                int
 	Expires, Activity         time.Time
@@ -150,7 +151,7 @@ func (r *Registry) Create(ctx context.Context, name string) (protocol.Session, e
 		if _, ok := r.rooms[code]; ok {
 			continue
 		}
-		s := Record{ID: id, Code: code, OwnerID: p.ID, Status: "lobby", MaxPlayers: 8, Expires: r.now().Add(Lifetime), Activity: r.now(), Members: []Member{p}}
+		s := Record{GameID: "zinger", ID: id, Code: code, OwnerID: p.ID, Status: "lobby", MaxPlayers: 8, Expires: r.now().Add(Lifetime), Activity: r.now(), Members: []Member{p}}
 		// PostgreSQL also rejects historical code collisions. Retry without overwriting history.
 		if err := r.repo.Save(ctx, s, true); err != nil {
 			if errors.Is(err, ErrConflict) {
@@ -212,7 +213,7 @@ func authenticate(s *Record, token string) (*Member, error) {
 	return nil, ErrUnauthorized
 }
 func project(s Record, you string) protocol.Lobby {
-	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: "zinger", PackSlug: "og", MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
+	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: s.GameID, PackSlug: "og", MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
 	connected := 0
 	for _, m := range s.Members {
 		if m.Status != "active" {
@@ -372,6 +373,15 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 			if !found {
 				return nil, ErrNotFound
 			}
+		case "select_game":
+			if s.OwnerID != p.ID {
+				return nil, ErrForbidden
+			}
+			gameID := payload.(*protocol.GameSelection).GameID
+			if gameID != "zinger" {
+				return nil, fmt.Errorf("game is not available")
+			}
+			s.GameID = gameID
 		case "update_settings":
 			if s.OwnerID != p.ID {
 				return nil, ErrForbidden

@@ -96,7 +96,7 @@ with `{ "token": "…" }`. Replies contain a private token and public lobby proj
 Connect `/api/rooms/{code}/ws`, send a `session_auth` envelope with that token as
 its first payload, then receive `lobby_state` projections. Tokens never enter URLs.
 Go protocol is authoritative; TypeScript mirrors it. Owner intents: `kick_player`,
-`update_settings`; all members may `ping` or `leave_room`. No start-game intent yet.
+`update_settings` and `select_game`; all members may `ping` or `leave_room`. No start-game intent yet.
 
 Guest tokens rotate on reconnect. Grace: 60 seconds; hard room lifetime: two hours.
 Owner transfers on departure; rooms need three connected players to be eligible.
@@ -108,8 +108,9 @@ for the future engine; there is no public answer/vote/history CRUD API.
 
 Open http://localhost:3000, enter a name and choose **Create a room**. In another
 browser/tab, use a different name and the six-character room code, or open the
-shared link. Both players appear live. The owner can change capacity or remove
-players; anyone can leave. Refreshing within the reconnect grace restores identity.
+shared link. Both players appear live. The owner can select **Zinger**, change capacity or remove
+players; everyone can see the selected game. **Coming soon** is disabled until another
+game is available. Anyone can leave. Refreshing within the reconnect grace restores identity.
 The page shows readiness at three connected players; game rounds are not built yet.
 
 For phones on your LAN, set `API_PUBLIC_URL=http://YOUR_LAN_IP:8080` and

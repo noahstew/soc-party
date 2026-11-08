@@ -392,6 +392,35 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
                   ))}
                 </ul>
               </div>
+              <div>
+                <label htmlFor="room-game" className="font-heading">
+                  Game
+                </label>
+                <select
+                  id="room-game"
+                  value={lobby.gameId}
+                  disabled={!owner || connection !== "connected"}
+                  onChange={(e) =>
+                    send({
+                      type: "select_game",
+                      payload: { gameId: e.target.value },
+                    })
+                  }
+                  className={inputStyle}
+                  aria-describedby="game-description"
+                >
+                  <option value="zinger">Zinger</option>
+                  <option value="coming_soon" disabled>
+                    Coming soon
+                  </option>
+                </select>
+                <p id="game-description" className="mt-2 text-sm">
+                  {owner
+                    ? "Choose a game for your group."
+                    : "The room owner chooses the game."}{" "}
+                  More games are on the way.
+                </p>
+              </div>
               {owner && (
                 <div>
                   <label htmlFor="max-players" className="font-heading">

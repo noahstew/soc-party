@@ -106,6 +106,15 @@ describe("room lobby", () => {
     expect(screen.getByLabelText("Share this room link")).toHaveValue(
       "http://localhost:3000/?room=ABCDEF",
     );
+    const game = screen.getByRole("combobox", { name: "Game" });
+    expect(game).toHaveValue("zinger");
+    expect(game).toBeEnabled();
+    expect(screen.getByRole("option", { name: "Coming soon" })).toBeDisabled();
+    fireEvent.change(game, { target: { value: "zinger" } });
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+      type: "select_game",
+      payload: { gameId: "zinger" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Remove Sam" }));
     expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
       type: "kick_player",
@@ -147,6 +156,10 @@ describe("room lobby", () => {
       expect.anything(),
     );
     expect(screen.queryByLabelText("Room size")).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Game" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Game" })).toHaveValue(
+      "zinger",
+    );
     expect(
       screen.queryByRole("button", { name: /Remove/ }),
     ).not.toBeInTheDocument();
