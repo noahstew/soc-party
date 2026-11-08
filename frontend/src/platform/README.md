@@ -18,3 +18,15 @@ Tests mock fetch and WebSocket boundaries and assert rendered player outcomes.
 The room game selector is visible to all members. Only the connected owner may
 choose a game; `select_game` is authorized and validated by the Go actor. Zinger is
 the only available choice. Coming soon stays disabled and is rejected by the server.
+
+Home shows only the `room-entry.tsx` admission card. Continue validates the player
+name and flips to Connect/Create Room; editing the name preserves both fields.
+Inactive faces are inert and hidden from assistive technology, focus follows the
+active step, and reduced motion disables the flip transition. Admission success
+uses the global success toast. Shared-link prefills and session recovery remain
+owned by `room-lobby.tsx`; no additional icon or animation dependency is needed.
+
+The badge retains its slight tilt. The room face has a Back control above the
+room-code field. Each face keeps its natural height; a ResizeObserver tracks the
+active face so the outer card animates height with the flip, including viewport
+or content resizing. Both transitions are disabled for reduced motion.

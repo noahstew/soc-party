@@ -175,3 +175,36 @@
     opacity: 0;
   }
 }
+
+.room-entry {
+  perspective: 1200px;
+}
+
+.room-entry-flipper {
+  display: grid;
+  transform-style: preserve-3d;
+  transition:
+    transform 650ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.room-entry-flipper[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.room-entry-face {
+  grid-area: 1 / 1;
+  align-self: start;
+  min-width: 0;
+  backface-visibility: hidden;
+}
+
+.room-entry-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-entry-flipper {
+    transition: none;
+  }
+}

@@ -5,29 +5,27 @@ import { describe, expect, it, vi } from "vitest";
 import Home from "./page";
 
 describe("home", () => {
-  it("shows room admission and links to health without diagnostic fetches", () => {
+  it("shows only the branded player-name card without diagnostic fetches", () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
     render(<Home />);
     expect(
-      screen.getByRole("button", { name: "Create a room" }),
+      screen.getByRole("button", { name: "Continue" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Join a room" }),
+      screen.getByRole("textbox", { name: "Player Name" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "System health" })).toHaveAttribute(
-      "href",
-      "/health",
-    );
     expect(
-      screen.queryByRole("region", { name: "Connection status" }),
+      screen.queryByRole("textbox", { name: "Room Code" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Soc Party")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Create Room" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Great game nights.",
+      "SOC PARTY",
     );
-    expect(screen.getByText(/choose a game together/)).toBeInTheDocument();
-    expect(screen.queryByText(/Zinger/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Great game nights/)).not.toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();
   });
 });

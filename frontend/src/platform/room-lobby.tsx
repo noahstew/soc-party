@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import { RoomEntry } from "./room-entry";
 import { useToast } from "@/lib/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -262,6 +263,12 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
           { name: cleanName },
         ),
       );
+      notify(
+        action === "create"
+          ? "Room created! Invite your friends."
+          : "Room joined! You’re in.",
+        "success",
+      );
     } catch (err) {
       notify(
         err instanceof Error
@@ -301,242 +308,187 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
   const inputStyle =
     "mt-2 w-full rounded-base border-2 border-border bg-input-background px-3 py-3 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-background disabled:cursor-not-allowed disabled:opacity-60";
 
+  if (!lobby) {
+    return (
+      <RoomEntry
+        name={name}
+        code={code}
+        busy={busy}
+        onNameChange={setName}
+        onCodeChange={setCode}
+        onEnter={(action) => void enter(action)}
+      />
+    );
+  }
+
   return (
     <section aria-labelledby="room-title">
       <Card className="bg-secondary-background">
         <CardHeader>
           <h2 id="room-title" className="text-2xl font-heading">
-            {lobby ? "The waiting room" : "Get the group together"}
+            The waiting room
           </h2>
-          <p>
-            {lobby
-              ? "Everyone joins on their own device."
-              : "Pick a name. Start a room or hop into a friend’s."}
-          </p>
+          <p>Everyone joins on their own device.</p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {lobby ? (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm">Room code</p>
-                  <p
-                    className="font-mono text-4xl font-bold tracking-widest text-main"
-                    aria-label={`Room code ${lobby.code}`}
-                  >
-                    {lobby.code}
-                  </p>
-                </div>
-                <Badge variant="neutral" className="border-main text-main">
-                  {connection === "connected"
-                    ? "Live"
-                    : connection === "connecting"
-                      ? "Connecting…"
-                      : "Reconnecting…"}
-                </Badge>
-              </div>
-              {shareURL && (
-                <div>
-                  <label htmlFor="share-link" className="text-sm">
-                    Share this room link
-                  </label>
-                  <input
-                    id="share-link"
-                    readOnly
-                    value={shareURL}
-                    onFocus={(e) => e.target.select()}
-                    className={inputStyle}
-                  />
-                </div>
-              )}
-              <div aria-live="polite" aria-atomic="true">
-                <h3 className="mb-3 font-heading">
-                  Players ({lobby.players.length}/{lobby.maxPlayers})
-                </h3>
-                <ul className="space-y-3" aria-label="Players in room">
-                  {lobby.players.map((player) => (
-                    <li
-                      key={player.id}
-                      className="flex items-center justify-between gap-3 rounded-base border-2 border-border bg-input-background p-3"
-                    >
-                      <div>
-                        <span className="font-heading">{player.name}</span>
-                        {player.id === lobby.youId && <span> (you)</span>}
-                        {player.id === lobby.ownerId && (
-                          <span className="ml-2 text-sm text-main">Owner</span>
-                        )}
-                        <p className="text-sm">
-                          {player.connected
-                            ? "Connected"
-                            : "Joining or reconnecting…"}
-                        </p>
-                      </div>
-                      {owner && player.id !== lobby.youId && (
-                        <Button
-                          variant="neutral"
-                          size="sm"
-                          disabled={connection !== "connected"}
-                          onClick={() =>
-                            send({
-                              type: "kick_player",
-                              payload: { playerId: player.id },
-                            })
-                          }
-                          aria-label={`Remove ${player.name}`}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <label htmlFor="room-game" className="font-heading">
-                  Game
+                <p className="text-sm">Room code</p>
+                <p
+                  className="font-mono text-4xl font-bold tracking-widest text-main"
+                  aria-label={`Room code ${lobby.code}`}
+                >
+                  {lobby.code}
+                </p>
+              </div>
+              <Badge variant="neutral" className="border-main text-main">
+                {connection === "connected"
+                  ? "Live"
+                  : connection === "connecting"
+                    ? "Connecting…"
+                    : "Reconnecting…"}
+              </Badge>
+            </div>
+            {shareURL && (
+              <div>
+                <label htmlFor="share-link" className="text-sm">
+                  Share this room link
+                </label>
+                <input
+                  id="share-link"
+                  readOnly
+                  value={shareURL}
+                  onFocus={(e) => e.target.select()}
+                  className={inputStyle}
+                />
+              </div>
+            )}
+            <div aria-live="polite" aria-atomic="true">
+              <h3 className="mb-3 font-heading">
+                Players ({lobby.players.length}/{lobby.maxPlayers})
+              </h3>
+              <ul className="space-y-3" aria-label="Players in room">
+                {lobby.players.map((player) => (
+                  <li
+                    key={player.id}
+                    className="flex items-center justify-between gap-3 rounded-base border-2 border-border bg-input-background p-3"
+                  >
+                    <div>
+                      <span className="font-heading">{player.name}</span>
+                      {player.id === lobby.youId && <span> (you)</span>}
+                      {player.id === lobby.ownerId && (
+                        <span className="ml-2 text-sm text-main">Owner</span>
+                      )}
+                      <p className="text-sm">
+                        {player.connected
+                          ? "Connected"
+                          : "Joining or reconnecting…"}
+                      </p>
+                    </div>
+                    {owner && player.id !== lobby.youId && (
+                      <Button
+                        variant="neutral"
+                        size="sm"
+                        disabled={connection !== "connected"}
+                        onClick={() =>
+                          send({
+                            type: "kick_player",
+                            payload: { playerId: player.id },
+                          })
+                        }
+                        aria-label={`Remove ${player.name}`}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <label htmlFor="room-game" className="font-heading">
+                Game
+              </label>
+              <select
+                id="room-game"
+                value={lobby.gameId}
+                disabled={!owner || connection !== "connected"}
+                onChange={(e) =>
+                  send({
+                    type: "select_game",
+                    payload: { gameId: e.target.value },
+                  })
+                }
+                className={inputStyle}
+                aria-describedby="game-description"
+              >
+                <option value="zinger">Zinger</option>
+                <option value="coming_soon" disabled>
+                  Coming soon
+                </option>
+              </select>
+              <p
+                id="game-description"
+                className="mt-2 text-sm text-muted-foreground"
+              >
+                {owner
+                  ? "Choose a game for your group."
+                  : "The room owner chooses the game."}{" "}
+                More games are on the way.
+              </p>
+            </div>
+            {owner && (
+              <div>
+                <label htmlFor="max-players" className="font-heading">
+                  Room size
                 </label>
                 <select
-                  id="room-game"
-                  value={lobby.gameId}
-                  disabled={!owner || connection !== "connected"}
+                  id="max-players"
+                  value={lobby.maxPlayers}
+                  disabled={connection !== "connected"}
                   onChange={(e) =>
                     send({
-                      type: "select_game",
-                      payload: { gameId: e.target.value },
+                      type: "update_settings",
+                      payload: { maxPlayers: Number(e.target.value) },
                     })
                   }
                   className={inputStyle}
-                  aria-describedby="game-description"
                 >
-                  <option value="zinger">Zinger</option>
-                  <option value="coming_soon" disabled>
-                    Coming soon
-                  </option>
+                  {[3, 4, 5, 6, 7, 8].map((n) => (
+                    <option
+                      key={n}
+                      value={n}
+                      disabled={n < lobby.players.length}
+                    >
+                      {n} players
+                    </option>
+                  ))}
                 </select>
-                <p
-                  id="game-description"
-                  className="mt-2 text-sm text-muted-foreground"
+              </div>
+            )}
+            <p className="text-sm">
+              {lobby.canStart
+                ? "The group is ready."
+                : "Gather at least 3 connected players."}{" "}
+              Zinger gameplay is coming next.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="neutral" onClick={leave}>
+                {connection === "connected" ? "Leave room" : "Return home"}
+              </Button>
+              {connection === "disconnected" && (
+                <Button
+                  onClick={() => {
+                    dismiss();
+                    setRetry((v) => v + 1);
+                  }}
                 >
-                  {owner
-                    ? "Choose a game for your group."
-                    : "The room owner chooses the game."}{" "}
-                  More games are on the way.
-                </p>
-              </div>
-              {owner && (
-                <div>
-                  <label htmlFor="max-players" className="font-heading">
-                    Room size
-                  </label>
-                  <select
-                    id="max-players"
-                    value={lobby.maxPlayers}
-                    disabled={connection !== "connected"}
-                    onChange={(e) =>
-                      send({
-                        type: "update_settings",
-                        payload: { maxPlayers: Number(e.target.value) },
-                      })
-                    }
-                    className={inputStyle}
-                  >
-                    {[3, 4, 5, 6, 7, 8].map((n) => (
-                      <option
-                        key={n}
-                        value={n}
-                        disabled={n < lobby.players.length}
-                      >
-                        {n} players
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <p className="text-sm">
-                {lobby.canStart
-                  ? "The group is ready."
-                  : "Gather at least 3 connected players."}{" "}
-                Zinger gameplay is coming next.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button variant="neutral" onClick={leave}>
-                  {connection === "connected" ? "Leave room" : "Return home"}
+                  Reconnect
                 </Button>
-                {connection === "disconnected" && (
-                  <Button
-                    onClick={() => {
-                      dismiss();
-                      setRetry((v) => v + 1);
-                    }}
-                  >
-                    Reconnect
-                  </Button>
-                )}
-              </div>
-            </>
-          ) : (
-            <form
-              noValidate
-              onSubmit={(event: FormEvent<HTMLFormElement>) => {
-                event.preventDefault();
-                void enter("join");
-              }}
-              className="space-y-5"
-              aria-busy={busy}
-            >
-              <div>
-                <label htmlFor="player-name" className="font-heading">
-                  Your name
-                </label>
-                <input
-                  id="player-name"
-                  autoComplete="nickname"
-                  maxLength={24}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={busy}
-                  className={inputStyle}
-                  placeholder="What should we call you?"
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={() => void enter("create")}
-                disabled={busy}
-                className="w-full"
-              >
-                {busy ? "One moment…" : "Create a room"}
-              </Button>
-              <div className="border-t-2 border-border pt-5">
-                <label htmlFor="room-code" className="font-heading">
-                  Have a room code?
-                </label>
-                <input
-                  id="room-code"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  disabled={busy}
-                  className={`${inputStyle} font-mono uppercase tracking-widest`}
-                  placeholder="ABCDEF"
-                />
-              </div>
-              <Button
-                type="submit"
-                variant="neutral"
-                disabled={busy}
-                className="w-full"
-              >
-                Join a room
-              </Button>
-              <p className="text-sm">
-                No account needed. Up to 8 friends, one room.
-              </p>
-            </form>
-          )}
+              )}
+            </div>
+          </>
         </CardContent>
       </Card>
     </section>

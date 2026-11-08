@@ -259,3 +259,20 @@ One commit per task; gameplay remains outside this request.
 - [x] Replace lobby action/validation alerts with a shared bottom-right animated toast for error,
   info, warning and success; auto-dismiss with distinct pastel accents, document the agent default,
   and verify with regression coverage and `make check`.
+
+## Requested home admission card
+
+- [x] Replace the home introduction with a modular branded player-name card,
+  animated Continue arrow and flip to room connection/creation; preserve shared
+  links/recovery, add admission success toasts and verify with regression tests,
+  `make check` and mobile/desktop browser acceptance. Gameplay remains out of scope.
+
+- [x] Refine the admission card with a tilted badge, Back above Room Code and
+  animated natural-height sizing; verify both directions with regression tests,
+  `make check` and mobile/desktop Chrome acceptance.
+
+- [x] Style Back as a small soft-white button with charcoal text and clarify the
+  player-name placeholder; verify with `make check` (29 frontend tests).
+
+- [x] Replace the filled Back button with subtle chevron navigation at the top
+  of the room face; verify with `make check` and existing navigation regressions.

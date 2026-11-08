@@ -205,3 +205,34 @@ was closed and the development frontend restarted after the production build che
   and no runtime exceptions. Screenshots/harness remain in /private/tmp;
   the temporary browser was closed after acceptance.
 - No backend/schema changes or new dependencies; database integration is not required.
+
+## 2026-11-08 — Two-step home admission
+
+- `make check` passes: lint/format/types, Go race/unit tests, sqlc drift and
+  28 frontend tests. Coverage includes initial card visibility, validation, focus
+  movement, preserving fields while editing, shared codes, admission failures,
+  successful create/join toasts and existing reconnect/owner controls.
+- Temporary Chrome acceptance passes at 390px and 1280px: no horizontal overflow,
+  both card faces, name/code focus, reduced-motion switching, real two-client
+  create/join with success toasts, live roster, reload/token rotation, owner
+  settings, kick/leave and /health. No runtime exceptions. Mobile screenshots
+  inspected; harness/screenshots remain in /private/tmp and Chrome was closed.
+- No schema/backend changes or new dependencies; database integration not required.
+
+### Admission card feedback
+
+- `make check` passes with 29 frontend tests, including active-face height changes
+  in both directions, Back placement and preserving fields/focus on return.
+- Chrome verifies compact initial height, expansion to the room face's measured
+  height, collapse on Back, height transition configuration, reduced motion and
+  existing two-client room behavior at mobile/desktop sizes. No runtime exceptions.
+  Updated mobile screenshots inspected; the temporary browser was closed.
+
+Back now uses the shared small Button with soft-white fill and charcoal text.
+The name placeholder reads "What other players will see you as". `make check`
+passes, including 29 frontend tests and existing Back navigation coverage.
+
+Back presentation was revised to a muted chevron-and-label control above the
+badge, with a transparent resting surface, subtle hover background and visible
+keyboard focus. `make check` passes, including 29 frontend tests covering Back,
+field preservation and card resizing.
