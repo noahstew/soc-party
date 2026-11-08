@@ -14,6 +14,7 @@ import {
 } from "@/lib/protocol";
 
 const storageKey = "soc-party.guest";
+const nameStorageKey = "soc-party.name";
 type Credential = { code: string; token: string };
 type Connection = "connecting" | "connected" | "disconnected";
 
@@ -65,6 +66,7 @@ async function intent(
 
 export function RoomLobby({ apiURL }: { apiURL: string }) {
   const [name, setName] = useState("");
+  const [sharedCode, setSharedCode] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [credential, setCredential] = useState<Credential | null>(null);
   const [lobby, setLobby] = useState<Lobby | null>(null);
@@ -79,6 +81,18 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
   function accept(session: Session) {
     const next = { code: session.lobby.code, token: session.token };
     remember(next);
+    const playerName = session.lobby.players.find(
+      (player) => player.id === session.lobby.youId,
+    )?.name;
+    if (playerName) {
+      setName(playerName);
+      try {
+        localStorage.setItem(nameStorageKey, playerName);
+      } catch {
+        // Shared links still work with an explicit name when storage is disabled.
+      }
+    }
+    window.history.replaceState(null, "", `/lobby?room=${next.code}`);
     setLobby(session.lobby);
     setCredential(next);
     setConnection("connecting");
@@ -89,44 +103,75 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     // A deferred read avoids using browser globals during server rendering.
     void Promise.resolve().then(async () => {
       if (cancelled) return;
-      const sharedCode = new URL(window.location.href).searchParams.get("room");
-      if (sharedCode && /^[A-Z2-9]{6}$/i.test(sharedCode))
-        setCode(sharedCode.toUpperCase());
       if (restored.current) return;
       restored.current = true;
-      let saved: unknown;
+      const urlCode = new URL(window.location.href).searchParams.get("room");
+      const targetCode =
+        urlCode && /^[A-Z2-9]{6}$/i.test(urlCode)
+          ? urlCode.toUpperCase()
+          : null;
+      if (targetCode) {
+        setCode(targetCode);
+        setSharedCode(targetCode);
+        window.history.replaceState(null, "", `/lobby?room=${targetCode}`);
+      } else if (urlCode) {
+        notify("Enter the six-character room code.", "error");
+      }
+      let saved: unknown = null;
+      let savedName = "";
+      try {
+        savedName = localStorage.getItem(nameStorageKey)?.trim() ?? "";
+      } catch {
+        // Names can be entered manually when storage is disabled.
+      }
+      if (!savedName || Array.from(savedName).length > 24) savedName = "";
+      if (savedName) setName((current) => current || savedName);
       try {
         saved = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
       } catch {
-        return;
+        // A corrupt or unavailable session must not block shared links.
       }
-      if (
-        typeof saved !== "object" ||
-        saved === null ||
-        !("code" in saved) ||
-        typeof saved.code !== "string" ||
-        !/^[A-Z2-9]{6}$/.test(saved.code) ||
-        !("token" in saved) ||
-        typeof saved.token !== "string"
-      )
-        return;
+      const credential =
+        typeof saved === "object" &&
+        saved !== null &&
+        "code" in saved &&
+        typeof saved.code === "string" &&
+        /^[A-Z2-9]{6}$/.test(saved.code) &&
+        "token" in saved &&
+        typeof saved.token === "string"
+          ? { code: saved.code, token: saved.token }
+          : null;
+      const recover =
+        credential && (!targetCode || targetCode === credential.code);
+      if (!recover && !(targetCode && savedName)) return;
       setBusy(true);
       try {
-        const session = await intent(
-          apiURL,
-          `/api/rooms/${saved.code}/reconnect`,
-          { token: saved.token },
-        );
+        const session = recover
+          ? await intent(apiURL, `/api/rooms/${credential.code}/reconnect`, {
+              token: credential.token,
+            })
+          : await intent(apiURL, `/api/rooms/${targetCode}/join`, {
+              name: savedName,
+            });
         // Persist a rotated token even if the component unmounted while HTTP completed.
         remember({ code: session.lobby.code, token: session.token });
-        if (!cancelled) accept(session);
-      } catch {
-        remember(null);
-        if (!cancelled)
+        if (!cancelled) {
+          accept(session);
+          if (!recover) notify("Room joined! You’re in.", "success");
+        }
+      } catch (err) {
+        if (recover) remember(null);
+        if (!cancelled) {
+          setSharedCode(null);
           notify(
-            "Your previous room has expired. Create or join a room below.",
+            recover
+              ? "Your previous room has expired. Create or join a room below."
+              : err instanceof Error
+                ? err.message
+                : "Unable to reach the server. Try again.",
             "error",
           );
+        }
       } finally {
         if (!cancelled) setBusy(false);
       }
@@ -188,7 +233,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
             retries = 0;
             setLobby(message.payload);
             setConnection("connected");
-            const share = new URL(window.location.origin);
+            const share = new URL("/lobby", window.location.origin);
             share.searchParams.set("room", credential.code);
             setShareURL(share.toString());
           } else if (
@@ -213,6 +258,8 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
           remember(null);
           setCredential(null);
           setLobby(null);
+          setSharedCode(null);
+          window.history.replaceState(null, "", "/");
           notify(
             "Your room session ended. You can create or join a room again.",
             "error",
@@ -270,6 +317,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
         "success",
       );
     } catch (err) {
+      setSharedCode(null);
       notify(
         err instanceof Error
           ? err.message
@@ -302,6 +350,9 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     remember(null);
     setCredential(null);
     setLobby(null);
+    setSharedCode(null);
+    setCode("");
+    window.history.replaceState(null, "", "/");
     dismiss();
   }
   const owner = lobby?.youId === lobby?.ownerId;
@@ -316,6 +367,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
         busy={busy}
         onNameChange={setName}
         onCodeChange={setCode}
+        onContinue={sharedCode ? () => void enter("join") : undefined}
         onEnter={(action) => void enter(action)}
       />
     );

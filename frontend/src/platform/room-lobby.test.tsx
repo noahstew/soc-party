@@ -66,12 +66,14 @@ async function createRoom() {
 }
 beforeEach(() => {
   sessionStorage.clear();
+  localStorage.clear();
   FakeSocket.instances = [];
   vi.stubGlobal("WebSocket", FakeSocket);
   window.history.replaceState(null, "", "/");
 });
 afterEach(() => {
   sessionStorage.clear();
+  localStorage.clear();
 });
 
 describe("room lobby", () => {
@@ -88,6 +90,9 @@ describe("room lobby", () => {
       }),
     );
     expect(FakeSocket.instances).toHaveLength(1);
+    expect(window.location.pathname).toBe("/lobby");
+    expect(window.location.search).toBe("?room=ABCDEF");
+    expect(localStorage.getItem("soc-party.name")).toBe("Alex");
     expect(screen.getByRole("status")).toHaveTextContent("Room created!");
     expect(socket.url.toString()).not.toContain(token);
     expect(JSON.parse(socket.send.mock.calls[0][0])).toEqual({
@@ -108,7 +113,7 @@ describe("room lobby", () => {
     ).toHaveTextContent("Sam");
     expect(screen.getByText("Players (2/8)")).toBeInTheDocument();
     expect(screen.getByLabelText("Share this room link")).toHaveValue(
-      "http://localhost:3000/?room=ABCDEF",
+      "http://localhost:3000/lobby?room=ABCDEF",
     );
     const game = screen.getByRole("combobox", { name: "Game" });
     expect(game).toHaveValue("zinger");
@@ -153,8 +158,9 @@ describe("room lobby", () => {
     fireEvent.change(screen.getByLabelText("Player Name"), {
       target: { value: "Sam" },
     });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe("/lobby");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    fireEvent.click(screen.getByRole("button", { name: "Connect" }));
     await screen.findByText("ABCDEF");
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/rooms/ABCDEF/join",
@@ -173,6 +179,93 @@ describe("room lobby", () => {
       screen.getByRole("list", { name: "Players in room" }),
     ).toHaveTextContent("Sam");
   });
+  it("automatically joins a lobby URL with a remembered name", async () => {
+    window.history.replaceState(null, "", "/lobby?room=abcdef");
+    localStorage.setItem("soc-party.name", "Alex");
+    const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
+    vi.stubGlobal("fetch", fetch);
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await screen.findByText("ABCDEF");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/rooms/ABCDEF/join",
+      expect.objectContaining({ body: JSON.stringify({ name: "Alex" }) }),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Room joined!");
+    expect(window.location.pathname + window.location.search).toBe(
+      "/lobby?room=ABCDEF",
+    );
+    expect(FakeSocket.instances).toHaveLength(1);
+  });
+
+  it("honors a shared room instead of reconnecting to a different saved room", async () => {
+    window.history.replaceState(null, "", "/?room=ABCDEF");
+    localStorage.setItem("soc-party.name", "Alex");
+    sessionStorage.setItem(
+      "soc-party.guest",
+      JSON.stringify({ code: "BCDEFG", token }),
+    );
+    const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
+    vi.stubGlobal("fetch", fetch);
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await screen.findByText("ABCDEF");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/rooms/ABCDEF/join",
+      expect.anything(),
+    );
+  });
+
+  it("recovers an existing identity when the shared link matches the saved room", async () => {
+    window.history.replaceState(null, "", "/lobby?room=ABCDEF");
+    sessionStorage.setItem(
+      "soc-party.guest",
+      JSON.stringify({ code: "ABCDEF", token }),
+    );
+    const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
+    vi.stubGlobal("fetch", fetch);
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await screen.findByText("ABCDEF");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:8080/api/rooms/ABCDEF/reconnect",
+      expect.anything(),
+    );
+  });
+
+  it("returns to editable admission after a shared room cannot be joined", async () => {
+    window.history.replaceState(null, "", "/lobby?room=ABCDEF");
+    localStorage.setItem("soc-party.name", "Alex");
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(response({ error: "room not found or expired" }, 404));
+    vi.stubGlobal("fetch", fetch);
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "room not found or expired",
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByRole("button", { name: "Create Room" })).toBeEnabled();
+    expect(screen.getByRole("textbox", { name: "Room Code" })).toHaveValue(
+      "ABCDEF",
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects malformed shared codes without sending a join request", async () => {
+    window.history.replaceState(null, "", "/lobby?room=invalid");
+    localStorage.setItem("soc-party.name", "Alex");
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("six-character"),
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("validates input and displays admission failures", async () => {
     const fetch = vi
       .fn()
@@ -250,6 +343,8 @@ describe("room lobby", () => {
       payload: {},
     });
     expect(socket.close).toHaveBeenCalled();
+    expect(window.location.pathname).toBe("/");
+    expect(window.location.search).toBe("");
     expect(sessionStorage.getItem("soc-party.guest")).toBeNull();
     expect(
       within(view.container).getByLabelText("Player Name"),

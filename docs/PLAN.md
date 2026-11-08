@@ -276,3 +276,12 @@ One commit per task; gameplay remains outside this request.
 
 - [x] Replace the filled Back button with subtle chevron navigation at the top
   of the room face; verify with `make check` and existing navigation regressions.
+
+## Requested lobby route and shared links
+
+- [x] Serve active rooms at `/lobby`, generate canonical room links and bypass
+  room-code admission for invitations. Remember a valid player name for automatic
+  joins; ask first-time players for their name, then join directly. Preserve
+  matching-room recovery and honor new invitations over a different saved room.
+  Verify errors, malformed links, identity/socket behavior, production routes,
+  `make check` and real multi-browser admission; commit work in focused groups.

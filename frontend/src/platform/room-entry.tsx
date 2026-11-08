@@ -12,6 +12,7 @@ type RoomEntryProps = {
   busy: boolean;
   onNameChange: (name: string) => void;
   onCodeChange: (code: string) => void;
+  onContinue?: () => void;
   onEnter: (action: "create" | "join") => void;
 };
 
@@ -33,6 +34,7 @@ export function RoomEntry({
   onNameChange,
   onCodeChange,
   onEnter,
+  onContinue,
 }: RoomEntryProps) {
   const [flipped, setFlipped] = useState(false);
   const flipper = useRef<HTMLDivElement>(null);
@@ -64,6 +66,10 @@ export function RoomEntry({
       return;
     }
     dismiss();
+    if (onContinue) {
+      onContinue();
+      return;
+    }
     setFlipped(true);
     // Wait for React to remove inert from the next face before moving focus.
     requestAnimationFrame(() => codeInput.current?.focus());

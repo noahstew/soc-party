@@ -236,3 +236,20 @@ Back presentation was revised to a muted chevron-and-label control above the
 badge, with a transparent resting surface, subtle hover background and visible
 keyboard focus. `make check` passes, including 29 frontend tests covering Back,
 field preservation and card resizing.
+
+## 2026-11-08 — Lobby route and automatic shared links
+
+- `make check` passes: lint/format/types, Go race/unit tests, sqlc drift and 34
+  frontend tests. Coverage includes automatic joins with remembered names,
+  first-time Continue joining directly, matching-credential recovery, a different
+  invitation overriding the saved room, malformed codes, expired invitations,
+  canonical links/URLs, leaving home and preserving freshly typed names.
+- Isolated production frontend build passes and lists `/`, `/lobby` and `/health`.
+  Build output stayed in a temporary Docker volume; generated next-env references
+  were restored to the running development configuration.
+- Temporary Chrome acceptance passes: real owner creation at `/lobby`, legacy
+  shared-link canonicalization, first-time name-only admission, another isolated
+  browser joining automatically with a remembered name, live roster, reload/token
+  rotation, owner settings, kick/leave and /health. Mobile/desktop layout checks and
+  reduced motion pass; no runtime exceptions. Temporary Chrome was closed.
+- No backend/schema changes or new dependencies; database integration not required.

@@ -180,3 +180,15 @@ info/success polite, without moving focus. Complement the coral theme with disti
 blue/yellow/pink/mint event accents and the existing outlined surfaces/offset shadow.
 No dependencies added. Health diagnostics remain persistent page content. Frontend
 agent guidance makes this hook the default for future feature work.
+
+## 2026-11-08 — Lobby URLs and invitation admission
+
+Use `/lobby?room=CODE` for active rooms and invitations, accepting legacy home
+links too. A shared code skips the manual code step. Remember only the accepted
+player name in localStorage so invitations in a new tab can join automatically;
+first-time/storage-disabled visitors provide a name and Continue joins directly.
+Credentials remain tab-local in sessionStorage. Reconnect a matching credential
+instead of creating duplicate membership; a different invitation takes priority.
+Share failures allow manual admission. Native history replacement updates the
+canonical URL without remounting the controller or starting a second socket;
+`/` and `/lobby` both serve that controller for direct visits and reloads.
