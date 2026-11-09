@@ -253,3 +253,12 @@ field preservation and card resizing.
   rotation, owner settings, kick/leave and /health. Mobile/desktop layout checks and
   reduced motion pass; no runtime exceptions. Temporary Chrome was closed.
 - No backend/schema changes or new dependencies; database integration not required.
+
+## 2026-11-09 — Lobby copy URL
+
+- `make check` passes: lint/format/types, Go race/unit tests, sqlc drift and 37
+  frontend tests. Added coverage for the disabled URL, copying the canonical link,
+  success feedback, clipboard denial and unavailable clipboard APIs.
+- The first check encountered transient missing Next dev types during container
+  startup; the subsequent full check passes after startup and an async test fix.
+- No schema changes or new dependencies.

@@ -285,3 +285,8 @@ One commit per task; gameplay remains outside this request.
   matching-room recovery and honor new invitations over a different saved room.
   Verify errors, malformed links, identity/socket behavior, production routes,
   `make check` and real multi-browser admission; commit work in focused groups.
+
+## Requested lobby link controls
+
+- [x] Disable the invitation URL input and add a trailing Copy URL button with
+  global success/error feedback; verify clipboard regression tests and `make check`.

@@ -32,6 +32,8 @@ active face so the outer card animates height with the flip, including viewport
 or content resizing. Both transitions are disabled for reduced motion.
 
 Active rooms use `/lobby?room=CODE`; generated invitations use this route too.
+The invitation URL field is disabled; its trailing Copy URL button copies the
+link with a global success toast, or an error toast if clipboard access fails.
 Legacy `/?room=CODE` links are canonicalized to `/lobby`. A valid shared code
 bypasses the room-code step: returning players join using their remembered name,
 while first-time players enter a name and Continue joins directly. Names are

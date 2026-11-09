@@ -355,6 +355,14 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     window.history.replaceState(null, "", "/");
     dismiss();
   }
+  async function copyRoomURL() {
+    try {
+      await navigator.clipboard.writeText(shareURL);
+      notify("Room link copied!", "success");
+    } catch {
+      notify("Unable to copy the room link. Please try again.", "error");
+    }
+  }
   const owner = lobby?.youId === lobby?.ownerId;
   const inputStyle =
     "mt-2 w-full rounded-base border-2 border-border bg-input-background px-3 py-3 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-background disabled:cursor-not-allowed disabled:opacity-60";
@@ -407,13 +415,17 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
                 <label htmlFor="share-link" className="text-sm">
                   Share this room link
                 </label>
-                <input
-                  id="share-link"
-                  readOnly
-                  value={shareURL}
-                  onFocus={(e) => e.target.select()}
-                  className={inputStyle}
-                />
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    id="share-link"
+                    disabled
+                    value={shareURL}
+                    className={`${inputStyle} mt-0 min-w-0 flex-1`}
+                  />
+                  <Button type="button" onClick={() => void copyRoomURL()}>
+                    Copy URL
+                  </Button>
+                </div>
               </div>
             )}
             <div aria-live="polite" aria-atomic="true">

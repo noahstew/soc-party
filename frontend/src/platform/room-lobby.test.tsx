@@ -77,6 +77,57 @@ afterEach(() => {
 });
 
 describe("room lobby", () => {
+  it("copies the disabled room URL and shows a success toast", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await createRoom();
+
+    expect(screen.getByLabelText("Share this room link")).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Copy URL" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent("Room link copied!"),
+    );
+    expect(writeText).toHaveBeenCalledWith(
+      "http://localhost:3000/lobby?room=ABCDEF",
+    );
+    expect(
+      screen.getByRole("status").closest('[data-slot="toast"]'),
+    ).toHaveAttribute("data-event", "success");
+  });
+
+  it.each(["rejected", "unavailable"])(
+    "shows an error toast when the clipboard is %s",
+    async (clipboardState) => {
+      vi.stubGlobal("navigator", {
+        clipboard:
+          clipboardState === "rejected"
+            ? { writeText: vi.fn().mockRejectedValue(new Error("Denied")) }
+            : undefined,
+      });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(response({ token, lobby })),
+      );
+      render(<RoomLobby apiURL="http://localhost:8080" />);
+      await createRoom();
+
+      fireEvent.click(screen.getByRole("button", { name: "Copy URL" }));
+
+      await waitFor(() =>
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Unable to copy the room link. Please try again.",
+        ),
+      );
+      expect(screen.queryByText("Room link copied!")).not.toBeInTheDocument();
+    },
+  );
+
   it("creates a room, authenticates one socket, and renders live arrivals", async () => {
     const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
     vi.stubGlobal("fetch", fetch);
