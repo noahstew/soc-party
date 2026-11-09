@@ -69,7 +69,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           data-state={notice?.closing ? "closing" : "open"}
           data-slot="toast"
           data-event={notice?.event}
-          className="pointer-events-auto flex max-h-[50dvh] items-start gap-3 overflow-y-auto rounded-base border-2 border-[var(--toast-accent)] bg-secondary-background p-4 text-foreground shadow-shadow"
+          className="pointer-events-auto flex max-h-[50dvh] items-start gap-3 overflow-y-auto rounded-base border-2 border-[var(--toast-ink)] bg-secondary-background p-4 text-foreground shadow-shadow"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           onFocus={() => setFocused(true)}
@@ -81,7 +81,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           {notice && (
             <span
               aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-base border-2 border-[var(--toast-accent)] bg-[var(--toast-accent)] font-heading text-main-foreground"
+              className="flex size-8 shrink-0 items-center justify-center rounded-base border-2 border-[var(--toast-ink)] bg-[var(--toast-accent)] font-heading text-main-foreground"
             >
               {symbols[notice.event]}
             </span>
@@ -104,7 +104,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               size="icon-sm"
               aria-label="Dismiss notification"
               onClick={dismiss}
-              className="shrink-0 border-[var(--toast-accent)] bg-[var(--toast-accent)]"
+              className="shrink-0 border-[var(--toast-ink)] bg-[var(--toast-accent)]"
             >
               <span aria-hidden="true">×</span>
             </Button>
@@ -118,7 +118,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 function ToastMessage({ notice }: { notice: Notice }) {
   return (
     <>
-      <p className="font-heading text-[var(--toast-accent)]">
+      <p className="font-heading text-[var(--toast-ink)]">
         {labels[notice.event]}
       </p>
       <p className="mt-1 text-sm leading-relaxed">{notice.message}</p>

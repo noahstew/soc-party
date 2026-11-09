@@ -224,3 +224,13 @@ baseline across socket retries so initial rosters and reconnect/status updates
 are not announced as joins. Aggregate simultaneous arrivals into one toast to
 match the shared single-notification behavior; the joining client receives an
 info admission toast. No protocol or backend changes are needed.
+
+## 2026-11-09 — Soft-white, coral and pastel-blue theme
+
+Replace the fixed dark theme with a fixed light palette at the user's request.
+Use warm off-white for the page, soft-white cards, coral primary actions and
+pastel-blue secondary actions/dropdown highlights. Retain charcoal outlines and
+offset shadows. Match viewport metadata and native controls to the light palette,
+independent of OS preference. Separate coral fill from darker coral text ink and
+pastel toast fills from darker event ink so labels remain readable on light
+surfaces. No dependencies or behavior changes are required.

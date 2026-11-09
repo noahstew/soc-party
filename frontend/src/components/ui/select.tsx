@@ -61,7 +61,7 @@ export function Select({
                     key={option.value}
                     value={option.value}
                     disabled={option.disabled}
-                    className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-base px-3 py-2 text-sm outline-none data-highlighted:bg-main data-highlighted:text-main-foreground data-disabled:cursor-not-allowed data-disabled:opacity-40"
+                    className="flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-base px-3 py-2 text-sm outline-none data-highlighted:bg-secondary data-highlighted:text-secondary-foreground data-disabled:cursor-not-allowed data-disabled:opacity-40"
                   >
                     <SelectPrimitive.ItemText>
                       {option.label}

@@ -4,17 +4,20 @@ Reusable accessible UI components belong here. `ui/` contains Button, Card, Badg
 and Alert imported from the [neobrutalism.dev registry](https://www.neobrutalism.dev/docs/installation).
 Use these shared components rather than duplicating their styles in platform/game UI.
 
-The custom dark/coral palette and Tailwind v4 tokens live in `src/app/globals.css`.
-The theme is fixed: `color-scheme: dark` and constant root tokens, with no toggle or
-system-preference palette. Layout viewport metadata matches the dark page background.
-Coral is the primary accent with dark ink on filled buttons; charcoal surfaces,
-warm-white text, muted lavender copy, visible outlines and solid offset shadows
-retain the neobrutalist foundation. Rounded corners, a quiet dotted backdrop and
-local system typography keep it playful without remote fonts or assets.
+The soft-white, coral and pastel-blue palette and Tailwind v4 tokens live in
+`src/app/globals.css`. The theme is fixed: `color-scheme: light` and constant root
+tokens, with no toggle or system-preference palette. Layout viewport metadata
+matches the warm off-white page background. Cards use soft white, primary actions
+use coral, and neutral/secondary actions and dropdown highlights use pastel blue.
+Charcoal ink, visible outlines and solid offset shadows retain the neobrutalist
+foundation. A quiet dotted backdrop and local typography need no remote assets.
 
-Use semantic tokens for component colors, including focus rings, input surfaces and
-errors; avoid hard-coded white/black focus styles. Reduced motion removes button
-translation/transition. Preserve dark native form controls and visible keyboard focus.
+Use semantic tokens for component colors, including focus rings, input surfaces
+and errors. Use `text-main-ink` for coral text on light surfaces; reserve `bg-main`
+with `text-main-foreground` for coral fills. `bg-secondary` and
+`text-secondary-foreground` provide the pastel-blue action palette, while
+`bg-secondary-background` remains the card surface. Reduced motion removes button
+translation/transition. Preserve light native form controls and visible keyboard focus.
 
 `components.json` configures shadcn aliases and the `@neobrutalism` registry. To add
 another component from the repository root using Docker:
@@ -50,9 +53,9 @@ alerts or browser validation bubbles; custom-validated forms use `noValidate`.
 Persistent page content, such as the health diagnostic report, remains in the page.
 
 The latest notification replaces the previous one at the bottom-right of the viewport,
-with mobile gutters/safe-area clearance, charcoal fill, chunky outline and offset shadow.
-Event accents complement coral without reusing it: blue info, yellow warning, pink error,
-and mint success. Labels and icons supplement color. Errors/warnings announce assertively;
+with mobile gutters/safe-area clearance, soft-white fill, chunky outline and offset shadow.
+Pastel blue info, yellow warning, pink error and mint success use matching darker
+`--toast-ink` for readable event labels and outlines; `--toast-accent` supplies fills. Labels and icons supplement color. Errors/warnings announce assertively;
 info/success announce politely. Every event slides in over 300ms, stays for three seconds,
 then fades out over 250ms. Hover/focus pauses dismissal and grants three seconds afterward.
 Reduced motion disables animation. All events have a keyboard-accessible dismiss button;

@@ -8,15 +8,15 @@ export const metadata: Metadata = {
     "Your home for original party games. Create a room, invite friends, and choose a game together.",
 };
 export const viewport: Viewport = {
-  colorScheme: "dark",
-  themeColor: "#14141a",
+  colorScheme: "light",
+  themeColor: "#faf8f5",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body>
         <ToastProvider>{children}</ToastProvider>
       </body>

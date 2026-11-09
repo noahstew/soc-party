@@ -1,31 +1,37 @@
 @import "tailwindcss";
 
-/* PartiSocial: one fixed dark theme, independent of OS/browser preference. */
+/* PartiSocial: one fixed soft-white theme, independent of OS/browser preference. */
 :root {
-  color-scheme: dark;
-  --background: #14141a;
-  --secondary-background: #22222b;
-  --input-background: #19191f;
+  color-scheme: light;
+  --background: #faf8f5;
+  --secondary-background: #fffdfb;
+  --input-background: #f3f6fa;
   --main: #ff826f;
-  --ring: #ffad9f;
-  --foreground: #f7f0e9;
-  --muted-foreground: #b9b3c1;
-  --main-foreground: #19161d;
-  --border: #807887;
-  --overlay: rgb(7 7 11 / 85%);
-  --shadow: 5px 5px 0 0 #07070b;
-  --danger: #3a222b;
-  --danger-foreground: #ffd7d0;
+  --main-ink: #a13f30;
+  --secondary: #c9e3f5;
+  --secondary-foreground: #302c35;
+  --ring: #365773;
+  --foreground: #302c35;
+  --muted-foreground: #665f6c;
+  --main-foreground: #302c35;
+  --border: #504958;
+  --overlay: rgb(48 44 53 / 45%);
+  --shadow: 5px 5px 0 0 #504958;
+  --danger: #fce5e9;
+  --danger-foreground: #8c3047;
   --chart-1: #ff826f;
-  --chart-2: #a99bff;
-  --chart-3: #f4d27a;
-  --chart-4: #8cdec4;
-  --chart-5: #86baff;
-  --chart-active-dot: #f7f0e9;
+  --chart-2: #c9e3f5;
+  --chart-3: #866000;
+  --chart-4: #26715c;
+  --chart-5: #416b90;
+  --chart-active-dot: #302c35;
 }
 
 @theme inline {
   --color-main: var(--main);
+  --color-main-ink: var(--main-ink);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-background: var(--background);
   --color-secondary-background: var(--secondary-background);
   --color-input-background: var(--input-background);
@@ -62,7 +68,7 @@
     margin: 0;
     min-height: 100vh;
     background-color: var(--background);
-    background-image: radial-gradient(#35313d 1px, transparent 1px);
+    background-image: radial-gradient(#d9d4d0 1px, transparent 1px);
     background-size: 24px 24px;
     color: var(--foreground);
     font-family: "Avenir Next", "Segoe UI", Arial, Helvetica, sans-serif;
@@ -123,20 +129,24 @@
 
 /* Pastel event accents complement the coral theme without reusing coral. */
 [data-slot="toast"] {
-  --toast-accent: #86baff;
+  --toast-accent: #c9e3f5;
+  --toast-ink: #325c7c;
   animation: toast-enter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 [data-slot="toast"][data-event="warning"] {
-  --toast-accent: #f4d27a;
+  --toast-accent: #f6dfa1;
+  --toast-ink: #755400;
 }
 
 [data-slot="toast"][data-event="error"] {
-  --toast-accent: #ef9fbc;
+  --toast-accent: #f3c3d3;
+  --toast-ink: #8c3047;
 }
 
 [data-slot="toast"][data-event="success"] {
-  --toast-accent: #8cdec4;
+  --toast-accent: #bce5d5;
+  --toast-ink: #28624f;
 }
 
 [data-slot="toast"][data-state="closing"] {

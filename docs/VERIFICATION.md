@@ -288,7 +288,6 @@ field preservation and card resizing.
   later server support. No schema/backend changes or added dependencies; database
   integration is not required.
 
-
 ## 2026-11-09 — Lobby simplification and join notifications
 
 - Final `make check` passes: lint/format/types, Go race/unit tests, sqlc drift and
@@ -302,3 +301,19 @@ field preservation and card resizing.
   and the new size reaching all clients. No source changes followed the passing
   checks. The user independently verified the frontend and accepted it for commit.
 - No backend/schema changes or new dependencies; database integration not required.
+
+## 2026-11-09 — Soft-white, coral and pastel-blue theme
+
+- `make check` passes: lint/format/types, Go race/unit tests, sqlc drift and all
+  45 frontend tests. No behavior, schema or dependency changes.
+- Palette contrast calculations pass: main/muted/coral text is at least 4.62:1
+  across page/card/input/secondary surfaces, primary-button text is 5.64:1,
+  toast labels exceed 6.8:1, and focus rings exceed 3:1 on all tested surfaces
+  including coral. These checks cover enabled palette pairings, not disabled opacity.
+- Isolated Chrome verifies the light palette even with a dark OS preference,
+  matching viewport metadata, soft-white cards, coral primary and pastel-blue
+  secondary actions, error-label ink, desktop/mobile admission and lobby, and
+  no horizontal overflow. Mobile home and desktop lobby screenshots inspected;
+  temporary browser closed. Screenshots remain in `/private/tmp`.
+- Components documentation describes the light palette and accent-ink tokens.
+  No database changes; integration testing is not required.

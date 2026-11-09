@@ -208,7 +208,7 @@ export function RoomEntry({
               variant="neutral"
               disabled={busy}
               onClick={() => onEnter("create")}
-              className="h-12 w-full border-main text-base text-main"
+              className="h-12 w-full"
             >
               Create Room
             </Button>

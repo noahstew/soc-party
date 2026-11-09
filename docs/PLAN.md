@@ -317,3 +317,9 @@ this frontend request.
   info toasts for existing members and new arrivals. Verify all checks/tests
   together after implementation, including notification deduplication and
   custom-select interactions/permissions. User verified and accepted the frontend.
+
+## Requested soft-white theme
+
+- [x] Replace the dark palette with soft-white surfaces, coral primary and pastel
+  blue secondary actions. Update viewport/native control colors, readable accent
+  text and toast styling; verify contrast and run `make check`.

@@ -98,7 +98,7 @@ export function LobbyView({
         className={`flex items-center gap-3 rounded-base border-2 p-3 ${self ? "border-main bg-main/5" : "border-border bg-input-background"}`}
       >
         <span
-          className={`flex size-11 shrink-0 items-center justify-center rounded-base border-2 ${self ? "border-main text-main" : "border-border text-muted-foreground"}`}
+          className={`flex size-11 shrink-0 items-center justify-center rounded-base border-2 ${self ? "border-main text-main-ink" : "border-border text-muted-foreground"}`}
         >
           <Icon name="person" />
         </span>
@@ -202,7 +202,7 @@ export function LobbyView({
                 <p className="text-sm text-muted-foreground">Room code</p>
                 <p
                   aria-label={`Room code ${lobby.code}`}
-                  className="font-mono text-[clamp(2rem,7vw,3.5rem)] leading-tight font-bold tracking-wider text-main"
+                  className="font-mono text-[clamp(2rem,7vw,3.5rem)] leading-tight font-bold tracking-wider text-main-ink"
                 >
                   {lobby.code}
                 </p>
