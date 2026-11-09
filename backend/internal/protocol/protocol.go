@@ -27,6 +27,10 @@ type Settings struct {
 type GameSelection struct {
 	GameID string `json:"gameId"`
 }
+type PackSelection struct {
+	PackSlug string `json:"packSlug"`
+	Selected *bool  `json:"selected"`
+}
 type Empty struct{}
 type Player struct {
 	ID        string `json:"id"`
@@ -34,15 +38,16 @@ type Player struct {
 	Connected bool   `json:"connected"`
 }
 type Lobby struct {
-	Code       string   `json:"code"`
-	OwnerID    string   `json:"ownerId"`
-	YouID      string   `json:"youId"`
-	GameID     string   `json:"gameId"`
-	PackSlug   string   `json:"packSlug"`
-	MaxPlayers int      `json:"maxPlayers"`
-	CanStart   bool     `json:"canStart"`
-	ExpiresAt  string   `json:"expiresAt"`
-	Players    []Player `json:"players"`
+	Code         string   `json:"code"`
+	OwnerID      string   `json:"ownerId"`
+	YouID        string   `json:"youId"`
+	GameID       string   `json:"gameId"`
+	PackSlug     string   `json:"packSlug"`
+	PackSelected bool     `json:"packSelected"`
+	MaxPlayers   int      `json:"maxPlayers"`
+	CanStart     bool     `json:"canStart"`
+	ExpiresAt    string   `json:"expiresAt"`
+	Players      []Player `json:"players"`
 }
 type Session struct {
 	Token string `json:"token"`
@@ -85,6 +90,8 @@ func Decode(data []byte) (Envelope, any, error) {
 		payload = &Settings{}
 	case "select_game":
 		payload = &GameSelection{}
+	case "select_pack":
+		payload = &PackSelection{}
 	case "ping", "leave_room":
 		payload = &Empty{}
 	default:

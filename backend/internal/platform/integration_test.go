@@ -58,6 +58,18 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 			t.Fatal("raw or missing token")
 		}
 	}
+	if !record.PackSelected {
+		t.Fatal("default pack not persisted")
+	}
+	for _, selected := range []bool{false, true} {
+		if err = r.Command(ctx, owner.Lobby.Code, owner.Token, "select_pack", packSelection(selected)); err != nil {
+			t.Fatal(err)
+		}
+		record, err = q.GetRoom(ctx, owner.Lobby.Code)
+		if err != nil || record.PackSelected != selected {
+			t.Fatalf("pack selection not persisted: selected=%v err=%v", selected, err)
+		}
+	}
 	if err = repo.Reset(ctx); err != nil {
 		t.Fatal(err)
 	}

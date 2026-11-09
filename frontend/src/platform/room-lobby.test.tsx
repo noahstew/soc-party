@@ -18,6 +18,7 @@ const lobby: Lobby = {
   youId: "owner",
   gameId: "zinger",
   packSlug: "og",
+  packSelected: true,
   maxPlayers: 8,
   canStart: false,
   expiresAt: "2026-11-08T01:00:00Z",
@@ -270,11 +271,90 @@ describe("room lobby", () => {
     expect(screen.getByRole("tabpanel", { name: "Game" })).toBeVisible();
     const pack = screen.getByRole("button", { name: "OG pack" });
     expect(pack).toHaveAttribute("aria-pressed", "true");
-    expect(pack).toBeDisabled();
+    expect(pack).toBeEnabled();
+    expect(screen.getByRole("img", { name: "Pack selected" })).toBeVisible();
     fireEvent.keyDown(screen.getByRole("tab", { name: "Game" }), {
       key: "Home",
     });
     expect(screen.getByRole("tab", { name: "Lobby" })).toHaveFocus();
+    expect(socket.send).toHaveBeenCalledTimes(1);
+  });
+
+  it("toggles packs through authoritative updates and clears eligibility when none are selected", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    const socket = await createRoom();
+    fireEvent.click(screen.getByRole("tab", { name: "Game" }));
+    const pack = screen.getByRole("button", { name: "OG pack" });
+    expect(screen.getByRole("img", { name: "Pack selected" })).toBeVisible();
+    fireEvent.click(pack);
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+      type: "select_pack",
+      payload: { packSlug: "og", selected: false },
+    });
+    expect(pack).toHaveAttribute("aria-pressed", "true");
+    act(() =>
+      socket.update({ ...lobby, packSelected: false, canStart: false }),
+    );
+    expect(pack).toHaveAttribute("aria-pressed", "false");
+    expect(
+      screen.queryByRole("img", { name: "Pack selected" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Select at least one pack to start."),
+    ).toBeVisible();
+    fireEvent.click(pack);
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+      type: "select_pack",
+      payload: { packSlug: "og", selected: true },
+    });
+    act(() => socket.update({ ...lobby, packSelected: true }));
+    expect(screen.getByRole("img", { name: "Pack selected" })).toBeVisible();
+    expect(
+      screen.queryByText("Select at least one pack to start."),
+    ).not.toBeInTheDocument();
+    act(() => socket.onerror?.());
+    expect(pack).toBeDisabled();
+  });
+
+  it("lets guests see selected packs while reserving toggles for the owner", async () => {
+    sessionStorage.setItem(
+      "soc-party.guest",
+      JSON.stringify({ code: lobby.code, token }),
+    );
+    const guestLobby = {
+      ...lobby,
+      youId: "guest",
+      players: [
+        ...lobby.players,
+        { id: "guest", name: "Sam", connected: true },
+      ],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby: guestLobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await screen.findByLabelText("Room code ABCDEF");
+    await waitFor(() => expect(FakeSocket.instances).toHaveLength(1));
+    const socket = FakeSocket.instances.at(-1)!;
+    act(() => {
+      socket.open();
+      socket.update(guestLobby);
+    });
+    fireEvent.click(screen.getByRole("tab", { name: "Game" }));
+    expect(screen.getByRole("button", { name: "OG pack" })).toBeDisabled();
+    expect(screen.getByRole("img", { name: "Pack selected" })).toBeVisible();
+    act(() => socket.update({ ...guestLobby, packSelected: false }));
+    expect(
+      screen.queryByRole("img", { name: "Pack selected" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Select at least one pack to start."),
+    ).toBeVisible();
     expect(socket.send).toHaveBeenCalledTimes(1);
   });
 

@@ -305,9 +305,9 @@ One commit per task; gameplay remains outside this request.
   game/pack tiles and persistent leave/reconnect controls. Verify regression
   coverage, `make check` and responsive Chrome acceptance.
 
-OG remains the fixed server pack; coming-soon tiles are disabled. Pack toggling
-requires M3 settings support; gameplay, accounts and infrastructure remain outside
-this frontend request.
+OG is the only available pack; coming-soon tiles are disabled. The later pack-control
+request authorizes toggling OG and gating readiness, without prompt retrieval,
+sampling, gameplay, accounts or infrastructure.
 
 ## Requested lobby simplification
 
@@ -328,6 +328,10 @@ this frontend request.
 
 - [x] Slide the lobby card in from the top on mount, respecting reduced motion;
   verify and commit separately before implementing pack controls.
-- [ ] Allow owner pack toggles, mark selected pack tiles with a green circle check,
+- [x] Allow owner pack toggles, mark selected pack tiles with a green circle check,
   and require at least one selected pack for server-owned start eligibility.
   Gameplay remains outside this request.
+
+The 2026-11-09 pack-control request authorizes a persisted OG selection flag and
+owner intent, mirrored projections, selected indicators and eligibility guard.
+This does not complete M3 content sampling or authorize M2 gameplay/start phases.

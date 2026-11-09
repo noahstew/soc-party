@@ -6,6 +6,7 @@ export type Lobby = {
   youId: string;
   gameId: "zinger";
   packSlug: string;
+  packSelected: boolean;
   maxPlayers: number;
   canStart: boolean;
   expiresAt: string;
@@ -14,6 +15,11 @@ export type Lobby = {
 export type Session = { token: string; lobby: Lobby };
 export type ClientMessage =
   | { type: "select_game"; id?: string; payload: { gameId: string } }
+  | {
+      type: "select_pack";
+      id?: string;
+      payload: { packSlug: string; selected: boolean };
+    }
   | { type: "session_auth"; id?: string; payload: { token: string } }
   | { type: "ping" | "leave_room"; id?: string; payload: Record<string, never> }
   | { type: "kick_player"; id?: string; payload: { playerId: string } }
@@ -32,6 +38,7 @@ export function isLobby(value: unknown): value is Lobby {
     typeof p.youId === "string" &&
     p.gameId === "zinger" &&
     typeof p.packSlug === "string" &&
+    typeof p.packSelected === "boolean" &&
     typeof p.maxPlayers === "number" &&
     p.maxPlayers >= 3 &&
     p.maxPlayers <= 8 &&

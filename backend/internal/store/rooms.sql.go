@@ -30,7 +30,7 @@ func (q *Queries) DisconnectStalePlayers(ctx context.Context) error {
 }
 
 const getRoom = `-- name: GetRoom :one
-SELECT id, code, owner_id, game_id, pack_slug, max_players, status, created_at, expires_at FROM rooms WHERE code = $1
+SELECT id, code, owner_id, game_id, pack_slug, max_players, status, created_at, expires_at, pack_selected FROM rooms WHERE code = $1
 `
 
 func (q *Queries) GetRoom(ctx context.Context, code string) (Room, error) {
@@ -46,6 +46,7 @@ func (q *Queries) GetRoom(ctx context.Context, code string) (Room, error) {
 		&i.Status,
 		&i.CreatedAt,
 		&i.ExpiresAt,
+		&i.PackSelected,
 	)
 	return i, err
 }
@@ -148,16 +149,17 @@ func (q *Queries) SavePlayer(ctx context.Context, arg SavePlayerParams) error {
 }
 
 const saveRoom = `-- name: SaveRoom :exec
-UPDATE rooms SET owner_id = $2, max_players = $3, expires_at = $4, status = $5, game_id = $6 WHERE id = $1
+UPDATE rooms SET owner_id = $2, max_players = $3, expires_at = $4, status = $5, game_id = $6, pack_selected = $7 WHERE id = $1
 `
 
 type SaveRoomParams struct {
-	ID         string             `json:"id"`
-	OwnerID    string             `json:"owner_id"`
-	MaxPlayers int32              `json:"max_players"`
-	ExpiresAt  pgtype.Timestamptz `json:"expires_at"`
-	Status     string             `json:"status"`
-	GameID     string             `json:"game_id"`
+	ID           string             `json:"id"`
+	OwnerID      string             `json:"owner_id"`
+	MaxPlayers   int32              `json:"max_players"`
+	ExpiresAt    pgtype.Timestamptz `json:"expires_at"`
+	Status       string             `json:"status"`
+	GameID       string             `json:"game_id"`
+	PackSelected bool               `json:"pack_selected"`
 }
 
 func (q *Queries) SaveRoom(ctx context.Context, arg SaveRoomParams) error {
@@ -168,6 +170,7 @@ func (q *Queries) SaveRoom(ctx context.Context, arg SaveRoomParams) error {
 		arg.ExpiresAt,
 		arg.Status,
 		arg.GameID,
+		arg.PackSelected,
 	)
 	return err
 }

@@ -234,3 +234,18 @@ offset shadows. Match viewport metadata and native controls to the light palette
 independent of OS preference. Separate coral fill from darker coral text ink and
 pastel toast fills from darker event ink so labels remain readable on light
 surfaces. No dependencies or behavior changes are required.
+
+## 2026-11-09 — Owner pack selection and readiness
+
+The user now authorizes toggling the available OG pack. Keep `packSlug` as the
+existing pack identity and add a `packSelected` boolean, true for new/existing
+rooms by migration default. The owner sends `select_pack` with an OG slug and an
+explicit boolean; reject unavailable packs, absent/null selection and guest writes.
+Persist through goose/sqlc before publishing room projections, preserving the
+actor's rollback behavior. Reconnect and owner transfer retain selection.
+
+Green circle checks mark selected game/pack tiles for everyone. Clients wait for
+authoritative updates rather than locally toggling. The server's `canStart` now
+requires the lobby phase, Zinger, at least three connected players and selected OG.
+No actual start intent exists yet; M2 gameplay and M3 DB prompt sampling remain
+out of scope. The existing single pack needs no speculative multiple-pack model.

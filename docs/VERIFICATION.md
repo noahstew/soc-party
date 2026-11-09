@@ -325,3 +325,24 @@ field preservation and card resizing.
   preferences disable the animation.
 - `make check` passes with 45 frontend tests, lint/format/types, Go race/unit tests
   and sqlc drift. No behavior, dependency or schema changes.
+
+## 2026-11-09 — Shared OG pack toggles and start eligibility
+
+- `make check` passes with 47 frontend tests, lint/format/types, Go race/unit tests
+  and sqlc drift against the intentionally regenerated store. `make integration`
+  passes after applying additive migration 00004; selection defaults and both toggle
+  states persist through the generated queries.
+- Regression coverage verifies guest/malformed/unavailable-pack rejection,
+  persistence failure rollback, selected/empty broadcasts, reconnect retention,
+  reselecting Zinger preserving an empty pack choice, and three-player eligibility
+  being removed/restored by pack toggles. Fewer than three connected players remain
+  ineligible even with OG selected. Frontend tests cover authoritative toggle
+  intents/updates, green indicators, guest restrictions and disconnected controls.
+- Three-client Chrome acceptance verifies shared OG checks, owner-only toggles,
+  server `canStart` true with three players/OG and false without OG, selection
+  surviving reload, and mobile layout without overflow. Selected desktop/mobile
+  screenshots inspected. The same run verifies the card starts above the viewport,
+  retains its animation across tab/state updates, and disables it for reduced
+  motion. Temporary browser closed; artifacts remain in `/private/tmp`.
+- Gameplay start remains unimplemented (M2); this change guards server-owned start
+  eligibility and does not implement DB prompt retrieval/sampling (M3).

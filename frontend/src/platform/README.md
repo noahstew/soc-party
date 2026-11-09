@@ -55,9 +55,13 @@ members, and only the connected owner can remove others or change settings.
 Room size uses the shared Base UI Select and stays visible but disabled for guests.
 The footer contains only right-aligned Leave/reconnect controls outside the tabs. Existing room admission, socket and storage behavior is retained.
 
-Game/pack tiles use text placeholders for future art. OG reflects the server's
-fixed `packSlug`; it cannot be toggled. Each settings tab has one disabled Coming Soon tile. Shared pack selection requires the M3 protocol/store work and is not
-simulated with local-only state.
+Game/pack tiles use text placeholders for future art. A green circle check marks
+selected tiles. Only the connected owner can toggle the current OG pack, through
+`select_pack`; all clients render the authoritative `packSelected` snapshot field.
+OG is selected by default and may be cleared. With no pack selected, the Game tab
+shows a short selection requirement and the server reports `canStart: false`.
+Each settings tab has one disabled Coming Soon tile. This setting is persisted;
+DB prompt retrieval/sampling and actual gameplay start remain later milestones.
 
 Lobby snapshots are compared by player ID to announce new members through the
 shared info toast on every existing client. Initial admission seeds the baseline;

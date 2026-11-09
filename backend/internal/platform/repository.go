@@ -51,7 +51,7 @@ func (p PostgresRepository) Save(ctx context.Context, s Record, create bool) err
 			return err
 		}
 	}
-	if err = q.SaveRoom(ctx, store.SaveRoomParams{GameID: s.GameID, ID: s.ID, OwnerID: s.OwnerID, MaxPlayers: int32(s.MaxPlayers), Status: s.Status, ExpiresAt: pgtype.Timestamptz{Time: s.Expires, Valid: true}}); err != nil {
+	if err = q.SaveRoom(ctx, store.SaveRoomParams{PackSelected: s.PackSelected, GameID: s.GameID, ID: s.ID, OwnerID: s.OwnerID, MaxPlayers: int32(s.MaxPlayers), Status: s.Status, ExpiresAt: pgtype.Timestamptz{Time: s.Expires, Valid: true}}); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

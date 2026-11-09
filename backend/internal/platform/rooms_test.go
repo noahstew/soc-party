@@ -248,3 +248,99 @@ func TestGameSelectionAuthorizationAndProjection(t *testing.T) {
 		t.Fatal("selected game not persisted")
 	}
 }
+
+func packSelection(selected bool) *protocol.PackSelection {
+	return &protocol.PackSelection{PackSlug: "og", Selected: &selected}
+}
+
+func TestPackSelectionAuthorizationEligibilityAndRollback(t *testing.T) {
+	r, repo, owner := fixture(t)
+	ctx := context.Background()
+	code := owner.Lobby.Code
+	_, ownerCh, err := r.Subscribe(ctx, code, owner.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !readLobby(t, ownerCh).PackSelected {
+		t.Fatal("OG must start selected")
+	}
+	guest, err := r.Join(ctx, code, "Guest")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, guestCh, err := r.Subscribe(ctx, code, guest.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	third, err := r.Join(ctx, code, "Third")
+	if err != nil {
+		t.Fatal(err)
+	}
+	thirdID, thirdCh, err := r.Subscribe(ctx, code, third.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := readLobby(t, ownerCh); !got.CanStart {
+		t.Fatal("three connected players with OG should be eligible")
+	}
+	if err := r.Command(ctx, code, guest.Token, "select_pack", packSelection(false)); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("guest changed packs: %v", err)
+	}
+	for _, selection := range []*protocol.PackSelection{{PackSlug: "og"}, {PackSlug: "coming_soon", Selected: packSelection(true).Selected}, {Selected: packSelection(false).Selected}} {
+		if err := r.Command(ctx, code, owner.Token, "select_pack", selection); err == nil {
+			t.Fatal("invalid pack selection accepted")
+		}
+	}
+	repo.mu.Lock()
+	repo.fail = true
+	repo.mu.Unlock()
+	if err := r.Command(ctx, code, owner.Token, "select_pack", packSelection(false)); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("failed save accepted: %v", err)
+	}
+	repo.mu.Lock()
+	repo.fail = false
+	repo.mu.Unlock()
+	if err := r.Command(ctx, code, owner.Token, "ping", &protocol.Empty{}); err != nil {
+		t.Fatal(err)
+	}
+	if got := readLobby(t, ownerCh); !got.PackSelected || !got.CanStart {
+		t.Fatal("failed save changed selection or eligibility")
+	}
+	if err := r.Command(ctx, code, owner.Token, "select_pack", packSelection(false)); err != nil {
+		t.Fatal(err)
+	}
+	for _, ch := range []<-chan []byte{ownerCh, guestCh, thirdCh} {
+		if got := readLobby(t, ch); got.PackSelected || got.CanStart {
+			t.Fatal("empty selection must be shared and ineligible")
+		}
+	}
+	repo.mu.Lock()
+	selected := repo.records[code].PackSelected
+	repo.mu.Unlock()
+	if selected {
+		t.Fatal("deselection not persisted")
+	}
+	resumed, err := r.Reconnect(ctx, code, owner.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resumed.Lobby.PackSelected || resumed.Lobby.CanStart {
+		t.Fatal("reconnect lost empty selection")
+	}
+	if err := r.Command(ctx, code, resumed.Token, "select_game", &protocol.GameSelection{GameID: "zinger"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := readLobby(t, ownerCh); got.PackSelected || got.CanStart {
+		t.Fatal("reselecting game bypassed pack requirement")
+	}
+	if err := r.Command(ctx, code, resumed.Token, "select_pack", packSelection(true)); err != nil {
+		t.Fatal(err)
+	}
+	if got := readLobby(t, ownerCh); !got.PackSelected || !got.CanStart {
+		t.Fatal("selecting OG did not restore eligibility")
+	}
+	r.Disconnect(code, thirdID, thirdCh)
+	if got := readLobby(t, ownerCh); !got.PackSelected || got.CanStart {
+		t.Fatal("pack selection bypassed player requirement")
+	}
+}

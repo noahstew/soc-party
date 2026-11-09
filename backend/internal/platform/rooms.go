@@ -39,6 +39,7 @@ type Member struct {
 	Seen             time.Time
 }
 type Record struct {
+	PackSelected              bool
 	GameID                    string
 	ID, Code, OwnerID, Status string
 	MaxPlayers                int
@@ -151,7 +152,7 @@ func (r *Registry) Create(ctx context.Context, name string) (protocol.Session, e
 		if _, ok := r.rooms[code]; ok {
 			continue
 		}
-		s := Record{GameID: "zinger", ID: id, Code: code, OwnerID: p.ID, Status: "lobby", MaxPlayers: 8, Expires: r.now().Add(Lifetime), Activity: r.now(), Members: []Member{p}}
+		s := Record{GameID: "zinger", PackSelected: true, ID: id, Code: code, OwnerID: p.ID, Status: "lobby", MaxPlayers: 8, Expires: r.now().Add(Lifetime), Activity: r.now(), Members: []Member{p}}
 		// PostgreSQL also rejects historical code collisions. Retry without overwriting history.
 		if err := r.repo.Save(ctx, s, true); err != nil {
 			if errors.Is(err, ErrConflict) {
@@ -213,7 +214,7 @@ func authenticate(s *Record, token string) (*Member, error) {
 	return nil, ErrUnauthorized
 }
 func project(s Record, you string) protocol.Lobby {
-	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: s.GameID, PackSlug: "og", MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
+	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: s.GameID, PackSlug: "og", PackSelected: s.PackSelected, MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
 	connected := 0
 	for _, m := range s.Members {
 		if m.Status != "active" {
@@ -224,7 +225,7 @@ func project(s Record, you string) protocol.Lobby {
 			connected++
 		}
 	}
-	p.CanStart = connected >= 3
+	p.CanStart = s.Status == "lobby" && s.GameID == "zinger" && connected >= 3 && s.PackSelected
 	return p
 }
 func count(s Record) int {
@@ -382,6 +383,15 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				return nil, fmt.Errorf("game is not available")
 			}
 			s.GameID = gameID
+		case "select_pack":
+			if s.OwnerID != p.ID {
+				return nil, ErrForbidden
+			}
+			selection := payload.(*protocol.PackSelection)
+			if selection.PackSlug != "og" || selection.Selected == nil {
+				return nil, fmt.Errorf("choose the OG pack and provide its selected state")
+			}
+			s.PackSelected = *selection.Selected
 		case "update_settings":
 			if s.OwnerID != p.ID {
 				return nil, ErrForbidden

@@ -62,6 +62,27 @@ function Icon({ name }: { name: "person" | "crown" | "copy" | "x" }) {
   );
 }
 
+function SelectionCheck({ label }: { label: string }) {
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-chart-4 text-secondary-background"
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        className="size-4"
+      >
+        <path d="m5 12 4 4L19 6" />
+      </svg>
+    </span>
+  );
+}
+
 export function LobbyView({
   lobby,
   connection,
@@ -282,9 +303,12 @@ export function LobbyView({
                         payload: { gameId: "zinger" },
                       })
                     }
-                    className="h-24 whitespace-normal text-xl"
+                    className="relative h-24 whitespace-normal text-xl"
                   >
                     Zinger
+                    {lobby.gameId === "zinger" && (
+                      <SelectionCheck label="Game selected" />
+                    )}
                   </Button>
                   <Button
                     variant="neutral"
@@ -309,12 +333,25 @@ export function LobbyView({
                 </legend>
                 <div className="grid grid-cols-2 gap-3">
                   <Button
-                    aria-pressed={lobby.packSlug === "og"}
+                    aria-pressed={lobby.packSlug === "og" && lobby.packSelected}
                     aria-label="OG pack"
-                    disabled
-                    className="h-28 text-xl"
+                    disabled={!editable}
+                    variant={lobby.packSelected ? "default" : "neutral"}
+                    onClick={() =>
+                      onSend({
+                        type: "select_pack",
+                        payload: {
+                          packSlug: "og",
+                          selected: !lobby.packSelected,
+                        },
+                      })
+                    }
+                    className="relative h-28 text-xl"
                   >
                     OG
+                    {lobby.packSelected && (
+                      <SelectionCheck label="Pack selected" />
+                    )}
                   </Button>
                   <Button
                     variant="neutral"
@@ -325,6 +362,11 @@ export function LobbyView({
                   </Button>
                 </div>
               </fieldset>
+              {!lobby.packSelected && (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Select at least one pack to start.
+                </p>
+              )}
             </div>
           </div>
         </div>

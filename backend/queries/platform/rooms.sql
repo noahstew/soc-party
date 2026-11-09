@@ -9,7 +9,7 @@ UPDATE room_players SET token_hash = $2, connected = $3, status = $4, last_seen_
 WHERE id = $1;
 
 -- name: SaveRoom :exec
-UPDATE rooms SET owner_id = $2, max_players = $3, expires_at = $4, status = $5, game_id = $6 WHERE id = $1;
+UPDATE rooms SET owner_id = $2, max_players = $3, expires_at = $4, status = $5, game_id = $6, pack_selected = $7 WHERE id = $1;
 
 -- name: CloseStaleRooms :exec
 UPDATE rooms SET status = 'closed' WHERE status <> 'closed';
