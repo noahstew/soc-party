@@ -3,7 +3,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
-  title: "Soc Party — bring your friends",
+  title: "PartiSocial — bring your friends",
   description:
     "Your home for original party games. Create a room, invite friends, and choose a game together.",
 };

@@ -6,6 +6,11 @@ Use strict TypeScript, Tailwind, semantic accessible HTML and mobile-first layou
 Keep server-only API URLs on the server; browsers cannot resolve Docker service names.
 Use one socket per tab; future countdowns derive from server deadlines.
 
+Frontend branding is **PartiSocial** (planned frontend domain: `parti.social`).
+Use it in UI copy, metadata and frontend package naming. Backend/module/repository
+names remain `soc-party`. Preserve the legacy `soc-party.guest` and `soc-party.name`
+browser storage keys so existing room recovery and remembered names keep working.
+
 Colocate meaningful `.test.tsx` tests; use Vitest + React Testing Library, mock fetch
 at the boundary and assert visible outcomes including failure states.
 Host commands: `pnpm --dir frontend <test|lint|typecheck|build>`; Docker checks use Make.

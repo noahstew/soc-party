@@ -23,7 +23,7 @@ describe("home", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "SOC PARTY",
+      "PartiSocial",
     );
     expect(screen.queryByText(/Great game nights/)).not.toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();

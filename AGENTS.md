@@ -6,6 +6,8 @@ code/link, no host screen. First game: **Zinger** (working title). Original cont
 M0 and M1 are verified. The user authorized rooms/lobby plus MVP persistence models
 and original OG seed, now complete. M2 gameplay implementation, accounts, ads and
 infrastructure remain out of scope until explicitly authorized.
+Frontend branding is **PartiSocial** (planned domain: `parti.social`); see `frontend/AGENTS.md` for naming
+and browser-storage compatibility guidance.
 
 ## Workflow
 - Read the plan's current milestone and applicable `backend/AGENTS.md` or

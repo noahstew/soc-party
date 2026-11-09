@@ -262,3 +262,12 @@ field preservation and card resizing.
 - The first check encountered transient missing Next dev types during container
   startup; the subsequent full check passes after startup and an async test fix.
 - No schema changes or new dependencies.
+
+## 2026-11-09 — PartiSocial branding
+
+- Frontend badge, page title, health-page navigation and package name use PartiSocial.
+  Root/frontend agent guidance records the planned `parti.social` domain and preserves
+  legacy browser storage keys for existing names and room recovery.
+- `make check` passes, including 37 frontend tests with home branding and health
+  navigation assertions, Go race/unit tests, lint/format/types and sqlc drift.
+- Backend/repository naming and domain/hosting configuration are unchanged.

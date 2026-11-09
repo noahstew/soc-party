@@ -290,3 +290,8 @@ One commit per task; gameplay remains outside this request.
 
 - [x] Disable the invitation URL input and add a trailing Copy URL button with
   global success/error feedback; verify clipboard regression tests and `make check`.
+
+## Requested frontend branding
+
+- [x] Rename frontend branding and package to PartiSocial, document planned domain
+  `parti.social` and compatibility guidance for future agents, and verify `make check`.

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Soc Party: one fixed dark theme, independent of OS/browser preference. */
+/* PartiSocial: one fixed dark theme, independent of OS/browser preference. */
 :root {
   color-scheme: dark;
   --background: #14141a;

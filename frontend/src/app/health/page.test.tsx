@@ -23,6 +23,9 @@ describe("health page", () => {
       { id: 1, slug: "original", title: "Small Talk, Big Nonsense" },
     ]);
     render(await HealthPage());
+    expect(
+      screen.getByRole("link", { name: "Back to PartiSocial" }),
+    ).toHaveAttribute("href", "/");
     expect(screen.getByText("Reachable")).toBeInTheDocument();
     expect(screen.getByText("Healthy")).toBeInTheDocument();
     expect(screen.getByText("Small Talk, Big Nonsense")).toBeInTheDocument();
