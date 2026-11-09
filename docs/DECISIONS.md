@@ -192,3 +192,35 @@ instead of creating duplicate membership; a different invitation takes priority.
 Share failures allow manual admission. Native history replacement updates the
 canonical URL without remounting the controller or starting a second socket;
 `/` and `/lobby` both serve that controller for direct visits and reloads.
+
+## 2026-11-09 — Responsive lobby presentation
+
+Keep admission/socket/recovery in `room-lobby.tsx` and render the active room in
+`lobby-view.tsx`. Share the admission badge rather than duplicating branding.
+At 768px, switch from Lobby/Room/Game tabs to persistent players beside Room/Game
+settings. Subscribe to the matching media query so tab semantics and keyboard
+navigation reflect the visible layout, retaining the current settings on resize.
+Display the current server owner with a crown; ownership can transfer after leave.
+Only the connected owner can change room settings or remove another player.
+Use the authoritative connected count rather than total membership for presence.
+
+The current protocol exposes one fixed `packSlug` and no pack-setting intent.
+Show OG as included and other pack tiles disabled with explicit availability copy.
+Do not invent local pack selections that would disagree across players or advance
+M3 persistence/settings behavior as part of this presentation change. No new
+dependencies, game rules, accounts or hosting changes are needed.
+
+## 2026-11-09 — Lobby simplification and join notifications
+
+Use the existing Base UI Select primitives for room size instead of adding a
+second component dependency. Keep room code/invitation copying only in the player
+panel. Each settings tab has one Coming Soon tile; the footer keeps right-aligned
+actions only. Keep offline/reconnect information when actionable, while removing
+routine Live/Connected labels and redundant player/promotional copy.
+
+Derive arrival info toasts on each client from new player IDs in authoritative
+lobby snapshots, seeding the comparison from HTTP admission. Preserve that
+baseline across socket retries so initial rosters and reconnect/status updates
+are not announced as joins. Aggregate simultaneous arrivals into one toast to
+match the shared single-notification behavior; the joining client receives an
+info admission toast. No protocol or backend changes are needed.

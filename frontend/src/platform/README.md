@@ -32,8 +32,8 @@ active face so the outer card animates height with the flip, including viewport
 or content resizing. Both transitions are disabled for reduced motion.
 
 Active rooms use `/lobby?room=CODE`; generated invitations use this route too.
-The invitation URL field is disabled; its trailing Copy URL button copies the
-link with a global success toast, or an error toast if clipboard access fails.
+The SVG copy icon beside the large room code copies the canonical invitation URL
+with global success/error toasts. Room settings do not repeat the code.
 Legacy `/?room=CODE` links are canonicalized to `/lobby`. A valid shared code
 bypasses the room-code step: returning players join using their remembered name,
 while first-time players enter a name and Continue joins directly. Names are
@@ -44,3 +44,25 @@ admission with the error toast. Leaving or a revoked session returns to `/`.
 Native history replacement keeps one mounted controller/socket while changing
 the URL; a direct visit or reload of `/lobby` renders that same controller and
 recovers the session. Storage-disabled browsers can still enter their name.
+
+`lobby-view.tsx` renders the active room below the shared `components/brand.tsx`
+badge. At 768px and wider, a vertical divider separates players from Room/Game
+settings. Mobile starts on Lobby and exposes Room and Game as sibling tabs.
+Arrow keys, Home and End navigate the tabs; resizing preserves the selected
+settings. The local player stays above a scrollable list of other players.
+A crown marks the current owner for all members, connected count excludes offline
+members, and only the connected owner can remove others or change settings.
+Room size uses the shared Base UI Select and stays visible but disabled for guests.
+The footer contains only right-aligned Leave/reconnect controls outside the tabs. Existing room admission, socket and storage behavior is retained.
+
+Game/pack tiles use text placeholders for future art. OG reflects the server's
+fixed `packSlug`; it cannot be toggled. Each settings tab has one disabled Coming Soon tile. Shared pack selection requires the M3 protocol/store work and is not
+simulated with local-only state.
+
+Lobby snapshots are compared by player ID to announce new members through the
+shared info toast on every existing client. Initial admission seeds the baseline;
+existing roster members, connection-status changes and unchanged reconnect
+snapshots are not announced again. Multiple new members in one snapshot share
+one notification. New arrivals receive their own Room joined info toast after
+HTTP admission. Removed Live/Connected labels and promotional copy stay absent;
+offline players still show Reconnecting when relevant.

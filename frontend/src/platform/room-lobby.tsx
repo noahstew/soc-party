@@ -3,9 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { RoomEntry } from "./room-entry";
 import { useToast } from "@/lib/use-toast";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { LobbyView } from "./lobby-view";
 import {
   isLobby,
   type ClientMessage,
@@ -77,6 +75,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
   const [shareURL, setShareURL] = useState("");
   const socket = useRef<WebSocket | null>(null);
   const restored = useRef(false);
+  const previousPlayers = useRef(new Set<string>());
 
   function accept(session: Session) {
     const next = { code: session.lobby.code, token: session.token };
@@ -93,6 +92,9 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       }
     }
     window.history.replaceState(null, "", `/lobby?room=${next.code}`);
+    previousPlayers.current = new Set(
+      session.lobby.players.map((player) => player.id),
+    );
     setLobby(session.lobby);
     setCredential(next);
     setConnection("connecting");
@@ -157,7 +159,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
         remember({ code: session.lobby.code, token: session.token });
         if (!cancelled) {
           accept(session);
-          if (!recover) notify("Room joined! You’re in.", "success");
+          if (!recover) notify("Room joined!", "info");
         }
       } catch (err) {
         if (recover) remember(null);
@@ -230,6 +232,18 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
           if (message.type === "lobby_state" && isLobby(message.payload)) {
             if (message.payload.code !== credential.code)
               throw new Error("wrong room");
+            const arrivals = message.payload.players.filter(
+              (player) => !previousPlayers.current.has(player.id),
+            );
+            previousPlayers.current = new Set(
+              message.payload.players.map((player) => player.id),
+            );
+            if (arrivals.length > 0) {
+              notify(
+                `${arrivals.map((player) => player.name).join(", ")} joined the room.`,
+                "info",
+              );
+            }
             retries = 0;
             setLobby(message.payload);
             setConnection("connected");
@@ -313,8 +327,8 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       notify(
         action === "create"
           ? "Room created! Invite your friends."
-          : "Room joined! You’re in.",
-        "success",
+          : "Room joined!",
+        action === "create" ? "success" : "info",
       );
     } catch (err) {
       setSharedCode(null);
@@ -355,7 +369,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     window.history.replaceState(null, "", "/");
     dismiss();
   }
-  async function copyRoomURL() {
+  async function copyRoomLink() {
     try {
       await navigator.clipboard.writeText(shareURL);
       notify("Room link copied!", "success");
@@ -363,10 +377,6 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       notify("Unable to copy the room link. Please try again.", "error");
     }
   }
-  const owner = lobby?.youId === lobby?.ownerId;
-  const inputStyle =
-    "mt-2 w-full rounded-base border-2 border-border bg-input-background px-3 py-3 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-background disabled:cursor-not-allowed disabled:opacity-60";
-
   if (!lobby) {
     return (
       <RoomEntry
@@ -382,179 +392,17 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
   }
 
   return (
-    <section aria-labelledby="room-title">
-      <Card className="bg-secondary-background">
-        <CardHeader>
-          <h2 id="room-title" className="text-2xl font-heading">
-            The waiting room
-          </h2>
-          <p>Everyone joins on their own device.</p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm">Room code</p>
-                <p
-                  className="font-mono text-4xl font-bold tracking-widest text-main"
-                  aria-label={`Room code ${lobby.code}`}
-                >
-                  {lobby.code}
-                </p>
-              </div>
-              <Badge variant="neutral" className="border-main text-main">
-                {connection === "connected"
-                  ? "Live"
-                  : connection === "connecting"
-                    ? "Connecting…"
-                    : "Reconnecting…"}
-              </Badge>
-            </div>
-            {shareURL && (
-              <div>
-                <label htmlFor="share-link" className="text-sm">
-                  Share this room link
-                </label>
-                <div className="mt-2 flex items-center gap-2">
-                  <input
-                    id="share-link"
-                    disabled
-                    value={shareURL}
-                    className={`${inputStyle} mt-0 min-w-0 flex-1`}
-                  />
-                  <Button type="button" onClick={() => void copyRoomURL()}>
-                    Copy URL
-                  </Button>
-                </div>
-              </div>
-            )}
-            <div aria-live="polite" aria-atomic="true">
-              <h3 className="mb-3 font-heading">
-                Players ({lobby.players.length}/{lobby.maxPlayers})
-              </h3>
-              <ul className="space-y-3" aria-label="Players in room">
-                {lobby.players.map((player) => (
-                  <li
-                    key={player.id}
-                    className="flex items-center justify-between gap-3 rounded-base border-2 border-border bg-input-background p-3"
-                  >
-                    <div>
-                      <span className="font-heading">{player.name}</span>
-                      {player.id === lobby.youId && <span> (you)</span>}
-                      {player.id === lobby.ownerId && (
-                        <span className="ml-2 text-sm text-main">Owner</span>
-                      )}
-                      <p className="text-sm">
-                        {player.connected
-                          ? "Connected"
-                          : "Joining or reconnecting…"}
-                      </p>
-                    </div>
-                    {owner && player.id !== lobby.youId && (
-                      <Button
-                        variant="neutral"
-                        size="sm"
-                        disabled={connection !== "connected"}
-                        onClick={() =>
-                          send({
-                            type: "kick_player",
-                            payload: { playerId: player.id },
-                          })
-                        }
-                        aria-label={`Remove ${player.name}`}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <label htmlFor="room-game" className="font-heading">
-                Game
-              </label>
-              <select
-                id="room-game"
-                value={lobby.gameId}
-                disabled={!owner || connection !== "connected"}
-                onChange={(e) =>
-                  send({
-                    type: "select_game",
-                    payload: { gameId: e.target.value },
-                  })
-                }
-                className={inputStyle}
-                aria-describedby="game-description"
-              >
-                <option value="zinger">Zinger</option>
-                <option value="coming_soon" disabled>
-                  Coming soon
-                </option>
-              </select>
-              <p
-                id="game-description"
-                className="mt-2 text-sm text-muted-foreground"
-              >
-                {owner
-                  ? "Choose a game for your group."
-                  : "The room owner chooses the game."}{" "}
-                More games are on the way.
-              </p>
-            </div>
-            {owner && (
-              <div>
-                <label htmlFor="max-players" className="font-heading">
-                  Room size
-                </label>
-                <select
-                  id="max-players"
-                  value={lobby.maxPlayers}
-                  disabled={connection !== "connected"}
-                  onChange={(e) =>
-                    send({
-                      type: "update_settings",
-                      payload: { maxPlayers: Number(e.target.value) },
-                    })
-                  }
-                  className={inputStyle}
-                >
-                  {[3, 4, 5, 6, 7, 8].map((n) => (
-                    <option
-                      key={n}
-                      value={n}
-                      disabled={n < lobby.players.length}
-                    >
-                      {n} players
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <p className="text-sm">
-              {lobby.canStart
-                ? "The group is ready."
-                : "Gather at least 3 connected players."}{" "}
-              Zinger gameplay is coming next.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button variant="neutral" onClick={leave}>
-                {connection === "connected" ? "Leave room" : "Return home"}
-              </Button>
-              {connection === "disconnected" && (
-                <Button
-                  onClick={() => {
-                    dismiss();
-                    setRetry((v) => v + 1);
-                  }}
-                >
-                  Reconnect
-                </Button>
-              )}
-            </div>
-          </>
-        </CardContent>
-      </Card>
-    </section>
+    <LobbyView
+      lobby={lobby}
+      connection={connection}
+      shareURL={shareURL}
+      onCopyLink={() => void copyRoomLink()}
+      onSend={send}
+      onLeave={leave}
+      onReconnect={() => {
+        dismiss();
+        setRetry((v) => v + 1);
+      }}
+    />
   );
 }

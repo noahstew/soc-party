@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/lib/use-toast";
@@ -15,14 +15,6 @@ type RoomEntryProps = {
   onContinue?: () => void;
   onEnter: (action: "create" | "join") => void;
 };
-
-function Brand() {
-  return (
-    <Badge className="mx-auto -rotate-2 border-main bg-main px-5 py-2 text-2xl font-heading tracking-widest text-main-foreground shadow-shadow sm:text-3xl">
-      PartiSocial
-    </Badge>
-  );
-}
 
 const inputStyle =
   "mt-3 w-full rounded-base border-2 border-border bg-input-background px-4 py-3 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-background disabled:cursor-not-allowed disabled:opacity-60";
@@ -76,7 +68,10 @@ export function RoomEntry({
   }
 
   return (
-    <section aria-label="Room admission" className="room-entry">
+    <section
+      aria-label="Room admission"
+      className="room-entry mx-auto w-full max-w-lg"
+    >
       <div ref={flipper} className="room-entry-flipper" data-flipped={flipped}>
         <Card
           ref={frontFace}

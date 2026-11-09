@@ -58,3 +58,16 @@ then fades out over 250ms. Hover/focus pauses dismissal and grants three seconds
 Reduced motion disables animation. All events have a keyboard-accessible dismiss button;
 notifications do not steal focus. Use `dismiss()` when retrying or invalidating old feedback.
 No additional package is required.
+
+## Branding
+
+`brand.tsx` shares the tilted PartiSocial badge between admission and the lobby.
+Keep its theme and typography consistent when replacing the text with future art.
+
+## Select
+
+`ui/select.tsx` composes the already installed `@base-ui/react/select` primitives
+into a reusable labeled control, styled with the existing theme. The library owns
+keyboard navigation, typeahead, disabled options, selection, focus restoration and
+portal accessibility. The popup uses the trigger width and available viewport
+height. No dependency is added. Source API: https://base-ui.com/react/components/select.

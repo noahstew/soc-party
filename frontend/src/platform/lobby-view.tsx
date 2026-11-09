@@ -1,0 +1,344 @@
+"use client";
+
+import { useRef, useState, useSyncExternalStore } from "react";
+import { Brand } from "@/components/brand";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
+import type { ClientMessage, Lobby, Player } from "@/lib/protocol";
+
+type Tab = "lobby" | "room" | "game";
+type Props = {
+  lobby: Lobby;
+  connection: "connecting" | "connected" | "disconnected";
+  shareURL: string;
+  onCopyLink: () => void;
+  onSend: (message: ClientMessage) => void;
+  onLeave: () => void;
+  onReconnect: () => void;
+};
+
+function subscribeToDesktop(callback: () => void) {
+  const query = window.matchMedia?.("(min-width: 768px)");
+  query?.addEventListener("change", callback);
+  return () => query?.removeEventListener("change", callback);
+}
+function desktopSnapshot() {
+  return window.matchMedia?.("(min-width: 768px)").matches ?? false;
+}
+
+function Icon({ name }: { name: "person" | "crown" | "copy" | "x" }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="size-5 shrink-0"
+    >
+      {name === "person" && (
+        <>
+          <circle cx="12" cy="7" r="4" />
+          <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+        </>
+      )}
+      {name === "crown" && (
+        <>
+          <path d="m3 6 5 4 4-7 4 7 5-4-3 12H6Z" />
+          <path d="M7 22h10" />
+        </>
+      )}
+      {name === "copy" && (
+        <>
+          <rect x="8" y="8" width="13" height="13" rx="2" />
+          <path d="M16 8V3H3v13h5" />
+        </>
+      )}
+      {name === "x" && <path d="m6 6 12 12M6 18 18 6" />}
+    </svg>
+  );
+}
+
+export function LobbyView({
+  lobby,
+  connection,
+  shareURL,
+  onCopyLink,
+  onSend,
+  onLeave,
+  onReconnect,
+}: Props) {
+  const desktop = useSyncExternalStore(
+    subscribeToDesktop,
+    desktopSnapshot,
+    () => false,
+  );
+  const [mobileTab, setMobileTab] = useState<Tab>("lobby");
+  const [settingsTab, setSettingsTab] = useState<"room" | "game">("room");
+  const tablist = useRef<HTMLDivElement>(null);
+  const activeTab = desktop ? settingsTab : mobileTab;
+  const tabs: Tab[] = desktop ? ["room", "game"] : ["lobby", "room", "game"];
+  const owner = lobby.youId === lobby.ownerId;
+  const editable = owner && connection === "connected";
+  const you = lobby.players.find((player) => player.id === lobby.youId);
+  const others = lobby.players.filter((player) => player.id !== lobby.youId);
+  const connected = lobby.players.filter((player) => player.connected).length;
+
+  function selectTab(tab: Tab) {
+    setMobileTab(tab);
+    if (tab !== "lobby") setSettingsTab(tab);
+  }
+
+  function playerCard(player: Player, self = false) {
+    return (
+      <div
+        className={`flex items-center gap-3 rounded-base border-2 p-3 ${self ? "border-main bg-main/5" : "border-border bg-input-background"}`}
+      >
+        <span
+          className={`flex size-11 shrink-0 items-center justify-center rounded-base border-2 ${self ? "border-main text-main" : "border-border text-muted-foreground"}`}
+        >
+          <Icon name="person" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate font-heading">{player.name}</span>
+            {player.id === lobby.ownerId && (
+              <span
+                role="img"
+                aria-label="Room owner"
+                title="Room owner"
+                className="text-chart-3"
+              >
+                <Icon name="crown" />
+              </span>
+            )}
+          </div>
+          {!player.connected && (
+            <p className="mt-1 text-xs text-muted-foreground">Reconnecting…</p>
+          )}
+        </div>
+        {owner && !self && (
+          <Button
+            variant="neutral"
+            size="icon"
+            className="shrink-0 rounded-full shadow-none"
+            disabled={connection !== "connected"}
+            aria-label={`Remove ${player.name}`}
+            onClick={() =>
+              onSend({ type: "kick_player", payload: { playerId: player.id } })
+            }
+          >
+            <Icon name="x" />
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <section aria-label="Room lobby" className="space-y-8">
+      <h1 className="text-center">
+        <Brand />
+      </h1>
+      <Card className="gap-0 overflow-hidden p-0">
+        <div className="lobby-grid">
+          <div
+            ref={tablist}
+            role="tablist"
+            aria-label="Lobby sections"
+            className="lobby-tabs flex gap-2 border-b-2 border-border p-3 md:px-6 md:pt-6"
+            onKeyDown={(event) => {
+              if (
+                !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)
+              )
+                return;
+              event.preventDefault();
+              const index = tabs.indexOf(activeTab);
+              const next =
+                event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? tabs.length - 1
+                    : (index +
+                        (event.key === "ArrowRight" ? 1 : -1) +
+                        tabs.length) %
+                      tabs.length;
+              selectTab(tabs[next]);
+              tablist.current
+                ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+                [next]?.focus();
+            }}
+          >
+            {tabs.map((tab) => (
+              <Button
+                key={tab}
+                id={`tab-${tab}`}
+                role="tab"
+                aria-controls={`panel-${tab}`}
+                aria-selected={activeTab === tab}
+                tabIndex={activeTab === tab ? 0 : -1}
+                variant={activeTab === tab ? "default" : "neutral"}
+                className="flex-1 shadow-none"
+                onClick={() => selectTab(tab)}
+              >
+                {tab === "lobby" ? "Lobby" : tab === "room" ? "Room" : "Game"}
+              </Button>
+            ))}
+          </div>
+          <div
+            id="panel-lobby"
+            role={desktop ? "region" : "tabpanel"}
+            aria-label={desktop ? "Lobby" : undefined}
+            aria-labelledby={desktop ? undefined : "tab-lobby"}
+            hidden={!desktop && activeTab !== "lobby"}
+            tabIndex={0}
+            className="lobby-players min-w-0 space-y-6 p-5 sm:p-7"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Room code</p>
+                <p
+                  aria-label={`Room code ${lobby.code}`}
+                  className="font-mono text-[clamp(2rem,7vw,3.5rem)] leading-tight font-bold tracking-wider text-main"
+                >
+                  {lobby.code}
+                </p>
+              </div>
+              <Button
+                variant="neutral"
+                size="icon-lg"
+                disabled={!shareURL}
+                onClick={onCopyLink}
+                aria-label="Copy URL"
+                title="Copy room link"
+              >
+                <Icon name="copy" />
+              </Button>
+            </div>
+            <div
+              aria-label={`Players (${lobby.players.length}/${lobby.maxPlayers})`}
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-sm">Players</h2>
+                <span
+                  aria-label={`${connected} people connected`}
+                  className="flex items-center gap-2 text-sm text-muted-foreground"
+                >
+                  <Icon name="person" />
+                  {connected}/{lobby.maxPlayers}
+                </span>
+              </div>
+              {you && playerCard(you, true)}
+              <ul
+                aria-label="Players in room"
+                className="mt-3 max-h-72 space-y-3 overflow-y-auto overscroll-contain p-1 -m-1"
+              >
+                {others.map((player) => (
+                  <li key={player.id}>{playerCard(player)}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div
+            className="lobby-settings min-w-0 p-5 sm:p-7"
+            hidden={activeTab === "lobby" && !desktop}
+          >
+            <div
+              id="panel-room"
+              role="tabpanel"
+              aria-labelledby="tab-room"
+              tabIndex={0}
+              hidden={activeTab !== "room"}
+              className="space-y-6"
+            >
+              <Select
+                label="Room size"
+                value={String(lobby.maxPlayers)}
+                disabled={!editable}
+                options={[3, 4, 5, 6, 7, 8].map((size) => ({
+                  value: String(size),
+                  label: `${size} players`,
+                  disabled: size < lobby.players.length,
+                }))}
+                onValueChange={(value) =>
+                  onSend({
+                    type: "update_settings",
+                    payload: { maxPlayers: Number(value) },
+                  })
+                }
+              />
+              <fieldset>
+                <legend className="mb-3 text-sm font-heading">Game</legend>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    aria-pressed={lobby.gameId === "zinger"}
+                    disabled={!editable}
+                    onClick={() =>
+                      onSend({
+                        type: "select_game",
+                        payload: { gameId: "zinger" },
+                      })
+                    }
+                    className="h-24 whitespace-normal text-xl"
+                  >
+                    Zinger
+                  </Button>
+                  <Button
+                    variant="neutral"
+                    disabled
+                    className="h-24 whitespace-normal border-dashed text-muted-foreground"
+                  >
+                    Coming Soon
+                  </Button>
+                </div>
+              </fieldset>
+            </div>
+            <div
+              id="panel-game"
+              role="tabpanel"
+              aria-labelledby="tab-game"
+              tabIndex={0}
+              hidden={activeTab !== "game"}
+            >
+              <fieldset>
+                <legend className="mb-3 text-sm font-heading">
+                  Zinger packs
+                </legend>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    aria-pressed={lobby.packSlug === "og"}
+                    aria-label="OG pack"
+                    disabled
+                    className="h-28 text-xl"
+                  >
+                    OG
+                  </Button>
+                  <Button
+                    variant="neutral"
+                    disabled
+                    className="h-28 whitespace-normal border-dashed text-muted-foreground"
+                  >
+                    Coming Soon
+                  </Button>
+                </div>
+              </fieldset>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end border-t-2 border-border bg-input-background px-5 py-4 sm:px-7">
+          <div className="flex gap-3">
+            {connection === "disconnected" && (
+              <Button onClick={onReconnect}>Reconnect</Button>
+            )}
+            <Button variant="neutral" onClick={onLeave}>
+              Leave room
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </section>
+  );
+}

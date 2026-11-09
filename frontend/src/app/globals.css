@@ -208,3 +208,30 @@
     transition: none;
   }
 }
+
+.lobby-grid {
+  display: grid;
+}
+
+@media (min-width: 768px) {
+  .lobby-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .lobby-players {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    border-right: 2px solid var(--border);
+  }
+
+  .lobby-tabs {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .lobby-settings {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}

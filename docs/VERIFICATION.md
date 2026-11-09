@@ -271,3 +271,34 @@ field preservation and card resizing.
 - `make check` passes, including 37 frontend tests with home branding and health
   navigation assertions, Go race/unit tests, lint/format/types and sqlc drift.
 - Backend/repository naming and domain/hosting configuration are unchanged.
+
+## 2026-11-09 — Responsive lobby rebuild
+
+- `make check` passes: lint/format/types, Go race/unit tests, sqlc drift and 41
+  frontend tests. Regression coverage includes clipboard success/failure, game
+  tiles/settings intents, owner removal, guest permissions/crown, connected count,
+  mobile default/keyboard tabs, desktop media-query changes, reconnect and leave.
+- Isolated headless Chrome acceptance passes against the running local Docker app:
+  real UI admission, eight authenticated connected players, scrollable roster,
+  desktop players alongside both settings tabs, mobile Lobby/Room/Game visibility,
+  OG included state, owner removal and no horizontal overflow at 320/375/390/768/
+  1024/1280px. No runtime exceptions. Desktop/mobile screenshots were inspected;
+  the temporary browser was closed and artifacts remain in `/private/tmp`.
+- OG stays fixed; other game/pack tiles are disabled. Shared pack toggling needs
+  later server support. No schema/backend changes or added dependencies; database
+  integration is not required.
+
+
+## 2026-11-09 — Lobby simplification and join notifications
+
+- Final `make check` passes: lint/format/types, Go race/unit tests, sqlc drift and
+  45 frontend tests. Coverage includes owner/guest arrival info toasts, duplicate
+  suppression on repeated snapshots and reconnect, grouped arrivals, concise UI,
+  one Coming Soon tile per tab, custom-select settings intents, disabled sizes,
+  guest permissions, Escape/focus restoration and existing admission regressions.
+- Chrome verified info notifications across three real clients and room-size
+  selection propagating to all clients. The automated browser run did not finish:
+  its popup DOM-removal assertion timed out despite the trigger reporting closed
+  and the new size reaching all clients. No source changes followed the passing
+  checks. The user independently verified the frontend and accepted it for commit.
+- No backend/schema changes or new dependencies; database integration not required.

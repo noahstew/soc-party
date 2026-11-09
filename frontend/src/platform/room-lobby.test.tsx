@@ -55,7 +55,7 @@ async function createRoom() {
   });
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));
   fireEvent.click(screen.getByRole("button", { name: "Create Room" }));
-  await screen.findByText("ABCDEF");
+  await screen.findByLabelText("Room code ABCDEF");
   await waitFor(() => expect(FakeSocket.instances).toHaveLength(1));
   const socket = FakeSocket.instances.at(-1)!;
   act(() => {
@@ -77,7 +77,7 @@ afterEach(() => {
 });
 
 describe("room lobby", () => {
-  it("copies the disabled room URL and shows a success toast", async () => {
+  it("copies the room URL beside the code and shows a success toast", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     vi.stubGlobal(
@@ -87,7 +87,6 @@ describe("room lobby", () => {
     render(<RoomLobby apiURL="http://localhost:8080" />);
     await createRoom();
 
-    expect(screen.getByLabelText("Share this room link")).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Copy URL" }));
 
     await waitFor(() =>
@@ -128,6 +127,213 @@ describe("room lobby", () => {
     },
   );
 
+  it("keeps only essential lobby content and one placeholder per settings tab", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await createRoom();
+    const room = screen.getByRole("region", { name: "Room lobby" });
+    expect(
+      within(room).queryByText(
+        /Live|Connected|The waiting room|Your player|^You$|Make room|gameplay|Invite your|Everyone joins|The rest of/,
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Copy URL" }).querySelector("svg"),
+    ).not.toBeNull();
+    const footer = screen.getByRole("button", { name: "Leave room" })
+      .parentElement!.parentElement!;
+    expect(footer.textContent).toBe("Leave room");
+    expect(footer).toHaveClass("justify-end");
+    fireEvent.click(screen.getByRole("tab", { name: "Room" }));
+    expect(
+      within(screen.getByRole("tabpanel", { name: "Room" })).queryByText(
+        "ABCDEF",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Coming Soon" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("tab", { name: "Game" }));
+    expect(screen.getByRole("button", { name: "Coming Soon" })).toBeDisabled();
+  });
+
+  it.each(["owner", "guest"])(
+    "notifies the %s about arrivals without repeating on updates or reconnect",
+    async (youId) => {
+      const initial = {
+        ...lobby,
+        youId,
+        players: [
+          ...lobby.players,
+          { id: "guest", name: "Sam", connected: true },
+        ],
+      };
+      sessionStorage.setItem(
+        "soc-party.guest",
+        JSON.stringify({ code: lobby.code, token }),
+      );
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(response({ token, lobby: initial })),
+      );
+      render(<RoomLobby apiURL="http://localhost:8080" />);
+      await screen.findByLabelText("Room code ABCDEF");
+      await waitFor(() => expect(FakeSocket.instances).toHaveLength(1));
+      const socket = FakeSocket.instances.at(-1)!;
+      act(() => {
+        socket.open();
+        socket.update(initial);
+      });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      const joined = {
+        ...initial,
+        players: [
+          ...initial.players,
+          { id: "new", name: "Charlie", connected: false },
+        ],
+      };
+      act(() => socket.update(joined));
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Charlie joined the room.",
+      );
+      expect(
+        screen.getByRole("status").closest('[data-slot="toast"]'),
+      ).toHaveAttribute("data-event", "info");
+      fireEvent.click(
+        screen.getByRole("button", { name: "Dismiss notification" }),
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+      );
+      const connected = {
+        ...joined,
+        players: joined.players.map((player) => ({
+          ...player,
+          connected: true,
+        })),
+      };
+      act(() => {
+        socket.update(connected);
+        socket.update(connected);
+      });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      act(() => socket.onerror?.());
+      fireEvent.click(screen.getByRole("button", { name: "Reconnect" }));
+      const retrySocket = FakeSocket.instances.at(-1)!;
+      act(() => {
+        retrySocket.open();
+        retrySocket.update(connected);
+      });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    },
+  );
+
+  it("includes every arrival when a room update contains several new players", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    const socket = await createRoom();
+    act(() =>
+      socket.update({
+        ...lobby,
+        players: [
+          ...lobby.players,
+          { id: "sam", name: "Sam", connected: true },
+          { id: "jo", name: "Jo", connected: true },
+        ],
+      }),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Sam, Jo joined the room.",
+    );
+  });
+
+  it("opens Lobby first and navigates settings with the keyboard", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    const socket = await createRoom();
+    expect(screen.getByRole("tab", { name: "Lobby" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tabpanel", { name: "Lobby" })).toBeVisible();
+    fireEvent.keyDown(screen.getByRole("tab", { name: "Lobby" }), {
+      key: "End",
+    });
+    expect(screen.getByRole("tab", { name: "Game" })).toHaveFocus();
+    expect(screen.getByRole("tabpanel", { name: "Game" })).toBeVisible();
+    const pack = screen.getByRole("button", { name: "OG pack" });
+    expect(pack).toHaveAttribute("aria-pressed", "true");
+    expect(pack).toBeDisabled();
+    fireEvent.keyDown(screen.getByRole("tab", { name: "Game" }), {
+      key: "Home",
+    });
+    expect(screen.getByRole("tab", { name: "Lobby" })).toHaveFocus();
+    expect(socket.send).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps players alongside desktop settings and adapts when resized", async () => {
+    let matches = true;
+    let resize: () => void = () => {};
+    vi.stubGlobal("matchMedia", () => ({
+      matches,
+      addEventListener: (_event: string, callback: () => void) => {
+        resize = callback;
+      },
+      removeEventListener: vi.fn(),
+    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    await createRoom();
+    expect(
+      screen.queryByRole("tab", { name: "Lobby" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Lobby" })).toBeVisible();
+    expect(screen.getByRole("tabpanel", { name: "Room" })).toBeVisible();
+    fireEvent.click(screen.getByRole("tab", { name: "Game" }));
+    expect(screen.getByRole("region", { name: "Lobby" })).toBeVisible();
+    expect(screen.getByRole("tabpanel", { name: "Game" })).toBeVisible();
+    act(() => {
+      matches = false;
+      resize();
+    });
+    expect(screen.getByRole("tab", { name: "Game" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Lobby" }));
+    expect(screen.getByRole("tabpanel", { name: "Lobby" })).toBeVisible();
+    expect(
+      screen.queryByRole("tabpanel", { name: "Game" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("disables owner controls on disconnect and reconnects without losing the room", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    const socket = await createRoom();
+    act(() => socket.onerror?.());
+    fireEvent.click(screen.getByRole("tab", { name: "Room" }));
+    expect(screen.getByLabelText("Room size")).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Zinger/ })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Reconnect" }));
+    await waitFor(() => expect(FakeSocket.instances).toHaveLength(2));
+    expect(socket.close).toHaveBeenCalled();
+    expect(sessionStorage.getItem("soc-party.guest")).not.toBeNull();
+  });
+
   it("creates a room, authenticates one socket, and renders live arrivals", async () => {
     const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
     vi.stubGlobal("fetch", fetch);
@@ -162,32 +368,80 @@ describe("room lobby", () => {
     expect(
       screen.getByRole("list", { name: "Players in room" }),
     ).toHaveTextContent("Sam");
-    expect(screen.getByText("Players (2/8)")).toBeInTheDocument();
-    expect(screen.getByLabelText("Share this room link")).toHaveValue(
-      "http://localhost:3000/lobby?room=ABCDEF",
-    );
-    const game = screen.getByRole("combobox", { name: "Game" });
-    expect(game).toHaveValue("zinger");
+    expect(screen.getByLabelText("Players (2/8)")).toBeInTheDocument();
+    expect(screen.getByLabelText("2 people connected")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Room owner" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Room" }));
+    const game = screen.getByRole("button", { name: /Zinger/ });
+    expect(game).toHaveAttribute("aria-pressed", "true");
     expect(game).toBeEnabled();
-    expect(screen.getByRole("option", { name: "Coming soon" })).toBeDisabled();
-    fireEvent.change(game, { target: { value: "zinger" } });
+    expect(screen.getAllByRole("button", { name: "Coming Soon" })).toHaveLength(
+      1,
+    );
+    for (const button of screen.getAllByRole("button", {
+      name: "Coming Soon",
+    })) {
+      expect(button).toBeDisabled();
+    }
+    fireEvent.click(game);
     expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
       type: "select_game",
       payload: { gameId: "zinger" },
     });
+    fireEvent.click(screen.getByRole("combobox", { name: "Room size" }));
+    const fourPlayers = await screen.findByRole("option", {
+      name: "4 players",
+    });
+    fireEvent.pointerDown(fourPlayers, { pointerType: "mouse", button: 0 });
+    fireEvent.click(fourPlayers);
+    await waitFor(() =>
+      expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+        type: "update_settings",
+        payload: { maxPlayers: 4 },
+      }),
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Lobby" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove Sam" }));
     expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
       type: "kick_player",
       payload: { playerId: "guest" },
     });
-    fireEvent.change(screen.getByLabelText("Room size"), {
-      target: { value: "4" },
-    });
-    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
-      type: "update_settings",
-      payload: { maxPlayers: 4 },
-    });
   });
+  it("disables room sizes below current membership", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    const socket = await createRoom();
+    act(() =>
+      socket.update({
+        ...lobby,
+        players: [
+          ...lobby.players,
+          ...[1, 2, 3].map((id) => ({
+            id: String(id),
+            name: `Guest ${id}`,
+            connected: true,
+          })),
+        ],
+      }),
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Room" }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Room size" }));
+    expect(
+      await screen.findByRole("option", { name: "3 players" }),
+    ).toHaveAttribute("aria-disabled", "true");
+    expect(
+      screen.getByRole("option", { name: "4 players" }),
+    ).not.toHaveAttribute("aria-disabled", "true");
+    fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" });
+    await waitFor(() =>
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole("combobox", { name: "Room size" })).toHaveFocus();
+  });
+
   it("joins from a shared code and shows guest controls", async () => {
     window.history.replaceState(null, "", "/?room=ABCDEF");
     const guestLobby = {
@@ -212,23 +466,27 @@ describe("room lobby", () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(window.location.pathname).toBe("/lobby");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await screen.findByText("ABCDEF");
+    await screen.findByLabelText("Room code ABCDEF");
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/rooms/ABCDEF/join",
       expect.anything(),
     );
     expect(screen.getByRole("status")).toHaveTextContent("Room joined!");
-    expect(screen.queryByLabelText("Room size")).not.toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Game" })).toBeDisabled();
-    expect(screen.getByRole("combobox", { name: "Game" })).toHaveValue(
-      "zinger",
-    );
+    expect(
+      screen.getByRole("status").closest('[data-slot="toast"]'),
+    ).toHaveAttribute("data-event", "info");
+    fireEvent.click(screen.getByRole("tab", { name: "Room" }));
+    expect(screen.getByLabelText("Room size")).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Zinger/ })).toBeDisabled();
+    fireEvent.click(screen.getByRole("tab", { name: "Lobby" }));
+    expect(screen.getByRole("img", { name: "Room owner" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Remove/ }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("list", { name: "Players in room" }),
-    ).toHaveTextContent("Sam");
+    ).toHaveTextContent("Alex");
+    expect(screen.getByText("Sam")).toBeInTheDocument();
   });
   it("automatically joins a lobby URL with a remembered name", async () => {
     window.history.replaceState(null, "", "/lobby?room=abcdef");
@@ -236,13 +494,16 @@ describe("room lobby", () => {
     const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
     vi.stubGlobal("fetch", fetch);
     render(<RoomLobby apiURL="http://localhost:8080" />);
-    await screen.findByText("ABCDEF");
+    await screen.findByLabelText("Room code ABCDEF");
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/rooms/ABCDEF/join",
       expect.objectContaining({ body: JSON.stringify({ name: "Alex" }) }),
     );
     expect(screen.getByRole("status")).toHaveTextContent("Room joined!");
+    expect(
+      screen.getByRole("status").closest('[data-slot="toast"]'),
+    ).toHaveAttribute("data-event", "info");
     expect(window.location.pathname + window.location.search).toBe(
       "/lobby?room=ABCDEF",
     );
@@ -259,7 +520,7 @@ describe("room lobby", () => {
     const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
     vi.stubGlobal("fetch", fetch);
     render(<RoomLobby apiURL="http://localhost:8080" />);
-    await screen.findByText("ABCDEF");
+    await screen.findByLabelText("Room code ABCDEF");
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/rooms/ABCDEF/join",
@@ -276,7 +537,7 @@ describe("room lobby", () => {
     const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
     vi.stubGlobal("fetch", fetch);
     render(<RoomLobby apiURL="http://localhost:8080" />);
-    await screen.findByText("ABCDEF");
+    await screen.findByLabelText("Room code ABCDEF");
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/rooms/ABCDEF/reconnect",
@@ -356,7 +617,7 @@ describe("room lobby", () => {
     const fetch = vi.fn().mockResolvedValue(response({ token, lobby }));
     vi.stubGlobal("fetch", fetch);
     render(<RoomLobby apiURL="http://localhost:8080" />);
-    await screen.findByText("ABCDEF");
+    await screen.findByLabelText("Room code ABCDEF");
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:8080/api/rooms/ABCDEF/reconnect",
       expect.objectContaining({

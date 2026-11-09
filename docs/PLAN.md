@@ -295,3 +295,25 @@ One commit per task; gameplay remains outside this request.
 
 - [x] Rename frontend branding and package to PartiSocial, document planned domain
   `parti.social` and compatibility guidance for future agents, and verify `make check`.
+
+## Requested lobby rebuild
+
+- [x] Move the shared badge above a desktop lobby card with players on the left
+  and Room/Game settings on the right; use Lobby/Room/Game tabs on mobile.
+  Pin the local player above a scrollable roster, show the owner crown and
+  connected count, add circular removal controls, code/link copying, room size,
+  game/pack tiles and persistent leave/reconnect controls. Verify regression
+  coverage, `make check` and responsive Chrome acceptance.
+
+OG remains the fixed server pack; coming-soon tiles are disabled. Pack toggling
+requires M3 settings support; gameplay, accounts and infrastructure remain outside
+this frontend request.
+
+## Requested lobby simplification
+
+- [x] Remove the lobby header, Live/Connected and redundant text, the repeated
+  room code and extra Coming Soon tiles. Keep the footer controls on the right,
+  use an SVG copy icon and the shared Base UI Select, and announce joins with
+  info toasts for existing members and new arrivals. Verify all checks/tests
+  together after implementation, including notification deduplication and
+  custom-select interactions/permissions. User verified and accepted the frontend.
