@@ -346,3 +346,15 @@ field preservation and card resizing.
   motion. Temporary browser closed; artifacts remain in `/private/tmp`.
 - Gameplay start remains unimplemented (M2); this change guards server-owned start
   eligibility and does not implement DB prompt retrieval/sampling (M3).
+
+## 2026-11-09 — Extended Zinger seed pack
+
+- Added the official published Extended pack (`extended`) with three original
+  approved prompts. The standard seed command now loads OG (five prompts) and
+  Extended (three prompts), each in its existing per-pack transaction.
+- `make seed` successfully applied both packs to the development game database.
+  `make check` passes, including 47 frontend tests and the Extended metadata/
+  originality regression. `make integration` passes: repeated seeding preserves
+  pack counts, prompt IDs, exact text/order, approval visibility and OG contents.
+- No schema/query/dependency changes. This request seeds content only; the current
+  lobby selection remains OG and does not add Extended selection/gameplay logic.

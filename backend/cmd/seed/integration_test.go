@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -39,8 +40,8 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer pool.Close()
-	path := "../../data/og_pack.json"
-	if err := seed(ctx, pool, path); err != nil {
+	directory := "../../data"
+	if err := seedPacks(ctx, pool, directory); err != nil {
 		t.Fatal(err)
 	}
 	q := gamestore.New(pool)
@@ -48,7 +49,15 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := seed(ctx, pool, path); err != nil {
+	beforePrompts := make(map[string][]gamestore.ListApprovedPromptsRow)
+	for _, slug := range []string{"og", "extended"} {
+		prompts, err := q.ListApprovedPrompts(ctx, slug)
+		if err != nil {
+			t.Fatal(err)
+		}
+		beforePrompts[slug] = prompts
+	}
+	if err := seedPacks(ctx, pool, directory); err != nil {
 		t.Fatal(err)
 	}
 	after, err := q.CountPacks(ctx)
@@ -62,21 +71,49 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	found := false
+	expected := map[string]pack{}
+	for _, name := range []string{"og_pack.json", "extended_pack.json"} {
+		content, err := readPack(directory + "/" + name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected[content.Slug] = content
+	}
+	found := make(map[string]bool)
 	for _, p := range packs {
-		if p.Slug == "og" {
-			found = true
-			count, err := q.CountPrompts(ctx, p.ID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if count != 5 {
-				t.Fatalf("seed prompt count=%d, want 5", count)
+		content, ok := expected[p.Slug]
+		if !ok {
+			continue
+		}
+		found[p.Slug] = true
+		if p.Title != content.Title {
+			t.Fatalf("wrong title for %s: %s", p.Slug, p.Title)
+		}
+		count, err := q.CountPrompts(ctx, p.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count != int64(len(content.Prompts)) {
+			t.Fatalf("%s prompt count=%d, want %d", p.Slug, count, len(content.Prompts))
+		}
+		prompts, err := q.ListApprovedPrompts(ctx, p.Slug)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(beforePrompts[p.Slug], prompts) {
+			t.Fatalf("repeated seed changed %s prompt IDs/content", p.Slug)
+		}
+		if len(prompts) != len(content.Prompts) {
+			t.Fatalf("approved prompts missing from %s", p.Slug)
+		}
+		for i, prompt := range prompts {
+			if prompt.Position != int32(i) || prompt.Text != content.Prompts[i] {
+				t.Fatalf("wrong %s prompt at position %d", p.Slug, i)
 			}
 		}
 	}
-	if !found {
-		t.Fatal("official seed pack absent")
+	if len(found) != len(expected) {
+		t.Fatalf("official seed packs absent: found %v", found)
 	}
 	tx, err := pool.Begin(ctx)
 	if err != nil {

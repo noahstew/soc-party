@@ -335,3 +335,10 @@ sampling, gameplay, accounts or infrastructure.
 The 2026-11-09 pack-control request authorizes a persisted OG selection flag and
 owner intent, mirrored projections, selected indicators and eligibility guard.
 This does not complete M3 content sampling or authorize M2 gameplay/start phases.
+
+## Requested Extended seed pack
+
+- [x] Add the official Zinger Extended pack with three original prompts, include it
+  alongside OG in `make seed`, verify contents and repeated-seed idempotency, and
+  apply the seed to the development database. Room selection/gameplay stays outside
+  this seed-only request.

@@ -1,4 +1,4 @@
-// Command seed transactionally upserts the original starter pack through sqlc.
+// Command seed transactionally upserts each original official pack through sqlc.
 package main
 
 import (
@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -42,7 +43,16 @@ func run() error {
 		return err
 	}
 	defer pool.Close()
-	return seed(ctx, pool, "data/og_pack.json")
+	return seedPacks(ctx, pool, "data")
+}
+
+func seedPacks(ctx context.Context, pool *pgxpool.Pool, directory string) error {
+	for _, name := range []string{"og_pack.json", "extended_pack.json"} {
+		if err := seed(ctx, pool, filepath.Join(directory, name)); err != nil {
+			return fmt.Errorf("seed %s: %w", name, err)
+		}
+	}
+	return nil
 }
 
 func readPack(path string) (pack, error) {

@@ -68,3 +68,29 @@ func TestOGPack(t *testing.T) {
 		seen[prompt] = true
 	}
 }
+
+func TestExtendedPack(t *testing.T) {
+	extended, err := readPack("../../data/extended_pack.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if extended.Slug != "extended" || extended.Title != "Extended" || len(extended.Prompts) != 3 {
+		t.Fatalf("invalid Extended metadata: %+v", extended)
+	}
+	seen := map[string]bool{}
+	for _, path := range []string{"../../data/og_pack.json", "../../data/official_pack.json"} {
+		original, err := readPack(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, text := range original.Prompts {
+			seen[text] = true
+		}
+	}
+	for _, text := range extended.Prompts {
+		if seen[text] {
+			t.Fatalf("duplicate Extended prompt: %s", text)
+		}
+		seen[text] = true
+	}
+}
