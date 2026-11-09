@@ -323,3 +323,11 @@ this frontend request.
 - [x] Replace the dark palette with soft-white surfaces, coral primary and pastel
   blue secondary actions. Update viewport/native control colors, readable accent
   text and toast styling; verify contrast and run `make check`.
+
+## Requested lobby entrance and pack controls
+
+- [x] Slide the lobby card in from the top on mount, respecting reduced motion;
+  verify and commit separately before implementing pack controls.
+- [ ] Allow owner pack toggles, mark selected pack tiles with a green circle check,
+  and require at least one selected pack for server-owned start eligibility.
+  Gameplay remains outside this request.

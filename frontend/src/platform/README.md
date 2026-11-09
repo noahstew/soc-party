@@ -66,3 +66,7 @@ snapshots are not announced again. Multiple new members in one snapshot share
 one notification. New arrivals receive their own Room joined info toast after
 HTTP admission. Removed Live/Connected labels and promotional copy stay absent;
 offline players still show Reconnecting when relevant.
+
+The active lobby card slides down from above the viewport on mount over 550ms.
+Room updates and tab changes reuse the card and do not replay the entrance.
+Reduced-motion preferences disable the entrance; the badge remains stationary.

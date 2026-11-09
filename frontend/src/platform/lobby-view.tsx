@@ -143,7 +143,7 @@ export function LobbyView({
       <h1 className="text-center">
         <Brand />
       </h1>
-      <Card className="gap-0 overflow-hidden p-0">
+      <Card className="lobby-card gap-0 overflow-hidden p-0">
         <div className="lobby-grid">
           <div
             ref={tablist}

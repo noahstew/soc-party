@@ -317,3 +317,11 @@ field preservation and card resizing.
   temporary browser closed. Screenshots remain in `/private/tmp`.
 - Components documentation describes the light palette and accent-ink tokens.
   No database changes; integration testing is not required.
+
+## 2026-11-09 — Lobby card entrance
+
+- The lobby card animates from above the viewport on mount over 550ms; the badge
+  stays stationary, regular room updates retain the same card, and reduced-motion
+  preferences disable the animation.
+- `make check` passes with 45 frontend tests, lint/format/types, Go race/unit tests
+  and sqlc drift. No behavior, dependency or schema changes.
