@@ -97,10 +97,13 @@ with `{ "token": "…" }`. Replies contain a private token and public lobby proj
 Connect `/api/rooms/{code}/ws`, send a `session_auth` envelope with that token as
 its first payload, then receive `lobby_state` projections. Tokens never enter URLs.
 Go protocol is authoritative; TypeScript mirrors it. Owner intents: `kick_player`,
-`update_settings` and `select_game`; all members may `ping` or `leave_room`. No start-game intent yet.
+`update_settings`, `select_game` and `select_pack`; all members may `ping` or `leave_room`. No start-game intent yet.
 
 Guest tokens rotate on reconnect. Grace: 60 seconds; hard room lifetime: two hours.
-Owner transfers on departure; rooms need three connected players to be eligible.
+Owner transfers on departure; rooms need three connected players and at least one
+selected available pack to be eligible. Lobby projections include the registered
+game/pack catalog and shared selected pack slugs. Pack choices are loaded from
+published game content; the lobby grids scroll and retain a Coming Soon tile.
 All live rooms close on backend restart. Database records are audit records, not
 restart recovery. Run exactly one backend process. Game record models are prepared
 for the future engine; there is no public answer/vote/history CRUD API.

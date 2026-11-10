@@ -28,13 +28,18 @@ func (m *memoryRepo) Save(_ context.Context, s Record, _ bool) error {
 		m.records = make(map[string]Record)
 	}
 	s.Members = append([]Member(nil), s.Members...)
+	s.SelectedPackSlugs = append([]string{}, s.SelectedPackSlugs...)
 	m.records[s.Code] = s
 	return nil
 }
+func testCatalog(context.Context) ([]protocol.Game, error) {
+	return []protocol.Game{{ID: "zinger", Title: "Zinger", Packs: []protocol.Pack{{Slug: "og", Title: "OG"}, {Slug: "extended", Title: "Extended"}}}}, nil
+}
+
 func fixture(t *testing.T) (*Registry, *memoryRepo, protocol.Session) {
 	t.Helper()
 	repo := &memoryRepo{}
-	r := NewRegistry(repo)
+	r := NewRegistry(repo, testCatalog)
 	t.Cleanup(r.Close)
 	owner, err := r.Create(context.Background(), "Owner")
 	if err != nil {
@@ -250,7 +255,7 @@ func TestGameSelectionAuthorizationAndProjection(t *testing.T) {
 }
 
 func packSelection(selected bool) *protocol.PackSelection {
-	return &protocol.PackSelection{PackSlug: "og", Selected: &selected}
+	return &protocol.PackSelection{GameID: "zinger", PackSlug: "og", Selected: &selected}
 }
 
 func TestPackSelectionAuthorizationEligibilityAndRollback(t *testing.T) {
@@ -261,7 +266,7 @@ func TestPackSelectionAuthorizationEligibilityAndRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !readLobby(t, ownerCh).PackSelected {
+	if len(readLobby(t, ownerCh).SelectedPackSlugs) == 0 {
 		t.Fatal("OG must start selected")
 	}
 	guest, err := r.Join(ctx, code, "Guest")
@@ -286,7 +291,7 @@ func TestPackSelectionAuthorizationEligibilityAndRollback(t *testing.T) {
 	if err := r.Command(ctx, code, guest.Token, "select_pack", packSelection(false)); !errors.Is(err, ErrForbidden) {
 		t.Fatalf("guest changed packs: %v", err)
 	}
-	for _, selection := range []*protocol.PackSelection{{PackSlug: "og"}, {PackSlug: "coming_soon", Selected: packSelection(true).Selected}, {Selected: packSelection(false).Selected}} {
+	for _, selection := range []*protocol.PackSelection{{GameID: "zinger", PackSlug: "og"}, {GameID: "zinger", PackSlug: "coming_soon", Selected: packSelection(true).Selected}, {GameID: "zinger", Selected: packSelection(false).Selected}} {
 		if err := r.Command(ctx, code, owner.Token, "select_pack", selection); err == nil {
 			t.Fatal("invalid pack selection accepted")
 		}
@@ -303,19 +308,19 @@ func TestPackSelectionAuthorizationEligibilityAndRollback(t *testing.T) {
 	if err := r.Command(ctx, code, owner.Token, "ping", &protocol.Empty{}); err != nil {
 		t.Fatal(err)
 	}
-	if got := readLobby(t, ownerCh); !got.PackSelected || !got.CanStart {
+	if got := readLobby(t, ownerCh); len(got.SelectedPackSlugs) == 0 || !got.CanStart {
 		t.Fatal("failed save changed selection or eligibility")
 	}
 	if err := r.Command(ctx, code, owner.Token, "select_pack", packSelection(false)); err != nil {
 		t.Fatal(err)
 	}
 	for _, ch := range []<-chan []byte{ownerCh, guestCh, thirdCh} {
-		if got := readLobby(t, ch); got.PackSelected || got.CanStart {
+		if got := readLobby(t, ch); len(got.SelectedPackSlugs) != 0 || got.CanStart {
 			t.Fatal("empty selection must be shared and ineligible")
 		}
 	}
 	repo.mu.Lock()
-	selected := repo.records[code].PackSelected
+	selected := len(repo.records[code].SelectedPackSlugs) != 0
 	repo.mu.Unlock()
 	if selected {
 		t.Fatal("deselection not persisted")
@@ -324,23 +329,23 @@ func TestPackSelectionAuthorizationEligibilityAndRollback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resumed.Lobby.PackSelected || resumed.Lobby.CanStart {
+	if len(resumed.Lobby.SelectedPackSlugs) != 0 || resumed.Lobby.CanStart {
 		t.Fatal("reconnect lost empty selection")
 	}
 	if err := r.Command(ctx, code, resumed.Token, "select_game", &protocol.GameSelection{GameID: "zinger"}); err != nil {
 		t.Fatal(err)
 	}
-	if got := readLobby(t, ownerCh); got.PackSelected || got.CanStart {
+	if got := readLobby(t, ownerCh); len(got.SelectedPackSlugs) != 0 || got.CanStart {
 		t.Fatal("reselecting game bypassed pack requirement")
 	}
 	if err := r.Command(ctx, code, resumed.Token, "select_pack", packSelection(true)); err != nil {
 		t.Fatal(err)
 	}
-	if got := readLobby(t, ownerCh); !got.PackSelected || !got.CanStart {
+	if got := readLobby(t, ownerCh); len(got.SelectedPackSlugs) == 0 || !got.CanStart {
 		t.Fatal("selecting OG did not restore eligibility")
 	}
 	r.Disconnect(code, thirdID, thirdCh)
-	if got := readLobby(t, ownerCh); !got.PackSelected || got.CanStart {
+	if got := readLobby(t, ownerCh); len(got.SelectedPackSlugs) == 0 || got.CanStart {
 		t.Fatal("pack selection bypassed player requirement")
 	}
 }

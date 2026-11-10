@@ -76,3 +76,11 @@ into a reusable labeled control, styled with the existing theme. The library own
 keyboard navigation, typeahead, disabled options, selection, focus restoration and
 portal accessibility. The popup uses the trigger width and available viewport
 height. No dependency is added. Source API: https://base-ui.com/react/components/select.
+
+## Catalog choices
+
+`choice-grid.tsx` contains a focusable, vertically scrollable two-column grid with
+bounded height and one disabled Coming Soon button as the final grid tile, matching
+the other buttons in size and style. Pass any number of game/pack buttons as
+children; use `tileSize="lg"` for pack tiles. Use stable catalog IDs/slugs as keys
+and let long labels wrap.

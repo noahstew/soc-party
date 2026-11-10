@@ -16,8 +16,10 @@ browser origin in ALLOWED_ORIGINS; Docker hostnames are never public URLs.
 Tests mock fetch and WebSocket boundaries and assert rendered player outcomes.
 
 The room game selector is visible to all members. Only the connected owner may
-choose a game; `select_game` is authorized and validated by the Go actor. Zinger is
-the only available choice. Coming soon stays disabled and is rejected by the server.
+choose a game or toggle packs; the Go actor validates each intent against the
+registered catalog. Zinger is currently registered with published packs loaded
+from the game database, including OG and Extended. New game registrations supply
+their own catalog source; frontend rendering and room storage accept their IDs.
 
 Home shows only the `room-entry.tsx` admission card. Continue validates the player
 name and flips to Connect/Create Room; editing the name preserves both fields.
@@ -55,13 +57,25 @@ members, and only the connected owner can remove others or change settings.
 Room size uses the shared Base UI Select and stays visible but disabled for guests.
 The footer contains only right-aligned Leave/reconnect controls outside the tabs. Existing room admission, socket and storage behavior is retained.
 
-Game/pack tiles use text placeholders for future art. A green circle check marks
-selected tiles. Only the connected owner can toggle the current OG pack, through
-`select_pack`; all clients render the authoritative `packSelected` snapshot field.
-OG is selected by default and may be cleared. With no pack selected, the Game tab
-shows a short selection requirement and the server reports `canStart: false`.
-Each settings tab has one disabled Coming Soon tile. This setting is persisted;
-DB prompt retrieval/sampling and actual gameplay start remain later milestones.
+Game/pack tiles use text placeholders for future art. `components/choice-grid.tsx`
+renders catalog entries in a focusable scroll region with a two-column grid and
+bounded height. One disabled Coming Soon button is the final tile inside each
+grid, matching the other choices and scrolling with them. Long titles wrap.
+
+Each lobby projection supplies `games` (IDs, titles, and available pack slugs/titles)
+and `selectedPackSlugs`. There is no fixed frontend game/pack count. A green circle
+check marks selected tiles. Only the connected owner can send `select_game` or
+`select_pack`; pack intents include the current `gameId` to reject stale clicks
+from a different game. Clients render authoritative updates and can select multiple
+packs. Switching games clears incompatible selections; reselecting the same game
+preserves selection. The server requires three connected players and at least one
+available selected pack for `canStart`. Choices refresh at room creation, socket
+subscription, reconnect and selection; unavailable packs are removed on refresh.
+The first catalog game/pack is selected for new rooms (currently Zinger/OG).
+
+Published packs appear automatically on catalog refresh, without adding frontend
+buttons. Registered game metadata is supplied in `backend/cmd/server/main.go`;
+actual game modules, prompt sampling and gameplay start remain later milestones.
 
 Lobby snapshots are compared by player ID to announce new members through the
 shared info toast on every existing client. Initial admission seeds the baseline;

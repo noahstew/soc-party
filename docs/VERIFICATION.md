@@ -359,6 +359,33 @@ field preservation and card resizing.
 - No schema/query/dependency changes. This request seeds content only; the current
   lobby selection remains OG and does not add Extended selection/gameplay logic.
 
+## 2026-11-09 — Catalog-driven scrolling lobby choices
+
+- Extended seed committed separately as `8e35820`. Lobby catalogs now load published
+  Zinger packs from game sqlc queries, including OG and Extended. Selected pack
+  arrays replace the prior flag, with migration 00005 preserving checked/unchecked
+  state. Registered game IDs no longer require a schema/frontend edit.
+- `make check` passes: lint/format/types, Go race/unit tests, sqlc drift against
+  intentionally regenerated output and 60 frontend tests. `make integration`
+  passes with persisted multiple packs, empty selection and registered game IDs.
+- Actor tests cover multi-pack idempotency, rollback of slice mutations on failed
+  persistence, source errors, refresh/removal of unavailable packs, game-switch
+  selection clearing and stale/cross-game intent rejection. Catalog validation
+  handles 100 games with 100 packs each; frontend tests exercise 60 games/90 packs
+  and reject malformed catalog/selection projections.
+- Three real Chrome clients verify Extended appears, OG/Extended toggle
+  independently, multiple selections are shared, guests cannot change them,
+  Extended-only selection remains eligible with three players, empty selection
+  becomes ineligible and selections survive reload.
+- Browser-local synthetic catalogs verify 100-game/90-pack grids scroll by
+  keyboard, reach the final choices and emit the right intents. Coming Soon is
+  exactly one disabled final button inside each grid, matching peer dimensions.
+  Desktop/mobile screenshots inspected and no horizontal overflow at 320/390/
+  768/1280px. Synthetic entries were never added to application data; temporary
+  browser closed and screenshots remain in `/private/tmp`.
+- No new dependencies or gameplay rules; prompt sampling/start phases remain
+  later milestones. Lobby catalog changes are left uncommitted for review.
+
 ## 2026-11-10 — Toast message titles
 
 - Notifications show the actual message as their title without generic severity

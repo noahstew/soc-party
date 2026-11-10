@@ -20,7 +20,9 @@ type roomRepo struct{}
 
 func (roomRepo) Save(context.Context, platform.Record, bool) error { return nil }
 func TestRoomHTTPAndSockets(t *testing.T) {
-	rooms := platform.NewRegistry(roomRepo{})
+	rooms := platform.NewRegistry(roomRepo{}, func(context.Context) ([]protocol.Game, error) {
+		return []protocol.Game{{ID: "zinger", Title: "Zinger", Packs: []protocol.Pack{{Slug: "og", Title: "OG"}}}}, nil
+	})
 	defer rooms.Close()
 	server := httptest.NewServer(New(fakeDB{}, fakePacks{}, slog.New(slog.NewTextHandler(io.Discard, nil)), RoomOptions{Registry: rooms, Origins: []string{"http://localhost:3000"}}))
 	defer server.Close()

@@ -346,3 +346,16 @@ This does not complete M3 content sampling or authorize M2 gameplay/start phases
   alongside OG in `make seed`, verify contents and repeated-seed idempotency, and
   apply the seed to the development database. Room selection/gameplay stays outside
   this seed-only request.
+
+## Requested scalable lobby catalog
+
+- [x] Commit the Extended seed, load published Zinger packs into lobby projections,
+  support registered game catalogs and persistent multiple-pack selections, and
+  render game/pack buttons in bounded scroll grids with one disabled Coming Soon
+  button as the final grid tile in each. Verify authorization, validation, catalog refresh, readiness,
+  persistence, large catalogs and responsive/keyboard scrolling.
+
+This request authorizes catalog/selection plumbing only; actual game engines,
+DB prompt sampling and gameplay phases remain outside scope. Catalog entries are
+included in room projections; pagination/virtualized rendering can be introduced
+if production catalogs exceed practical snapshot/rendering sizes.

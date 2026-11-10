@@ -249,3 +249,29 @@ authoritative updates rather than locally toggling. The server's `canStart` now
 requires the lobby phase, Zinger, at least three connected players and selected OG.
 No actual start intent exists yet; M2 gameplay and M3 DB prompt sampling remain
 out of scope. The existing single pack needs no speculative multiple-pack model.
+
+## 2026-11-09 — Catalog-driven scrolling lobby choices
+
+Inject a registered game catalog source into the room registry. The current server
+registration loads Zinger's published official packs using existing game sqlc
+queries, so Extended and future published packs appear without frontend edits.
+Catalog I/O runs outside room actors with a deadline; validated immutable snapshots
+are applied by the actor at creation, subscribe/reconnect and selection. Reject
+invalid/duplicate IDs or titles and unavailable/cross-game selections.
+
+Replace the OG-only flag with persisted `selected_pack_slugs`, backfilling the
+previous checked/unchecked state and preserving audit records. Relax the database's
+Zinger-only ID check to valid registered-ID syntax; application catalog validation
+still decides which games are available. New rooms choose the first registered
+game/pack; switching games clears selections while choosing the same game preserves
+them. Empty/unavailable selection is ineligible. Clone selection slices before
+actor operations so failed persistence cannot mutate existing state.
+
+Mirror catalog arrays and selected slugs in the protocol. Pack intents also carry
+the game ID to reject delayed clicks after a game switch. Frontend choice grids
+have no fixed item count, use bounded vertical scrolling and wrapping labels,
+and keep one disabled Coming Soon button as the final tile inside each grid,
+matching the size/style of its peers as requested in the layout feedback. No new dependencies, game
+rules or prompt sampling are added. The down migration restores the former
+single-pack schema using the first selected pack, so multi-pack choices are only
+fully represented by the new schema.

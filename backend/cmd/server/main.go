@@ -18,6 +18,7 @@ import (
 	"example.com/soc-party/backend/internal/gamestore"
 	"example.com/soc-party/backend/internal/httpapi"
 	"example.com/soc-party/backend/internal/platform"
+	"example.com/soc-party/backend/internal/protocol"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -84,7 +85,19 @@ func run(log *slog.Logger) error {
 	if err != nil {
 		return err
 	}
-	rooms := platform.NewRegistry(repo)
+	rooms := platform.NewRegistry(repo, func(ctx context.Context) ([]protocol.Game, error) {
+		// Register each future game with its own content source here. Lobby UI and
+		// room selection use this catalog rather than branching on game IDs.
+		rows, err := gamestore.New(gamePool).ListOfficialPacks(ctx)
+		if err != nil {
+			return nil, err
+		}
+		packs := make([]protocol.Pack, 0, len(rows))
+		for _, row := range rows {
+			packs = append(packs, protocol.Pack{Slug: row.Slug, Title: row.Title})
+		}
+		return []protocol.Game{{ID: "zinger", Title: "Zinger", Packs: packs}}, nil
+	})
 	defer rooms.Close()
 	srv := &http.Server{Addr: cfg.HTTPAddr, Handler: httpapi.New(databaseHealth{pool, gamePool}, gamestore.New(gamePool), log, httpapi.RoomOptions{Registry: rooms, Origins: cfg.AllowedOrigins}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	errCh := make(chan error, 1)

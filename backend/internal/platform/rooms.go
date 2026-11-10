@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -39,7 +40,8 @@ type Member struct {
 	Seen             time.Time
 }
 type Record struct {
-	PackSelected              bool
+	SelectedPackSlugs         []string
+	Games                     []protocol.Game
 	GameID                    string
 	ID, Code, OwnerID, Status string
 	MaxPlayers                int
@@ -62,19 +64,20 @@ type actor struct {
 	done     chan struct{}
 }
 type Registry struct {
-	mu     sync.Mutex
-	rooms  map[string]*actor
-	repo   Repository
-	now    func() time.Time
-	code   func() (string, error)
-	ctx    context.Context
-	cancel context.CancelFunc
-	wg     sync.WaitGroup
+	mu      sync.Mutex
+	rooms   map[string]*actor
+	repo    Repository
+	catalog CatalogSource
+	now     func() time.Time
+	code    func() (string, error)
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
 }
 
-func NewRegistry(repo Repository) *Registry {
+func NewRegistry(repo Repository, catalog CatalogSource) *Registry {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Registry{rooms: make(map[string]*actor), repo: repo, now: time.Now, code: NewCode, ctx: ctx, cancel: cancel}
+	return &Registry{rooms: make(map[string]*actor), repo: repo, catalog: catalog, now: time.Now, code: NewCode, ctx: ctx, cancel: cancel}
 }
 func (r *Registry) Close() { r.cancel(); r.wg.Wait() }
 func randomHex(n int) (string, error) {
@@ -131,6 +134,15 @@ func newMember(name string, now time.Time) (Member, string, error) {
 	return Member{ID: id, Name: name, Status: "active", Hash: sha256.Sum256([]byte(token)), Seen: now}, token, err
 }
 func (r *Registry) Create(ctx context.Context, name string) (protocol.Session, error) {
+	games, err := r.loadCatalog(ctx)
+	if err != nil || len(games) == 0 {
+		return protocol.Session{}, ErrUnavailable
+	}
+	selected := []string{}
+	if len(games[0].Packs) > 0 {
+		selected = append(selected, games[0].Packs[0].Slug)
+	}
+
 	p, token, err := newMember(name, r.now())
 	if err != nil {
 		return protocol.Session{}, err
@@ -152,7 +164,7 @@ func (r *Registry) Create(ctx context.Context, name string) (protocol.Session, e
 		if _, ok := r.rooms[code]; ok {
 			continue
 		}
-		s := Record{GameID: "zinger", PackSelected: true, ID: id, Code: code, OwnerID: p.ID, Status: "lobby", MaxPlayers: 8, Expires: r.now().Add(Lifetime), Activity: r.now(), Members: []Member{p}}
+		s := Record{GameID: games[0].ID, Games: games, SelectedPackSlugs: selected, ID: id, Code: code, OwnerID: p.ID, Status: "lobby", MaxPlayers: 8, Expires: r.now().Add(Lifetime), Activity: r.now(), Members: []Member{p}}
 		// PostgreSQL also rejects historical code collisions. Retry without overwriting history.
 		if err := r.repo.Save(ctx, s, true); err != nil {
 			if errors.Is(err, ErrConflict) {
@@ -214,7 +226,7 @@ func authenticate(s *Record, token string) (*Member, error) {
 	return nil, ErrUnauthorized
 }
 func project(s Record, you string) protocol.Lobby {
-	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: s.GameID, PackSlug: "og", PackSelected: s.PackSelected, MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
+	p := protocol.Lobby{Code: s.Code, OwnerID: s.OwnerID, YouID: you, GameID: s.GameID, Games: s.Games, SelectedPackSlugs: append([]string{}, s.SelectedPackSlugs...), MaxPlayers: s.MaxPlayers, ExpiresAt: s.Expires.UTC().Format(time.RFC3339), Players: []protocol.Player{}}
 	connected := 0
 	for _, m := range s.Members {
 		if m.Status != "active" {
@@ -225,7 +237,7 @@ func project(s Record, you string) protocol.Lobby {
 			connected++
 		}
 	}
-	p.CanStart = s.Status == "lobby" && s.GameID == "zinger" && connected >= 3 && s.PackSelected
+	p.CanStart = s.Status == "lobby" && connected >= 3 && packsReady(s)
 	return p
 }
 func count(s Record) int {
@@ -275,6 +287,10 @@ func (r *Registry) Join(ctx context.Context, code, name string) (protocol.Sessio
 	return value.(protocol.Session), nil
 }
 func (r *Registry) Reconnect(ctx context.Context, code, token string) (protocol.Session, error) {
+	games, err := r.loadCatalog(ctx)
+	if err != nil {
+		return protocol.Session{}, err
+	}
 	next, err := randomHex(32)
 	if err != nil {
 		return protocol.Session{}, err
@@ -287,6 +303,7 @@ func (r *Registry) Reconnect(ctx context.Context, code, token string) (protocol.
 		if !p.Connected && r.now().Sub(p.Seen) >= Grace {
 			return nil, ErrUnauthorized
 		}
+		applyCatalog(s, games)
 		p.Hash = sha256.Sum256([]byte(next))
 		p.Seen = r.now()
 		s.Activity = r.now()
@@ -305,6 +322,10 @@ type subscription struct {
 type unsubscription struct{ id string }
 
 func (r *Registry) Subscribe(ctx context.Context, code, token string) (string, <-chan []byte, error) {
+	games, err := r.loadCatalog(ctx)
+	if err != nil {
+		return "", nil, err
+	}
 	value, err := r.call(ctx, code, func(s *Record, _ map[string]chan []byte) (any, error) {
 		p, err := authenticate(s, token)
 		if err != nil {
@@ -313,6 +334,7 @@ func (r *Registry) Subscribe(ctx context.Context, code, token string) (string, <
 		if !p.Connected && r.now().Sub(p.Seen) >= Grace {
 			return nil, ErrUnauthorized
 		}
+		applyCatalog(s, games)
 		p.Connected = true
 		p.Seen = r.now()
 		s.Activity = r.now()
@@ -341,6 +363,15 @@ func (r *Registry) Disconnect(code, id string, ch <-chan []byte) {
 	})
 }
 func (r *Registry) Command(ctx context.Context, code, token, kind string, payload any) error {
+	var games []protocol.Game
+	if kind == "select_game" || kind == "select_pack" {
+		var err error
+		games, err = r.loadCatalog(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
 	_, err := r.call(ctx, code, func(s *Record, _ map[string]chan []byte) (any, error) {
 		p, err := authenticate(s, token)
 		if err != nil {
@@ -379,8 +410,12 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				return nil, ErrForbidden
 			}
 			gameID := payload.(*protocol.GameSelection).GameID
-			if gameID != "zinger" {
+			applyCatalog(s, games)
+			if _, ok := findGame(games, gameID); !ok {
 				return nil, fmt.Errorf("game is not available")
+			}
+			if s.GameID != gameID {
+				s.SelectedPackSlugs = []string{}
 			}
 			s.GameID = gameID
 		case "select_pack":
@@ -388,10 +423,16 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				return nil, ErrForbidden
 			}
 			selection := payload.(*protocol.PackSelection)
-			if selection.PackSlug != "og" || selection.Selected == nil {
-				return nil, fmt.Errorf("choose the OG pack and provide its selected state")
+			applyCatalog(s, games)
+			game, ok := findGame(games, s.GameID)
+			if !ok || selection.GameID != s.GameID || !hasPack(game, selection.PackSlug) || selection.Selected == nil {
+				return nil, fmt.Errorf("choose an available pack for the current game and provide its selected state")
 			}
-			s.PackSelected = *selection.Selected
+			if *selection.Selected && !slices.Contains(s.SelectedPackSlugs, selection.PackSlug) {
+				s.SelectedPackSlugs = append(s.SelectedPackSlugs, selection.PackSlug)
+			} else if !*selection.Selected {
+				s.SelectedPackSlugs = slices.DeleteFunc(s.SelectedPackSlugs, func(slug string) bool { return slug == selection.PackSlug })
+			}
 		case "update_settings":
 			if s.OwnerID != p.ID {
 				return nil, ErrForbidden
@@ -448,6 +489,7 @@ func (r *Registry) run(a *actor, s Record) {
 		case <-ticker.C:
 			next := s
 			next.Members = append([]Member(nil), s.Members...)
+			next.SelectedPackSlugs = append([]string{}, s.SelectedPackSlugs...)
 			r.cleanup(&next)
 			if next.Status == "closed" {
 				_ = r.persist(next)
@@ -472,6 +514,7 @@ func (r *Registry) run(a *actor, s Record) {
 			}
 			next := s
 			next.Members = append([]Member(nil), s.Members...)
+			next.SelectedPackSlugs = append([]string{}, s.SelectedPackSlugs...)
 			value, err := req.run(&next, subs)
 			if err == nil {
 				err = r.persist(next)

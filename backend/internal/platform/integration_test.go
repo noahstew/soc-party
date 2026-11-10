@@ -5,6 +5,7 @@ package platform
 import (
 	"context"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -28,7 +29,10 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	repo := PostgresRepository{Pool: tx}
-	r := NewRegistry(repo)
+	r := NewRegistry(repo, func(ctx context.Context) ([]protocol.Game, error) {
+		games, err := testCatalog(ctx)
+		return append(games, protocol.Game{ID: "future_game", Title: "Future Game", Packs: []protocol.Pack{{Slug: "alternate", Title: "Alternate"}}}), err
+	})
 	defer r.Close()
 	owner, err := r.Create(ctx, "Owner")
 	if err != nil {
@@ -58,7 +62,7 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 			t.Fatal("raw or missing token")
 		}
 	}
-	if !record.PackSelected {
+	if len(record.SelectedPackSlugs) != 1 || record.SelectedPackSlugs[0] != "og" {
 		t.Fatal("default pack not persisted")
 	}
 	for _, selected := range []bool{false, true} {
@@ -66,9 +70,27 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 			t.Fatal(err)
 		}
 		record, err = q.GetRoom(ctx, owner.Lobby.Code)
-		if err != nil || record.PackSelected != selected {
+		if err != nil || (len(record.SelectedPackSlugs) > 0) != selected {
 			t.Fatalf("pack selection not persisted: selected=%v err=%v", selected, err)
 		}
+	}
+	selected := true
+	if err = r.Command(ctx, owner.Lobby.Code, owner.Token, "select_pack", &protocol.PackSelection{GameID: "zinger", PackSlug: "extended", Selected: &selected}); err != nil {
+		t.Fatal(err)
+	}
+	record, err = q.GetRoom(ctx, owner.Lobby.Code)
+	if err != nil || !reflect.DeepEqual(record.SelectedPackSlugs, []string{"og", "extended"}) {
+		t.Fatalf("multiple packs not persisted: %v %v", record.SelectedPackSlugs, err)
+	}
+	if err = r.Command(ctx, owner.Lobby.Code, owner.Token, "select_game", &protocol.GameSelection{GameID: "future_game"}); err != nil {
+		t.Fatal(err)
+	}
+	if err = r.Command(ctx, owner.Lobby.Code, owner.Token, "select_pack", &protocol.PackSelection{GameID: "future_game", PackSlug: "alternate", Selected: &selected}); err != nil {
+		t.Fatal(err)
+	}
+	record, err = q.GetRoom(ctx, owner.Lobby.Code)
+	if err != nil || record.GameID != "future_game" || !reflect.DeepEqual(record.SelectedPackSlugs, []string{"alternate"}) {
+		t.Fatalf("registered game/pack not persisted: %+v %v", record, err)
 	}
 	if err = repo.Reset(ctx); err != nil {
 		t.Fatal(err)

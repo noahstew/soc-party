@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import { Brand } from "@/components/brand";
+import { ChoiceGrid } from "@/components/choice-grid";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
@@ -107,6 +108,8 @@ export function LobbyView({
   const you = lobby.players.find((player) => player.id === lobby.youId);
   const others = lobby.players.filter((player) => player.id !== lobby.youId);
   const connected = lobby.players.filter((player) => player.connected).length;
+  const currentGame = lobby.games.find((game) => game.id === lobby.gameId);
+  const selectedPacks = new Set(lobby.selectedPackSlugs);
 
   function selectTab(tab: Tab) {
     setMobileTab(tab);
@@ -293,31 +296,29 @@ export function LobbyView({
               />
               <fieldset>
                 <legend className="mb-3 text-sm font-heading">Game</legend>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    aria-pressed={lobby.gameId === "zinger"}
-                    disabled={!editable}
-                    onClick={() =>
-                      onSend({
-                        type: "select_game",
-                        payload: { gameId: "zinger" },
-                      })
-                    }
-                    className="relative h-24 whitespace-normal text-xl"
-                  >
-                    Zinger
-                    {lobby.gameId === "zinger" && (
-                      <SelectionCheck label="Game selected" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="neutral"
-                    disabled
-                    className="h-24 whitespace-normal border-dashed text-muted-foreground"
-                  >
-                    Coming Soon
-                  </Button>
-                </div>
+                <ChoiceGrid label="Available games">
+                  {lobby.games.map((game) => (
+                    <Button
+                      key={game.id}
+                      aria-pressed={lobby.gameId === game.id}
+                      aria-label={game.title}
+                      disabled={!editable}
+                      variant={lobby.gameId === game.id ? "default" : "neutral"}
+                      onClick={() =>
+                        onSend({
+                          type: "select_game",
+                          payload: { gameId: game.id },
+                        })
+                      }
+                      className="relative h-24 min-w-0 px-3 pr-8 text-lg whitespace-normal [overflow-wrap:anywhere]"
+                    >
+                      {game.title}
+                      {lobby.gameId === game.id && (
+                        <SelectionCheck label="Game selected" />
+                      )}
+                    </Button>
+                  ))}
+                </ChoiceGrid>
               </fieldset>
             </div>
             <div
@@ -329,40 +330,39 @@ export function LobbyView({
             >
               <fieldset>
                 <legend className="mb-3 text-sm font-heading">
-                  Zinger packs
+                  {currentGame ? `${currentGame.title} packs` : "Game packs"}
                 </legend>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    aria-pressed={lobby.packSlug === "og" && lobby.packSelected}
-                    aria-label="OG pack"
-                    disabled={!editable}
-                    variant={lobby.packSelected ? "default" : "neutral"}
-                    onClick={() =>
-                      onSend({
-                        type: "select_pack",
-                        payload: {
-                          packSlug: "og",
-                          selected: !lobby.packSelected,
-                        },
-                      })
-                    }
-                    className="relative h-28 text-xl"
-                  >
-                    OG
-                    {lobby.packSelected && (
-                      <SelectionCheck label="Pack selected" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="neutral"
-                    disabled
-                    className="h-28 whitespace-normal border-dashed text-muted-foreground"
-                  >
-                    Coming Soon
-                  </Button>
-                </div>
+                <ChoiceGrid label="Available packs" tileSize="lg">
+                  {currentGame?.packs.map((pack) => (
+                    <Button
+                      key={pack.slug}
+                      aria-pressed={selectedPacks.has(pack.slug)}
+                      aria-label={`${pack.title} pack`}
+                      disabled={!editable}
+                      variant={
+                        selectedPacks.has(pack.slug) ? "default" : "neutral"
+                      }
+                      onClick={() =>
+                        onSend({
+                          type: "select_pack",
+                          payload: {
+                            gameId: lobby.gameId,
+                            packSlug: pack.slug,
+                            selected: !selectedPacks.has(pack.slug),
+                          },
+                        })
+                      }
+                      className="relative h-28 min-w-0 px-3 pr-8 text-lg whitespace-normal [overflow-wrap:anywhere]"
+                    >
+                      {pack.title}
+                      {selectedPacks.has(pack.slug) && (
+                        <SelectionCheck label="Pack selected" />
+                      )}
+                    </Button>
+                  ))}
+                </ChoiceGrid>
               </fieldset>
-              {!lobby.packSelected && (
+              {lobby.selectedPackSlugs.length === 0 && (
                 <p className="mt-3 text-sm text-muted-foreground">
                   Select at least one pack to start.
                 </p>

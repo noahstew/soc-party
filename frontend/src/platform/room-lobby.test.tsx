@@ -17,8 +17,17 @@ const lobby: Lobby = {
   ownerId: "owner",
   youId: "owner",
   gameId: "zinger",
-  packSlug: "og",
-  packSelected: true,
+  games: [
+    {
+      id: "zinger",
+      title: "Zinger",
+      packs: [
+        { slug: "og", title: "OG" },
+        { slug: "extended", title: "Extended" },
+      ],
+    },
+  ],
+  selectedPackSlugs: ["og"],
   maxPlayers: 8,
   canStart: false,
   expiresAt: "2026-11-08T01:00:00Z",
@@ -293,11 +302,11 @@ describe("room lobby", () => {
     fireEvent.click(pack);
     expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
       type: "select_pack",
-      payload: { packSlug: "og", selected: false },
+      payload: { gameId: "zinger", packSlug: "og", selected: false },
     });
     expect(pack).toHaveAttribute("aria-pressed", "true");
     act(() =>
-      socket.update({ ...lobby, packSelected: false, canStart: false }),
+      socket.update({ ...lobby, selectedPackSlugs: [], canStart: false }),
     );
     expect(pack).toHaveAttribute("aria-pressed", "false");
     expect(
@@ -309,9 +318,9 @@ describe("room lobby", () => {
     fireEvent.click(pack);
     expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
       type: "select_pack",
-      payload: { packSlug: "og", selected: true },
+      payload: { gameId: "zinger", packSlug: "og", selected: true },
     });
-    act(() => socket.update({ ...lobby, packSelected: true }));
+    act(() => socket.update({ ...lobby, selectedPackSlugs: ["og"] }));
     expect(screen.getByRole("img", { name: "Pack selected" })).toBeVisible();
     expect(
       screen.queryByText("Select at least one pack to start."),
@@ -348,7 +357,7 @@ describe("room lobby", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Game" }));
     expect(screen.getByRole("button", { name: "OG pack" })).toBeDisabled();
     expect(screen.getByRole("img", { name: "Pack selected" })).toBeVisible();
-    act(() => socket.update({ ...guestLobby, packSelected: false }));
+    act(() => socket.update({ ...guestLobby, selectedPackSlugs: [] }));
     expect(
       screen.queryByRole("img", { name: "Pack selected" }),
     ).not.toBeInTheDocument();
@@ -356,6 +365,84 @@ describe("room lobby", () => {
       screen.getByText("Select at least one pack to start."),
     ).toBeVisible();
     expect(socket.send).toHaveBeenCalledTimes(1);
+  });
+
+  it("loads Extended from the catalog and supports multiple checked packs", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    const socket = await createRoom();
+    fireEvent.click(screen.getByRole("tab", { name: "Game" }));
+    const extended = screen.getByRole("button", { name: "Extended pack" });
+    expect(extended).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(extended);
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+      type: "select_pack",
+      payload: { gameId: "zinger", packSlug: "extended", selected: true },
+    });
+    act(() =>
+      socket.update({ ...lobby, selectedPackSlugs: ["og", "extended"] }),
+    );
+    expect(screen.getAllByRole("img", { name: "Pack selected" })).toHaveLength(
+      2,
+    );
+    act(() => socket.update({ ...lobby, selectedPackSlugs: ["extended"] }));
+    expect(screen.getByRole("button", { name: "OG pack" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(extended).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.queryByText("Select at least one pack to start."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders large catalogs without truncating choices and includes one disabled Coming Soon tile in each grid", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    const socket = await createRoom();
+    const games = Array.from({ length: 60 }, (_, i) => ({
+      id: `game_${i}`,
+      title: `Game ${i}`,
+      packs: Array.from({ length: 90 }, (_, j) => ({
+        slug: `pack_${j}`,
+        title: `Pack ${j}`,
+      })),
+    }));
+    const many = { ...lobby, gameId: "game_0", games, selectedPackSlugs: [] };
+    act(() => socket.update(many));
+    fireEvent.click(screen.getByRole("tab", { name: "Room" }));
+    const gameScroller = screen.getByRole("region", {
+      name: "Available games",
+    });
+    expect(within(gameScroller).getAllByRole("button")).toHaveLength(61);
+    const soon = screen.getByRole("button", { name: "Coming Soon" });
+    expect(soon).toBeDisabled();
+    expect(gameScroller).toContainElement(soon);
+    fireEvent.click(screen.getByRole("button", { name: "Game 59" }));
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+      type: "select_game",
+      payload: { gameId: "game_59" },
+    });
+    act(() => socket.update({ ...many, gameId: "game_59" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Game" }));
+    const packScroller = screen.getByRole("region", {
+      name: "Available packs",
+    });
+    expect(within(packScroller).getAllByRole("button")).toHaveLength(91);
+    expect(packScroller).toContainElement(
+      screen.getByRole("button", { name: "Coming Soon" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Pack 89 pack" }));
+    expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toEqual({
+      type: "select_pack",
+      payload: { gameId: "game_59", packSlug: "pack_89", selected: true },
+    });
   });
 
   it("keeps players alongside desktop settings and adapts when resized", async () => {

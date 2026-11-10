@@ -29,16 +29,15 @@ type PromptPack struct {
 }
 
 type Room struct {
-	ID           string             `json:"id"`
-	Code         string             `json:"code"`
-	OwnerID      string             `json:"owner_id"`
-	GameID       string             `json:"game_id"`
-	PackSlug     string             `json:"pack_slug"`
-	MaxPlayers   int32              `json:"max_players"`
-	Status       string             `json:"status"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	ExpiresAt    pgtype.Timestamptz `json:"expires_at"`
-	PackSelected bool               `json:"pack_selected"`
+	ID                string             `json:"id"`
+	Code              string             `json:"code"`
+	OwnerID           string             `json:"owner_id"`
+	GameID            string             `json:"game_id"`
+	MaxPlayers        int32              `json:"max_players"`
+	Status            string             `json:"status"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	ExpiresAt         pgtype.Timestamptz `json:"expires_at"`
+	SelectedPackSlugs []string           `json:"selected_pack_slugs"`
 }
 
 type RoomPlayer struct {
