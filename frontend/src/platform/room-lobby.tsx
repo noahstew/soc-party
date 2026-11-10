@@ -5,11 +5,14 @@ import { RoomEntry } from "./room-entry";
 import { useToast } from "@/lib/use-toast";
 import { LobbyView } from "./lobby-view";
 import {
+  isGameState,
   isLobby,
   type ClientMessage,
+  type GameState,
   type Lobby,
   type Session,
 } from "@/lib/protocol";
+import { ZingerGame } from "@/games/zinger-game";
 
 const storageKey = "soc-party.guest";
 const nameStorageKey = "soc-party.name";
@@ -68,6 +71,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
   const [code, setCode] = useState("");
   const [credential, setCredential] = useState<Credential | null>(null);
   const [lobby, setLobby] = useState<Lobby | null>(null);
+  const [game, setGame] = useState<GameState | null>(null);
   const [busy, setBusy] = useState(false);
   const { notify, dismiss } = useToast();
   const [connection, setConnection] = useState<Connection>("connecting");
@@ -246,10 +250,17 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
             }
             retries = 0;
             setLobby(message.payload);
+            setGame(null);
             setConnection("connected");
             const share = new URL("/lobby", window.location.origin);
             share.searchParams.set("room", credential.code);
             setShareURL(share.toString());
+          } else if (
+            message.type === "game_state" &&
+            isGameState(message.payload)
+          ) {
+            setGame(message.payload);
+            setConnection("connected");
           } else if (
             message.type === "error" &&
             typeof message.payload === "object" &&
@@ -387,6 +398,17 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
         onCodeChange={setCode}
         onContinue={sharedCode ? () => void enter("join") : undefined}
         onEnter={(action) => void enter(action)}
+      />
+    );
+  }
+
+  if (game) {
+    return (
+      <ZingerGame
+        state={game}
+        youId={lobby.youId}
+        ownerId={lobby.ownerId}
+        onSend={send}
       />
     );
   }

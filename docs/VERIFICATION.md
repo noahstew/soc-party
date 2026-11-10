@@ -436,3 +436,8 @@ owner authorization, prompt selection, per-player game broadcasts, locked admiss
 settings, and three authenticated clients completing all phases on one deadline timer
 before the owner returns to the retained lobby. Existing socket tests cover authenticated
 wire routing/origin enforcement; the game bot exercises the same actor command boundary.
+
+M2 task 10: `make check` passed with 68 frontend tests. The owner can start from
+the lobby; the existing single socket consumes validated game snapshots. Mobile game
+views render intros, a server-skew-corrected countdown, both assigned prompts,
+character counts, locked submissions, debounced drafts and connected waiting status.

@@ -378,6 +378,14 @@ export function LobbyView({
             <Button variant="neutral" onClick={onLeave}>
               Leave room
             </Button>
+            {lobby.youId === lobby.ownerId && (
+              <Button
+                disabled={!lobby.canStart || connection !== "connected"}
+                onClick={() => onSend({ type: "start_game", payload: {} })}
+              >
+                Start game
+              </Button>
+            )}
           </div>
         </div>
       </Card>

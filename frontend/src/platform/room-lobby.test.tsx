@@ -155,7 +155,7 @@ describe("room lobby", () => {
     ).not.toBeNull();
     const footer = screen.getByRole("button", { name: "Leave room" })
       .parentElement!.parentElement!;
-    expect(footer.textContent).toBe("Leave room");
+    expect(footer.textContent).toBe("Leave roomStart game");
     expect(footer).toHaveClass("justify-end");
     fireEvent.click(screen.getByRole("tab", { name: "Room" }));
     expect(
