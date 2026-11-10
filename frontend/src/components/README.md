@@ -55,7 +55,9 @@ Persistent page content, such as the health diagnostic report, remains in the pa
 The latest notification replaces the previous one at the bottom-right of the viewport,
 with mobile gutters/safe-area clearance, soft-white fill, chunky outline and offset shadow.
 Pastel blue info, yellow warning, pink error and mint success use matching darker
-`--toast-ink` for readable event labels and outlines; `--toast-accent` supplies fills. Labels and icons supplement color. Errors/warnings announce assertively;
+`--toast-ink` for readable message titles and outlines; `--toast-accent` supplies fills.
+The notification message is the title; only colour indicates the event visually,
+without generic severity labels or icons. Errors/warnings announce assertively;
 info/success announce politely. Every event slides in over 300ms, stays for three seconds,
 then fades out over 250ms. Hover/focus pauses dismissal and grants three seconds afterward.
 Reduced motion disables animation. All events have a keyboard-accessible dismiss button;

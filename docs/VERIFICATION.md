@@ -358,3 +358,12 @@ field preservation and card resizing.
   pack counts, prompt IDs, exact text/order, approval visibility and OG contents.
 - No schema/query/dependency changes. This request seeds content only; the current
   lobby selection remains OG and does not add Extended selection/gameplay logic.
+
+## 2026-11-10 — Toast message titles
+
+- Notifications show the actual message as their title without generic severity
+  labels or icons. Existing event colours, live-region urgency, replacement,
+  timeout, hover/focus pause and dismiss controls remain intact.
+- `make fmt` and `make check` pass, including lint/format/types, Go race/unit
+  tests, sqlc drift and 60 frontend tests. Toast regressions cover message titles,
+  absence of generic labels/icons and preserved event styling for all four types.

@@ -260,6 +260,10 @@ One commit per task; gameplay remains outside this request.
   info, warning and success; auto-dismiss with distinct pastel accents, document the agent default,
   and verify with regression coverage and `make check`.
 
+- [x] Use the notification message as the toast title, remove generic severity
+  labels/icons and indicate event type visually through colour only; preserve
+  announcements, timing and dismissal, and verify with `make check`.
+
 ## Requested home admission card
 
 - [x] Replace the home introduction with a modular branded player-name card,

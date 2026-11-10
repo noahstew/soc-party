@@ -32,16 +32,29 @@ afterEach(() => vi.useRealTimers());
 
 describe("global toasts", () => {
   it.each(["error", "info", "warning", "success"] as const)(
-    "announces %s with an explicit label and supports dismissal",
+    "shows the message as the %s title with colour-only event styling and supports dismissal",
     (variant) => {
       setup();
       fireEvent.click(screen.getByRole("button", { name: `Show ${variant}` }));
       const role =
         variant === "error" || variant === "warning" ? "alert" : "status";
-      expect(screen.getByRole(role)).toHaveTextContent(`${variant} message`);
+      expect(screen.getByRole(role)).toHaveTextContent(
+        new RegExp(`^${variant} message$`),
+      );
+      const message = screen.getByText(`${variant} message`);
+      expect(message).toHaveClass("font-heading");
+      expect(message.closest('[data-slot="toast"]')).toHaveAttribute(
+        "data-event",
+        variant,
+      );
       expect(
-        screen.getByText(variant[0].toUpperCase() + variant.slice(1)),
-      ).toBeVisible();
+        message
+          .closest('[data-slot="toast"]')!
+          .querySelector('[aria-hidden="true"]')?.textContent,
+      ).toBe("×");
+      expect(
+        screen.queryByText(variant[0].toUpperCase() + variant.slice(1)),
+      ).not.toBeInTheDocument();
       fireEvent.click(
         screen.getByRole("button", { name: "Dismiss notification" }),
       );

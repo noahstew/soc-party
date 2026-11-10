@@ -17,18 +17,6 @@ type Notice = {
   message: string;
   closing: boolean;
 };
-const labels: Record<ToastEvent, string> = {
-  error: "Error",
-  info: "Info",
-  warning: "Warning",
-  success: "Success",
-};
-const symbols: Record<ToastEvent, string> = {
-  error: "!",
-  info: "i",
-  warning: "!",
-  success: "✓",
-};
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -78,14 +66,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               setFocused(false);
           }}
         >
-          {notice && (
-            <span
-              aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-base border-2 border-[var(--toast-ink)] bg-[var(--toast-accent)] font-heading text-main-foreground"
-            >
-              {symbols[notice.event]}
-            </span>
-          )}
           <div className="min-w-0 flex-1 break-words">
             <div role="alert" aria-atomic="true">
               {notice && urgent && (
@@ -117,11 +97,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 function ToastMessage({ notice }: { notice: Notice }) {
   return (
-    <>
-      <p className="font-heading text-[var(--toast-ink)]">
-        {labels[notice.event]}
-      </p>
-      <p className="mt-1 text-sm leading-relaxed">{notice.message}</p>
-    </>
+    <p className="font-heading leading-relaxed text-[var(--toast-ink)]">
+      {notice.message}
+    </p>
   );
 }
