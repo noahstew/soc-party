@@ -74,7 +74,7 @@ func TestDraftReconnectAndDeadline(t *testing.T) {
 	s = apply(t, s, Presence{PlayerID: "p0", Connected: true}, now)
 	s = apply(t, s, AnswerIntent{"p0", a.PromptID, "reconnected draft", false}, now)
 	s = apply(t, s, Tick{}, s.Deadline)
-	if s.Phase != MatchupVoting || assigned(s, "p0")[0].Text != "reconnected draft" {
+	if s.Phase != MatchupReveal || assigned(s, "p0")[0].Text != "reconnected draft" {
 		t.Fatal("draft not promoted")
 	}
 }
@@ -87,7 +87,7 @@ func TestAnswerEarlyCompletionIgnoresDisconnected(t *testing.T) {
 			s = apply(t, s, AnswerIntent{pid, a.PromptID, "answer", true}, now)
 		}
 	}
-	if s.Phase != MatchupVoting {
+	if s.Phase != MatchupReveal {
 		t.Fatal("waited for disconnected player")
 	}
 }

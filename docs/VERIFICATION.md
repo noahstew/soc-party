@@ -409,3 +409,7 @@ deduplication, clone isolation and assignment invariants for N=3..8.
 M2 task 3: make check passed. Regression tests cover draft edit after reconnect,
 deadline promotion, connected-only early completion, Unicode validation, sanitation,
 answer locking, foreign prompts and rejection without mutating prior state.
+
+M2 task 4: make check passed. Tests verify 100/150-point votes, scaled unanimous
+bonuses, ties/missing-voter bonus exclusion, author rejection, vote locking, and
+one/both-empty forfeits preserving both answer slots.

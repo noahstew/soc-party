@@ -31,6 +31,10 @@ func Apply(state *State, event any, input games.Input) (*State, error) {
 		if err := s.answer(e, input.Now); err != nil {
 			return nil, err
 		}
+	case VoteIntent:
+		if err := s.vote(e, input.Now); err != nil {
+			return nil, err
+		}
 	case Presence:
 		p := s.player(e.PlayerID)
 		if p == nil || p.Left {
@@ -39,6 +43,7 @@ func Apply(state *State, event any, input games.Input) (*State, error) {
 		p.Connected = e.Connected && !e.Left
 		p.Left = e.Left
 		s.finishAnswering(input.Now)
+		s.finishVoting(input.Now)
 	default:
 		return nil, Code("unknown_event")
 	}
@@ -124,9 +129,11 @@ func (s *State) tick(now time.Time) {
 	switch s.Phase {
 	case RoundIntro:
 		s.enter(Answering, now, s.Config.Answering)
+	case MatchupVoting:
+		s.revealMatchup(now, false)
 	case Answering:
 		s.promote()
-		s.enter(MatchupVoting, now, s.Config.Voting)
+		s.beginMatchup(now)
 	}
 }
 func (s *State) promote() {
@@ -150,6 +157,6 @@ func (s *State) finishAnswering(now time.Time) {
 	})
 	if done {
 		s.promote()
-		s.enter(MatchupVoting, now, s.Config.Voting)
+		s.beginMatchup(now)
 	}
 }
