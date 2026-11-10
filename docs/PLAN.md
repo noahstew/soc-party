@@ -67,7 +67,7 @@ mobile player views, privacy and full-game verification. No game/result persiste
 **Ordered tasks (one focused commit each):**
 
 - [x] 1. Specify rules, tunables, state machine, architecture and ordered plan
-- [ ] 2. Engine config/types, initialization, prompt selection and matchup assignment
+- [x] 2. Engine config/types, initialization, prompt selection and matchup assignment
 - [ ] 3. Answer submission/drafts, deadlines, early completion and promotion
 - [ ] 4. Head-to-head votes, reveals, scoring and forfeits
 - [ ] 5. Two-round loop, multipliers and round scoreboards

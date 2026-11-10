@@ -402,3 +402,6 @@ tests and sqlc drift). First run exposed stale fixture tests after the user's
 official-to-OG merge; repaired fixture paths/count expectations and normalized
 uniqueness checks without changing seed content. OG contains 29 prompts.
 M2 task 1 specifies the authorized rules; engine/protocol/UI remain pending.
+
+M2 task 2: make check passed, including seeded initialization, normalized prompt
+deduplication, clone isolation and assignment invariants for N=3..8.
