@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"example.com/soc-party/backend/internal/games/zinger"
 	"example.com/soc-party/backend/internal/protocol"
 )
 
@@ -16,6 +19,204 @@ type memoryRepo struct {
 	mu      sync.Mutex
 	records map[string]Record
 	fail    bool
+}
+
+func readGame(t *testing.T, ch <-chan []byte) zinger.GameView {
+	t.Helper()
+	select {
+	case data := <-ch:
+		var envelope protocol.Envelope
+		if err := json.Unmarshal(data, &envelope); err != nil {
+			t.Fatal(err)
+		}
+		if envelope.Type != "game_state" {
+			t.Fatalf("message type=%s", envelope.Type)
+		}
+		var view zinger.GameView
+		if err := json.Unmarshal(envelope.Payload, &view); err != nil {
+			t.Fatal(err)
+		}
+		return view
+	case <-time.After(3 * time.Second):
+		t.Fatal("no game update")
+		return zinger.GameView{}
+	}
+}
+
+func TestStartGameLoadsSelectedPromptsAndLocksLobby(t *testing.T) {
+	r, _, owner := fixture(t)
+	config := zinger.DefaultConfig()
+	config.Intro = time.Hour
+	loaded := []string{}
+	if err := r.RegisterGame(zinger.Module{Config: config}, func(_ context.Context, slugs []string) ([]zinger.Prompt, error) {
+		loaded = append([]string(nil), slugs...)
+		prompts := []zinger.Prompt{}
+		for i := 0; i < 17; i++ {
+			prompts = append(prompts, zinger.Prompt{ID: fmt.Sprint(i), Text: fmt.Sprintf("Prompt %d", i)})
+		}
+		return prompts, nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	guests := []protocol.Session{}
+	for _, name := range []string{"A", "B"} {
+		guest, err := r.Join(ctx, owner.Lobby.Code, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		guests = append(guests, guest)
+	}
+	_, ownerCh, err := r.Subscribe(ctx, owner.Lobby.Code, owner.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = readLobby(t, ownerCh)
+	guestCh := make([]<-chan []byte, 0, 2)
+	for _, guest := range guests {
+		_, ch, err := r.Subscribe(ctx, owner.Lobby.Code, guest.Token)
+		if err != nil {
+			t.Fatal(err)
+		}
+		guestCh = append(guestCh, ch)
+		_ = readLobby(t, ch)
+		_ = readLobby(t, ownerCh)
+	}
+	if err := r.Command(ctx, owner.Lobby.Code, guests[0].Token, "start_game", &protocol.Empty{}); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("guest start=%v", err)
+	}
+	if err := r.Command(ctx, owner.Lobby.Code, owner.Token, "start_game", &protocol.Empty{}); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(loaded, []string{"og"}) {
+		t.Fatalf("loaded packs=%v", loaded)
+	}
+	if view := readGame(t, ownerCh); view.Phase != zinger.RoundIntro || view.Round != 1 {
+		t.Fatalf("owner view=%+v", view)
+	}
+	for _, ch := range guestCh {
+		if view := readGame(t, ch); view.Phase != zinger.RoundIntro {
+			t.Fatal(view.Phase)
+		}
+	}
+	if _, err := r.Join(ctx, owner.Lobby.Code, "Late"); !errors.Is(err, ErrConflict) {
+		t.Fatalf("late join=%v", err)
+	}
+	if err := r.Command(ctx, owner.Lobby.Code, owner.Token, "select_pack", packSelection(false)); !errors.Is(err, ErrConflict) {
+		t.Fatalf("midgame setting=%v", err)
+	}
+	if err := r.Command(ctx, owner.Lobby.Code, owner.Token, "return_to_lobby", &protocol.Empty{}); err != zinger.WrongPhase {
+		t.Fatalf("early return=%v", err)
+	}
+}
+
+func TestMultiClientFullGameAndReturnLobby(t *testing.T) {
+	r, _, owner := fixture(t)
+	config := zinger.DefaultConfig()
+	config.Intro, config.Answering, config.Voting = 2*time.Millisecond, 200*time.Millisecond, 200*time.Millisecond
+	config.Reveal, config.Scoreboard = 2*time.Millisecond, 2*time.Millisecond
+	config.FinalAnswering, config.FinalVoting, config.FinalReveal, config.FinalIdle = 200*time.Millisecond, 200*time.Millisecond, 2*time.Millisecond, 2*time.Millisecond
+	if err := r.RegisterGame(zinger.Module{Config: config}, func(_ context.Context, _ []string) ([]zinger.Prompt, error) {
+		prompts := make([]zinger.Prompt, 17)
+		for i := range prompts {
+			prompts[i] = zinger.Prompt{ID: fmt.Sprint(i), Text: fmt.Sprintf("Prompt %d", i)}
+		}
+		return prompts, nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	sessions := []protocol.Session{owner}
+	for _, name := range []string{"A", "B"} {
+		session, err := r.Join(ctx, owner.Lobby.Code, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sessions = append(sessions, session)
+	}
+	tokens := map[string]string{}
+	for _, session := range sessions {
+		id, ch, err := r.Subscribe(ctx, owner.Lobby.Code, session.Token)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tokens[id] = session.Token
+		_ = ch
+	}
+	if err := r.Command(ctx, owner.Lobby.Code, owner.Token, "start_game", &protocol.Empty{}); err != nil {
+		t.Fatal(err)
+	}
+	state := func() *zinger.State {
+		value, err := r.call(ctx, owner.Lobby.Code, func(record *Record, _ map[string]chan []byte) (any, error) { return record.GameState, nil })
+		if err != nil {
+			t.Fatal(err)
+		}
+		return value.(*zinger.State)
+	}
+	for steps := 0; steps < 2000; steps++ {
+		current := state()
+		switch current.Phase {
+		case zinger.RoundIntro, zinger.MatchupReveal, zinger.RoundScoreboard, zinger.FinalIntro, zinger.FinalReveal:
+			time.Sleep(time.Until(current.NextTick()) + 3*time.Millisecond)
+		case zinger.Answering:
+			for _, match := range current.Rounds[current.Round-1] {
+				for _, answer := range match.Answers {
+					if answer.Submitted {
+						continue
+					}
+					if err := r.Command(ctx, owner.Lobby.Code, tokens[answer.PlayerID], "submit_answer", &protocol.Draft{PromptID: answer.PromptID, Text: "answer " + answer.PlayerID}); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+		case zinger.MatchupVoting:
+			match := current.Rounds[current.Round-1][current.MatchIndex]
+			for _, player := range current.Players {
+				if player.ID == match.Answers[0].PlayerID || player.ID == match.Answers[1].PlayerID || match.Votes[player.ID] != "" {
+					continue
+				}
+				if err := r.Command(ctx, owner.Lobby.Code, tokens[player.ID], "cast_vote", &protocol.Vote{MatchupID: match.ID, AnswerID: match.Answers[0].ID}); err != nil {
+					t.Fatal(err)
+				}
+			}
+		case zinger.FinalAnswering:
+			for _, answer := range current.FinalAnswers {
+				if answer.Submitted {
+					continue
+				}
+				if err := r.Command(ctx, owner.Lobby.Code, tokens[answer.PlayerID], "submit_answer", &protocol.Draft{PromptID: answer.PromptID, Text: "final " + answer.PlayerID}); err != nil {
+					t.Fatal(err)
+				}
+			}
+		case zinger.FinalVoting:
+			for _, player := range current.Players {
+				if _, done := current.FinalVotes[player.ID]; done {
+					continue
+				}
+				ids := []string{}
+				for _, answer := range current.FinalAnswers {
+					if answer.PlayerID != player.ID && answer.Text != "" {
+						ids = append(ids, answer.ID)
+						break
+					}
+				}
+				if err := r.Command(ctx, owner.Lobby.Code, tokens[player.ID], "submit_final_votes", &protocol.FinalVotes{AnswerIDs: ids}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			time.Sleep(config.FinalIdle + 3*time.Millisecond)
+		case zinger.GameOver:
+			if err := r.Command(ctx, owner.Lobby.Code, owner.Token, "return_to_lobby", &protocol.Empty{}); err != nil {
+				t.Fatal(err)
+			}
+			value, err := r.call(ctx, owner.Lobby.Code, func(record *Record, _ map[string]chan []byte) (any, error) { return record.Status, nil })
+			if err != nil || value != "lobby" {
+				t.Fatalf("return status=%v err=%v", value, err)
+			}
+			return
+		}
+	}
+	t.Fatal("full game did not terminate")
 }
 
 func (m *memoryRepo) Save(_ context.Context, s Record, _ bool) error {

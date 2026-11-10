@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"example.com/soc-party/backend/internal/config"
+	"example.com/soc-party/backend/internal/games/zinger"
 	"example.com/soc-party/backend/internal/gamestore"
 	"example.com/soc-party/backend/internal/httpapi"
 	"example.com/soc-party/backend/internal/platform"
@@ -98,6 +99,22 @@ func run(log *slog.Logger) error {
 		}
 		return []protocol.Game{{ID: "zinger", Title: "Zinger", Packs: packs}}, nil
 	})
+	if err := rooms.RegisterGame(zinger.Module{Config: zinger.DefaultConfig()}, func(ctx context.Context, slugs []string) ([]zinger.Prompt, error) {
+		queries := gamestore.New(gamePool)
+		prompts := []zinger.Prompt{}
+		for _, slug := range slugs {
+			rows, err := queries.ListApprovedPrompts(ctx, slug)
+			if err != nil {
+				return nil, err
+			}
+			for _, row := range rows {
+				prompts = append(prompts, zinger.Prompt{ID: fmt.Sprint(row.ID), Text: row.Text})
+			}
+		}
+		return prompts, nil
+	}); err != nil {
+		return err
+	}
 	defer rooms.Close()
 	srv := &http.Server{Addr: cfg.HTTPAddr, Handler: httpapi.New(databaseHealth{pool, gamePool}, gamestore.New(gamePool), log, httpapi.RoomOptions{Registry: rooms, Origins: cfg.AllowedOrigins}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	errCh := make(chan error, 1)

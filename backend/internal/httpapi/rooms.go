@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"example.com/soc-party/backend/internal/games/zinger"
 	"example.com/soc-party/backend/internal/platform"
 	"example.com/soc-party/backend/internal/protocol"
 	"github.com/coder/websocket"
@@ -176,8 +177,19 @@ func (a api) socket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err = a.rooms.Registry.Command(ctx, code, token, envelope.Type, payload); err != nil {
+			code := "invalid_action"
+			var gameCode zinger.Code
+			if errors.As(err, &gameCode) {
+				code = string(gameCode)
+			}
+			if errors.Is(err, platform.ErrForbidden) {
+				code = "forbidden"
+			}
+			if errors.Is(err, platform.ErrUnavailable) {
+				code = "unavailable"
+			}
 			select {
-			case outgoing <- protocol.Message("error", envelope.ID, protocol.Error{Message: err.Error()}):
+			case outgoing <- protocol.Message("error", envelope.ID, protocol.Error{Code: code, Message: err.Error()}):
 			case <-ctx.Done():
 				return
 			default:

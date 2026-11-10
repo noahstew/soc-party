@@ -6,10 +6,12 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
+	mathrand "math/rand/v2"
 	"slices"
 	"strings"
 	"sync"
@@ -17,6 +19,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"example.com/soc-party/backend/internal/games"
+	"example.com/soc-party/backend/internal/games/zinger"
 	"example.com/soc-party/backend/internal/protocol"
 )
 
@@ -38,6 +42,7 @@ type Member struct {
 	Hash             [32]byte
 	Connected        bool
 	Seen             time.Time
+	DraftAt          time.Time
 }
 type Record struct {
 	SelectedPackSlugs         []string
@@ -47,6 +52,8 @@ type Record struct {
 	MaxPlayers                int
 	Expires, Activity         time.Time
 	Members                   []Member
+	GameState                 any
+	GameDeadline              time.Time
 }
 type Repository interface {
 	Save(context.Context, Record, bool) error
@@ -73,11 +80,25 @@ type Registry struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
 	wg      sync.WaitGroup
+	modules *games.Modules
+	prompts PromptSource
 }
+
+type PromptSource func(context.Context, []string) ([]zinger.Prompt, error)
 
 func NewRegistry(repo Repository, catalog CatalogSource) *Registry {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Registry{rooms: make(map[string]*actor), repo: repo, catalog: catalog, now: time.Now, code: NewCode, ctx: ctx, cancel: cancel}
+	return &Registry{rooms: make(map[string]*actor), repo: repo, catalog: catalog, now: time.Now, code: NewCode, ctx: ctx, cancel: cancel, modules: games.NewModules()}
+}
+func (r *Registry) RegisterGame(module games.Module, prompts PromptSource) error {
+	if prompts == nil {
+		return fmt.Errorf("prompt source is required")
+	}
+	if err := r.modules.Register(module); err != nil {
+		return err
+	}
+	r.prompts = prompts
+	return nil
 }
 func (r *Registry) Close() { r.cancel(); r.wg.Wait() }
 func randomHex(n int) (string, error) {
@@ -269,6 +290,9 @@ func (r *Registry) Join(ctx context.Context, code, name string) (protocol.Sessio
 		return protocol.Session{}, err
 	}
 	value, err := r.call(ctx, code, func(s *Record, _ map[string]chan []byte) (any, error) {
+		if s.Status != "lobby" {
+			return nil, ErrConflict
+		}
 		if count(*s) >= s.MaxPlayers || len(s.Members) >= 128 {
 			return nil, ErrConflict
 		}
@@ -337,6 +361,11 @@ func (r *Registry) Subscribe(ctx context.Context, code, token string) (string, <
 		applyCatalog(s, games)
 		p.Connected = true
 		p.Seen = r.now()
+		if s.Status == "game" {
+			if err := r.applyGame(s, zinger.Presence{PlayerID: p.ID, Connected: true}); err != nil {
+				return nil, err
+			}
+		}
 		s.Activity = r.now()
 		return subscription{id: p.ID, ch: make(chan []byte, 1)}, nil
 	})
@@ -357,18 +386,50 @@ func (r *Registry) Disconnect(code, id string, ch <-chan []byte) {
 			if s.Members[i].ID == id {
 				s.Members[i].Connected = false
 				s.Members[i].Seen = r.now()
+				if s.Status == "game" {
+					_ = r.applyGame(s, zinger.Presence{PlayerID: id})
+				}
 			}
 		}
 		return unsubscription{id: id}, nil
 	})
 }
 func (r *Registry) Command(ctx context.Context, code, token, kind string, payload any) error {
-	var games []protocol.Game
+	var catalogGames []protocol.Game
 	if kind == "select_game" || kind == "select_pack" {
 		var err error
-		games, err = r.loadCatalog(ctx)
+		catalogGames, err = r.loadCatalog(ctx)
 		if err != nil {
 			return err
+		}
+	}
+
+	var loaded []zinger.Prompt
+	if kind == "start_game" {
+		value, err := r.call(ctx, code, func(s *Record, _ map[string]chan []byte) (any, error) {
+			p, err := authenticate(s, token)
+			if err != nil {
+				return nil, err
+			}
+			if s.OwnerID != p.ID {
+				return nil, ErrForbidden
+			}
+			if !project(*s, p.ID).CanStart {
+				return nil, ErrConflict
+			}
+			return append([]string(nil), s.SelectedPackSlugs...), nil
+		})
+		if err != nil {
+			return err
+		}
+		if r.prompts == nil {
+			return ErrUnavailable
+		}
+		loadCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		loaded, err = r.prompts(loadCtx, value.([]string))
+		cancel()
+		if err != nil {
+			return ErrUnavailable
 		}
 	}
 
@@ -383,6 +444,11 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 		case "ping":
 			return nil, nil
 		case "leave_room":
+			if s.Status == "game" {
+				if err := r.applyGame(s, zinger.Presence{PlayerID: p.ID, Left: true}); err != nil {
+					return nil, err
+				}
+			}
 			p.Status = "left"
 			p.Connected = false
 			repairOwner(s)
@@ -397,6 +463,11 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 			found := false
 			for i := range s.Members {
 				if s.Members[i].ID == id && s.Members[i].Status == "active" {
+					if s.Status == "game" {
+						if err := r.applyGame(s, zinger.Presence{PlayerID: id, Left: true}); err != nil {
+							return nil, err
+						}
+					}
 					s.Members[i].Status = "kicked"
 					s.Members[i].Connected = false
 					found = true
@@ -406,12 +477,15 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				return nil, ErrNotFound
 			}
 		case "select_game":
+			if s.Status != "lobby" {
+				return nil, ErrConflict
+			}
 			if s.OwnerID != p.ID {
 				return nil, ErrForbidden
 			}
 			gameID := payload.(*protocol.GameSelection).GameID
-			applyCatalog(s, games)
-			if _, ok := findGame(games, gameID); !ok {
+			applyCatalog(s, catalogGames)
+			if _, ok := findGame(catalogGames, gameID); !ok {
 				return nil, fmt.Errorf("game is not available")
 			}
 			if s.GameID != gameID {
@@ -419,12 +493,15 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 			}
 			s.GameID = gameID
 		case "select_pack":
+			if s.Status != "lobby" {
+				return nil, ErrConflict
+			}
 			if s.OwnerID != p.ID {
 				return nil, ErrForbidden
 			}
 			selection := payload.(*protocol.PackSelection)
-			applyCatalog(s, games)
-			game, ok := findGame(games, s.GameID)
+			applyCatalog(s, catalogGames)
+			game, ok := findGame(catalogGames, s.GameID)
 			if !ok || selection.GameID != s.GameID || !hasPack(game, selection.PackSlug) || selection.Selected == nil {
 				return nil, fmt.Errorf("choose an available pack for the current game and provide its selected state")
 			}
@@ -434,6 +511,9 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				s.SelectedPackSlugs = slices.DeleteFunc(s.SelectedPackSlugs, func(slug string) bool { return slug == selection.PackSlug })
 			}
 		case "update_settings":
+			if s.Status != "lobby" {
+				return nil, ErrConflict
+			}
 			if s.OwnerID != p.ID {
 				return nil, ErrForbidden
 			}
@@ -442,6 +522,65 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				return nil, fmt.Errorf("capacity must be 3–8 and fit current players")
 			}
 			s.MaxPlayers = n
+		case "start_game":
+			if s.Status != "lobby" || s.OwnerID != p.ID || !project(*s, p.ID).CanStart {
+				return nil, ErrForbidden
+			}
+			module, ok := r.modules.Lookup(s.GameID)
+			if !ok {
+				return nil, ErrUnavailable
+			}
+			players := []zinger.Player{}
+			for _, member := range s.Members {
+				if member.Status == "active" && member.Connected {
+					players = append(players, zinger.Player{ID: member.ID, Name: member.Name, Connected: true})
+				}
+			}
+			var seed [16]byte
+			if _, err := rand.Read(seed[:]); err != nil {
+				return nil, ErrUnavailable
+			}
+			rng := mathrand.New(mathrand.NewPCG(binary.LittleEndian.Uint64(seed[:8]), binary.LittleEndian.Uint64(seed[8:])))
+			next, effects, err := module.Transition(nil, zinger.Start{Players: players, Prompts: loaded}, games.Input{Now: r.now(), Random: rng})
+			if err != nil {
+				return nil, err
+			}
+			s.GameState = next
+			s.Status = "game"
+			s.GameDeadline = deadline(effects)
+		case "update_draft", "submit_answer":
+			if s.Status != "game" {
+				return nil, zinger.WrongPhase
+			}
+			if kind == "update_draft" && r.now().Sub(p.DraftAt) < 100*time.Millisecond {
+				return nil, zinger.Code("rate_limited")
+			}
+			d := payload.(*protocol.Draft)
+			if err := r.applyGame(s, zinger.AnswerIntent{PlayerID: p.ID, PromptID: d.PromptID, Text: d.Text, Submit: kind == "submit_answer"}); err != nil {
+				return nil, err
+			}
+			p.DraftAt = r.now()
+		case "cast_vote":
+			v := payload.(*protocol.Vote)
+			if err := r.applyGame(s, zinger.VoteIntent{PlayerID: p.ID, MatchupID: v.MatchupID, AnswerID: v.AnswerID}); err != nil {
+				return nil, err
+			}
+		case "submit_final_votes":
+			v := payload.(*protocol.FinalVotes)
+			if err := r.applyGame(s, zinger.FinalVoteIntent{PlayerID: p.ID, AnswerIDs: v.AnswerIDs}); err != nil {
+				return nil, err
+			}
+		case "return_to_lobby":
+			state, ok := s.GameState.(*zinger.State)
+			if !ok || state.Phase != zinger.GameOver {
+				return nil, zinger.WrongPhase
+			}
+			if s.OwnerID != p.ID {
+				return nil, ErrForbidden
+			}
+			s.Status = "lobby"
+			s.GameState = nil
+			s.GameDeadline = time.Time{}
 		default:
 			return nil, fmt.Errorf("unknown command")
 		}
@@ -449,11 +588,36 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 	})
 	return err
 }
+
+func deadline(effects []any) time.Time {
+	for _, effect := range effects {
+		if scheduled, ok := effect.(zinger.Schedule); ok {
+			return scheduled.At
+		}
+	}
+	return time.Time{}
+}
+func (r *Registry) applyGame(s *Record, event any) error {
+	module, ok := r.modules.Lookup(s.GameID)
+	if !ok {
+		return ErrUnavailable
+	}
+	next, effects, err := module.Transition(s.GameState, event, games.Input{Now: r.now()})
+	if err != nil {
+		return err
+	}
+	s.GameState = next
+	s.GameDeadline = deadline(effects)
+	return nil
+}
 func (r *Registry) cleanup(s *Record) {
 	now := r.now()
 	for i := range s.Members {
 		p := &s.Members[i]
 		if p.Status == "active" && !p.Connected && now.Sub(p.Seen) >= Grace {
+			if s.Status == "game" {
+				_ = r.applyGame(s, zinger.Presence{PlayerID: p.ID, Left: true})
+			}
 			p.Status = "left"
 		}
 	}
@@ -478,6 +642,30 @@ func (r *Registry) run(a *actor, s Record) {
 	}()
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
+	gameTimer := time.NewTimer(time.Hour)
+	if !gameTimer.Stop() {
+		<-gameTimer.C
+	}
+	defer gameTimer.Stop()
+	var gameTimerC <-chan time.Time
+	resetGameTimer := func() {
+		if !gameTimer.Stop() && gameTimerC != nil {
+			select {
+			case <-gameTimer.C:
+			default:
+			}
+		}
+		gameTimerC = nil
+		if !s.GameDeadline.IsZero() {
+			delay := time.Until(s.GameDeadline)
+			if delay < 0 {
+				delay = 0
+			}
+			gameTimer.Reset(delay)
+			gameTimerC = gameTimer.C
+		}
+	}
+	resetGameTimer()
 	for {
 		select {
 		case <-r.ctx.Done():
@@ -503,6 +691,15 @@ func (r *Registry) run(a *actor, s Record) {
 			}
 			if changed && r.persist(next) == nil {
 				s = next
+				resetGameTimer()
+				broadcast(s, subs)
+			}
+		case <-gameTimerC:
+			gameTimerC = nil
+			next := s
+			if err := r.applyGame(&next, zinger.Tick{}); err == nil {
+				s = next
+				resetGameTimer()
 				broadcast(s, subs)
 			}
 		case req := <-a.requests:
@@ -521,6 +718,7 @@ func (r *Registry) run(a *actor, s Record) {
 			}
 			if err == nil {
 				s = next
+				resetGameTimer()
 				switch effect := value.(type) {
 				case subscription:
 					if old := subs[effect.id]; old != nil {
@@ -559,6 +757,13 @@ func broadcast(s Record, subs map[string]chan []byte) {
 		select {
 		case <-ch:
 		default:
+		}
+		if s.Status == "game" && s.GameState != nil {
+			moduleView, err := zinger.Module{}.Project(s.GameState, id, time.Now())
+			if err == nil {
+				ch <- protocol.Message("game_state", "", moduleView)
+				continue
+			}
 		}
 		ch <- protocol.Message("lobby_state", "", project(s, id))
 	}

@@ -429,3 +429,10 @@ and vote metadata, authors are ineligible, and reveal views include attributed s
 M2 task 8: `make check` passed with 66 frontend tests. Strict Go decoding now covers
 all game intents, rejects oversized/duplicate/malformed payloads, mirrors game-state
 types and validation in TypeScript, and documents envelopes, privacy and stable codes.
+
+M2 task 9: `make check` passed. Zinger is registered through the module registry;
+the server loads every selected pack through sqlc before actor start. Room tests cover
+owner authorization, prompt selection, per-player game broadcasts, locked admission/
+settings, and three authenticated clients completing all phases on one deadline timer
+before the owner returns to the retained lobby. Existing socket tests cover authenticated
+wire routing/origin enforcement; the game bot exercises the same actor command boundary.
