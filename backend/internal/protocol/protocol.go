@@ -33,6 +33,17 @@ type PackSelection struct {
 	Selected *bool  `json:"selected"`
 }
 type Empty struct{}
+type Draft struct {
+	PromptID string `json:"promptId"`
+	Text     string `json:"text"`
+}
+type Vote struct {
+	MatchupID string `json:"matchupId"`
+	AnswerID  string `json:"answerId"`
+}
+type FinalVotes struct {
+	AnswerIDs []string `json:"answerIds"`
+}
 type Player struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
@@ -64,6 +75,7 @@ type Session struct {
 	Lobby Lobby  `json:"lobby"`
 }
 type Error struct {
+	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
@@ -102,7 +114,13 @@ func Decode(data []byte) (Envelope, any, error) {
 		payload = &GameSelection{}
 	case "select_pack":
 		payload = &PackSelection{}
-	case "ping", "leave_room":
+	case "update_draft", "submit_answer":
+		payload = &Draft{}
+	case "cast_vote":
+		payload = &Vote{}
+	case "submit_final_votes":
+		payload = &FinalVotes{}
+	case "ping", "leave_room", "start_game", "return_to_lobby":
 		payload = &Empty{}
 	default:
 		return e, nil, fmt.Errorf("unknown message type")
@@ -110,7 +128,36 @@ func Decode(data []byte) (Envelope, any, error) {
 	if err := Strict(e.Payload, payload); err != nil {
 		return e, nil, err
 	}
+	if err := validatePayload(payload); err != nil {
+		return e, nil, err
+	}
 	return e, payload, nil
+}
+
+func validatePayload(payload any) error {
+	validID := func(value string) bool { return len(value) > 0 && len(value) <= 128 }
+	switch p := payload.(type) {
+	case *Draft:
+		if !validID(p.PromptID) || len(p.Text) > 400 {
+			return fmt.Errorf("invalid answer payload")
+		}
+	case *Vote:
+		if !validID(p.MatchupID) || !validID(p.AnswerID) {
+			return fmt.Errorf("invalid vote payload")
+		}
+	case *FinalVotes:
+		if p.AnswerIDs == nil || len(p.AnswerIDs) > 3 {
+			return fmt.Errorf("invalid final votes payload")
+		}
+		seen := make(map[string]bool, len(p.AnswerIDs))
+		for _, id := range p.AnswerIDs {
+			if !validID(id) || seen[id] {
+				return fmt.Errorf("invalid final votes payload")
+			}
+			seen[id] = true
+		}
+	}
+	return nil
 }
 
 func Message(kind, id string, payload any) []byte {

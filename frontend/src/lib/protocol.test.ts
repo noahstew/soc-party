@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isLobby } from "./protocol";
+import { isGameState, isLobby } from "./protocol";
 
 const valid = {
   code: "ABCDEF",
@@ -48,5 +48,39 @@ describe("catalog lobby protocol", () => {
     { selectedPackSlugs: null },
   ])("rejects malformed or inconsistent catalog state: %j", (change) => {
     expect(isLobby({ ...valid, ...change })).toBe(false);
+  });
+});
+
+describe("game state protocol", () => {
+  const state = {
+    phase: "answering",
+    round: 1,
+    multiplierPermille: 1000,
+    deadlineMs: 1000,
+    serverNowMs: 500,
+    players: [
+      {
+        id: "p1",
+        name: "Alex",
+        connected: true,
+        left: false,
+        score: 0,
+        roundDelta: 0,
+        finished: false,
+      },
+    ],
+    prompts: [{ id: "prompt", text: "Prompt", draft: "", submitted: false }],
+  };
+
+  it("accepts a valid player projection", () =>
+    expect(isGameState(state)).toBe(true));
+  it.each([
+    { phase: "secret_phase" },
+    { round: 4 },
+    { serverNowMs: "500" },
+    { players: [{ ...state.players[0], score: "zero" }] },
+    { prompts: [{ id: "prompt", text: "Prompt" }] },
+  ])("rejects malformed game state: %j", (change) => {
+    expect(isGameState({ ...state, ...change })).toBe(false);
   });
 });

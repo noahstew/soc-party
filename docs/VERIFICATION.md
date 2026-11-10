@@ -425,3 +425,7 @@ insufficient-player grace, and deterministic full-game simulations for N=3..8.
 M2 task 7: `make check` passed. Per-player projection tests assert that answering
 shows only the requesting player's drafts, head-to-head and final voting omit author
 and vote metadata, authors are ineligible, and reveal views include attributed scores.
+
+M2 task 8: `make check` passed with 66 frontend tests. Strict Go decoding now covers
+all game intents, rejects oversized/duplicate/malformed payloads, mirrors game-state
+types and validation in TypeScript, and documents envelopes, privacy and stable codes.
