@@ -2,6 +2,7 @@ package zinger
 
 import (
 	"strings"
+
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -31,6 +32,10 @@ func Apply(state *State, event any, input games.Input) (*State, error) {
 		if err := s.answer(e, input.Now); err != nil {
 			return nil, err
 		}
+	case FinalVoteIntent:
+		if err := s.finalVote(e, input.Now); err != nil {
+			return nil, err
+		}
 	case VoteIntent:
 		if err := s.vote(e, input.Now); err != nil {
 			return nil, err
@@ -44,9 +49,11 @@ func Apply(state *State, event any, input games.Input) (*State, error) {
 		p.Left = e.Left
 		s.finishAnswering(input.Now)
 		s.finishVoting(input.Now)
+		s.updateIdle(input.Now, false)
 	default:
 		return nil, Code("unknown_event")
 	}
+	s.updatePresence(input.Now)
 	return s, nil
 }
 func (s *State) player(id string) *Player {
@@ -123,10 +130,31 @@ func (s *State) enter(phase Phase, now time.Time, duration time.Duration) {
 	s.IdleAt = time.Time{}
 }
 func (s *State) tick(now time.Time) {
-	if now.Before(s.Deadline) || s.Phase == GameOver {
+	if s.Phase == GameOver {
+		return
+	}
+	if at := lowDeadline(s); !at.IsZero() && !now.Before(at) {
+		s.end()
+		return
+	}
+	if s.Phase == FinalVoting && !s.IdleAt.IsZero() && !now.Before(s.IdleAt) {
+		s.revealFinal(now)
+		return
+	}
+	if now.Before(s.Deadline) {
 		return
 	}
 	switch s.Phase {
+	case FinalIntro:
+		s.enter(FinalAnswering, now, s.Config.FinalAnswering)
+		s.finishAnswering(now)
+	case FinalAnswering:
+		s.promote()
+		s.beginFinalVoting(now)
+	case FinalVoting:
+		s.revealFinal(now)
+	case FinalReveal:
+		s.end()
 	case RoundIntro:
 		s.enter(Answering, now, s.Config.Answering)
 	case MatchupReveal:
@@ -151,7 +179,11 @@ func (s *State) tick(now time.Time) {
 		s.revealMatchup(now, false)
 	case Answering:
 		s.promote()
-		s.beginMatchup(now)
+		if s.Round == 3 {
+			s.beginFinalVoting(now)
+		} else {
+			s.beginMatchup(now)
+		}
 	}
 }
 func (s *State) promote() {
@@ -175,6 +207,10 @@ func (s *State) finishAnswering(now time.Time) {
 	})
 	if done {
 		s.promote()
-		s.beginMatchup(now)
+		if s.Round == 3 {
+			s.beginFinalVoting(now)
+		} else {
+			s.beginMatchup(now)
+		}
 	}
 }

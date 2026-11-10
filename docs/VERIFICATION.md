@@ -416,3 +416,8 @@ one/both-empty forfeits preserving both answer slots.
 
 M2 task 5: make check passed. A two-round test verifies all matchups, intro/reveal/
 scoreboard deadlines, cumulative scores, round deltas and transition to final intro.
+
+M2 task 6: `make check` passed. Tests cover final vote validation/resubmission,
+the five-second all-done inactivity window and reconnect cancellation, zero-eligible
+automatic completion, the absolute deadline, 200-point picks without a bonus,
+insufficient-player grace, and deterministic full-game simulations for N=3..8.

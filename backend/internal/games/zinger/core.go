@@ -194,6 +194,11 @@ func New(start Start, input games.Input) (*State, error) {
 	for r := range 2 {
 		s.Rounds[r] = assign(s.Players, prompts[r*n:(r+1)*n], r+1, input.Random)
 	}
+	order := slices.Clone(s.Players)
+	shuffle(order, input.Random)
+	for i, p := range order {
+		s.FinalAnswers = append(s.FinalAnswers, Answer{ID: fmt.Sprintf("final-a%d", i), PlayerID: p.ID, PromptID: s.FinalPrompt.ID})
+	}
 	return s, nil
 }
 func (s *State) Clone() *State {
