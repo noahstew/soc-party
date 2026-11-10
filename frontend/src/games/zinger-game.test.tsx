@@ -67,3 +67,88 @@ describe("Zinger answering", () => {
     vi.useRealTimers();
   });
 });
+
+describe("Zinger head-to-head views", () => {
+  it("casts one vote and shows confirmation", () => {
+    const send = vi.fn();
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          phase: "matchup_voting",
+          canVote: true,
+          matchupId: "m1",
+          prompt: { id: "q", text: "Pick one", submitted: false },
+          prompts: undefined,
+          answers: [
+            { id: "a1", text: "Alpha" },
+            { id: "a2", text: "Beta" },
+          ],
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={send}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Alpha" }));
+    expect(send).toHaveBeenCalledWith({
+      type: "cast_vote",
+      payload: { matchupId: "m1", answerId: "a1" },
+    });
+    expect(screen.getByText("Vote locked in")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Beta" })).toBeDisabled();
+  });
+  it("renders attributed reveal, empty placeholder and original bonus copy", () => {
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          phase: "matchup_reveal",
+          prompt: { id: "q", text: "Reveal", submitted: false },
+          prompts: undefined,
+          answers: [
+            {
+              id: "a1",
+              text: "No answer submitted",
+              author: "Alex",
+              votes: 0,
+              points: 0,
+            },
+            {
+              id: "a2",
+              text: "Winner",
+              author: "Bea",
+              votes: 1,
+              points: 200,
+              bonus: 100,
+            },
+          ],
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={() => {}}
+      />,
+    );
+    expect(screen.getByText("No answer submitted")).toBeInTheDocument();
+    expect(screen.getByText("Clean sweep! +100")).toBeInTheDocument();
+    expect(screen.getByText("1 votes · +200 points")).toBeInTheDocument();
+  });
+  it("orders the round scoreboard by total score", () => {
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          phase: "round_scoreboard",
+          players: [
+            { ...state.players[0], score: 100, roundDelta: 100 },
+            { ...state.players[1], score: 200, roundDelta: 200 },
+          ],
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={() => {}}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")[0]).toHaveTextContent("Bea");
+  });
+});

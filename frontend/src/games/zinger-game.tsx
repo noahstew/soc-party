@@ -39,6 +39,13 @@ export function ZingerGame({
         {(state.phase === "answering" || state.phase === "final_answering") && (
           <Answering prompts={state.prompts ?? []} onSend={onSend} />
         )}
+        {state.phase === "matchup_voting" && (
+          <MatchupVoting state={state} onSend={onSend} />
+        )}
+        {state.phase === "matchup_reveal" && <MatchupReveal state={state} />}
+        {state.phase === "round_scoreboard" && (
+          <Scoreboard state={state} title="Round scores" />
+        )}
         {waiting > 0 && (
           <p className="mt-6 text-sm text-muted-foreground" aria-live="polite">
             Waiting on {waiting} {waiting === 1 ? "player" : "players"}
@@ -53,6 +60,112 @@ export function ZingerGame({
         )}
       </Card>
     </main>
+  );
+}
+
+function MatchupVoting({
+  state,
+  onSend,
+}: {
+  state: GameState;
+  onSend: (message: ClientMessage) => void;
+}) {
+  const [selected, setSelected] = useState<string | null>(null);
+  if (!state.canVote)
+    return (
+      <div className="py-10 text-center">
+        <h2 className="text-2xl font-heading">Your matchup</h2>
+        <p className="mt-3">The other players are voting.</p>
+      </div>
+    );
+  return (
+    <section>
+      <h2 className="text-xl font-heading">{state.prompt?.text}</h2>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        {state.answers?.map((answer) => (
+          <Button
+            key={answer.id}
+            variant={selected === answer.id ? "default" : "neutral"}
+            disabled={selected !== null}
+            className="h-auto min-h-28 whitespace-normal p-5 text-lg"
+            onClick={() => {
+              setSelected(answer.id);
+              onSend({
+                type: "cast_vote",
+                payload: {
+                  matchupId: state.matchupId ?? "",
+                  answerId: answer.id,
+                },
+              });
+            }}
+          >
+            {answer.text}
+          </Button>
+        ))}
+      </div>
+      {selected && (
+        <p className="mt-4 text-center font-heading" aria-live="polite">
+          Vote locked in
+        </p>
+      )}
+    </section>
+  );
+}
+
+function MatchupReveal({ state }: { state: GameState }) {
+  return (
+    <section>
+      <h2 className="text-xl font-heading">{state.prompt?.text}</h2>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        {state.answers?.map((answer) => (
+          <article
+            key={answer.id}
+            className="rounded-base border-2 border-border bg-secondary-background p-5"
+          >
+            <p className="text-lg">{answer.text}</p>
+            <p className="mt-4 font-heading">{answer.author}</p>
+            <p>
+              {answer.votes ?? 0} votes · +{answer.points ?? 0} points
+            </p>
+            {Boolean(answer.bonus) && (
+              <p className="mt-3 rounded-base bg-main p-2 text-center font-heading text-main-foreground">
+                Clean sweep! +{answer.bonus}
+              </p>
+            )}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Scoreboard({ state, title }: { state: GameState; title: string }) {
+  const players = [...state.players].sort(
+    (a, b) => b.score - a.score || a.name.localeCompare(b.name),
+  );
+  return (
+    <section>
+      <h2 className="text-2xl font-heading">{title}</h2>
+      <ol className="mt-5 space-y-3">
+        {players.map((player) => (
+          <li
+            key={player.id}
+            className="flex items-center justify-between rounded-base border-2 border-border bg-secondary-background p-3"
+          >
+            <span>
+              {player.name}
+              {player.left ? " (left)" : ""}
+            </span>
+            <span className="font-heading">
+              {player.score}{" "}
+              <small className="text-muted-foreground">
+                (+{player.roundDelta})
+              </small>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

@@ -441,3 +441,8 @@ M2 task 10: `make check` passed with 68 frontend tests. The owner can start from
 the lobby; the existing single socket consumes validated game snapshots. Mobile game
 views render intros, a server-skew-corrected countdown, both assigned prompts,
 character counts, locked submissions, debounced drafts and connected waiting status.
+
+M2 task 11: `make check` passed with 71 frontend tests. Eligible voters get two
+anonymous answer cards and a locked confirmation; authors get a waiting view. Reveal
+shows empty placeholders, authors, votes, points and the original “Clean sweep” bonus,
+followed by a total/round-delta scoreboard ordered by score.
