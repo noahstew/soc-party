@@ -129,6 +129,24 @@ func (s *State) tick(now time.Time) {
 	switch s.Phase {
 	case RoundIntro:
 		s.enter(Answering, now, s.Config.Answering)
+	case MatchupReveal:
+		s.MatchIndex++
+		if s.MatchIndex < len(s.Rounds[s.Round-1]) {
+			s.beginMatchup(now)
+		} else {
+			s.enter(RoundScoreboard, now, s.Config.Scoreboard)
+		}
+	case RoundScoreboard:
+		s.Round++
+		s.MatchIndex = 0
+		for i := range s.Players {
+			s.Players[i].RoundStart = s.Players[i].Score
+		}
+		if s.Round == 3 {
+			s.enter(FinalIntro, now, s.Config.Intro)
+		} else {
+			s.enter(RoundIntro, now, s.Config.Intro)
+		}
 	case MatchupVoting:
 		s.revealMatchup(now, false)
 	case Answering:

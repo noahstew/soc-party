@@ -413,3 +413,6 @@ answer locking, foreign prompts and rejection without mutating prior state.
 M2 task 4: make check passed. Tests verify 100/150-point votes, scaled unanimous
 bonuses, ties/missing-voter bonus exclusion, author rejection, vote locking, and
 one/both-empty forfeits preserving both answer slots.
+
+M2 task 5: make check passed. A two-round test verifies all matchups, intro/reveal/
+scoreboard deadlines, cumulative scores, round deltas and transition to final intro.

@@ -70,7 +70,7 @@ mobile player views, privacy and full-game verification. No game/result persiste
 - [x] 2. Engine config/types, initialization, prompt selection and matchup assignment
 - [x] 3. Answer submission/drafts, deadlines, early completion and promotion
 - [x] 4. Head-to-head votes, reveals, scoring and forfeits
-- [ ] 5. Two-round loop, multipliers and round scoreboards
+- [x] 5. Two-round loop, multipliers and round scoreboards
 - [ ] 6. Final round, idle close, zero-eligible voters and game over
 - [ ] 7. Per-player projections and explicit privacy tests
 - [ ] 8. Validated Go protocol, TS mirror and docs/PROTOCOL.md
