@@ -1,10 +1,9 @@
 # Soc Party
 
-Foundation for a multiplayer party-game website. Every player uses their own browser;
-there is no host screen. The first planned game is **Zinger** (working title).
-Implemented: room create/join/reconnect API and WebSocket lobby service, health/packs
-API, separate platform/game databases, generated models and original OG seed.
-Gameplay, accounts and ads remain planned.
+Multiplayer party-game website where every player uses their own browser; there is
+no host screen. **Zinger** (working title) is playable end to end through two
+head-to-head rounds and a shared-prompt final. Rooms support links/codes, reconnect,
+owner controls and selected official prompt packs. Accounts and ads remain planned.
 
 ## Quickstart — Docker only
 
@@ -77,9 +76,9 @@ This is a local rehearsal, not an AWS deployment. No IaC exists. See [deployment
 ## Contributing
 
 Read [AGENTS.md](AGENTS.md), [plan](docs/PLAN.md), [architecture](docs/ARCHITECTURE.md),
-and [decisions](docs/DECISIONS.md). Work one task at a time. M1 is authorized by the user;
-gameplay remains a later milestone. SQL lives in queries/; migrations are the schema authority;
-commit generated store changes. Do not begin gameplay as part of this bootstrap.
+and [decisions](docs/DECISIONS.md). Work one task at a time. M2 is implemented. SQL
+lives in queries/; migrations are the schema authority and generated store changes
+are committed. See `docs/games/zinger.md` for exact rules.
 
 ## Databases and lobby API
 
@@ -88,7 +87,7 @@ creates `wit_parade` on the same PostgreSQL instance and migrates it separately.
 This legacy database name stores Zinger content; the game ID is `zinger`.
 The migration role needs CREATEDB to provision it. Existing platform content is
 preserved for data retention; new content and `/api/packs` use the game database.
-`make seed` idempotently loads **OG** with five original comedy prompts and
+`make seed` idempotently loads **OG** with 29 original comedy prompts and
 **Extended** with three more original prompts. Each pack is saved transactionally.
 
 With an allowed `Origin` header, POST `/api/rooms` with `{ "name": "Alex" }`,
@@ -96,8 +95,9 @@ POST `/api/rooms/{code}/join` with a name, or POST `/api/rooms/{code}/reconnect`
 with `{ "token": "…" }`. Replies contain a private token and public lobby projection.
 Connect `/api/rooms/{code}/ws`, send a `session_auth` envelope with that token as
 its first payload, then receive `lobby_state` projections. Tokens never enter URLs.
-Go protocol is authoritative; TypeScript mirrors it. Owner intents: `kick_player`,
-`update_settings`, `select_game` and `select_pack`; all members may `ping` or `leave_room`. No start-game intent yet.
+Go protocol is authoritative; TypeScript mirrors it. Owner intents include room
+settings, pack/game selection, starting and returning after game over. Players submit
+drafts, answers and votes over the same socket.
 
 Guest tokens rotate on reconnect. Grace: 60 seconds; hard room lifetime: two hours.
 Owner transfers on departure; rooms need three connected players and at least one
@@ -105,15 +105,15 @@ selected available pack to be eligible. Lobby projections include the registered
 game/pack catalog and shared selected pack slugs. Pack choices are loaded from
 published game content; the lobby grids scroll and retain a Coming Soon tile.
 All live rooms close on backend restart. Database records are audit records, not
-restart recovery. Run exactly one backend process. Game record models are prepared
-for the future engine; there is no public answer/vote/history CRUD API.
+restart recovery. Run exactly one backend process. Live game state is actor-owned and
+intentionally not persisted; there is no public answer/vote/history CRUD API.
 
 ## Try the lobby
 
-Open http://localhost:3000, enter a name and choose **Create a room**. In another
-browser/tab, use a different name and the six-character room code, or open the
-shared link. Both players appear live. The owner can select **Zinger**, change capacity or remove
-players; everyone can see the selected game. **Coming soon** is disabled until another
+Open http://localhost:3000, enter a name and choose **Create a room**. Join from two
+other browsers/tabs with different names using the code or shared link. All players
+appear live. The owner selects packs and starts **Zinger** once three players are
+connected. **Coming soon** is disabled until another
 game is available. Anyone can leave. Refreshing within the reconnect grace restores identity.
 The page shows readiness at three connected players; game rounds are not built yet.
 

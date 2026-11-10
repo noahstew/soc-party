@@ -4,7 +4,7 @@ Implemented: platform/game PostgreSQL migrations and generated stores, original 
 health/packs endpoints, create/join/reconnect HTTP intents, room actors/WebSockets and
 a general Soc Party home/lobby with live membership and owner controls.
 Health and content diagnostics live on /health, separate from room admission.
-Gameplay is still planned.
+Zinger gameplay is implemented in memory; accounts, ads and deployment remain planned.
 
 ## System context
 ```mermaid
@@ -26,8 +26,8 @@ flowchart LR
   Socket[Socket reader] -->|validated intent| Channel[Room event channel]
   Timer[Cleanup ticker] --> Actor
   Channel --> Actor[One goroutine owns room]
-  Actor -. M2 .-> Game[Pure game transition]
-  Game -. planned effects .-> Actor
+  Actor --> Game[Pure game transition]
+  Game -->|scheduled deadline| Actor
   Actor --> Projection[Per-player projections]
   Projection --> Writer[Bounded socket writers]
   Registry[Shared registry] --> Actor
@@ -53,7 +53,7 @@ sequenceDiagram
 M1 joins directly; M6 inserts AdGate, never during a round. Server validates admission;
 client success claims are not authority. M1 guest reconnect policy is recorded in Decisions.
 
-## Game module — interface stub only; lifecycle planned
+## Game module — implemented lifecycle
 ```mermaid
 flowchart LR
   Input[State + event + injected time/RNG] --> Transition[Module.Transition]
@@ -62,8 +62,9 @@ flowchart LR
   Project --> View[Authorized player view]
   Registry[Modules keyed by ID] --> Transition
 ```
-`backend/internal/games` holds only this contract and an unimplemented registry signature.
-Zinger is an empty placeholder. No game engine is implemented.
+`backend/internal/games` contains the module registry/contract and Zinger contains the
+deterministic engine, projections and adapter. Rooms resolve selected-pack prompts via
+sqlc, inject time/RNG, interpret one scheduled deadline and broadcast authorized views.
 Protocol convention: JSON `{type, id?, payload}`, snake_case types, camelCase fields.
 Go protocol package is authoritative; frontend lib/protocol.ts mirrors it. Lobby message types are in protocol.go and mirrored in frontend/src/lib/protocol.ts.
 
@@ -94,19 +95,19 @@ old rooms; actors are not reconstructed. One API process only.
 answers and votes. Goose histories and sqlc output packages are separate. The fixed game
 database name is derived from DATABASE_URL by replacing its database path. Migration
 bootstrap creates it, then migrates both databases. Go must validate cross-database IDs.
-The game schema is ready for M2; no answer/vote endpoints or game execution exist yet.
-Pack API and seed use the game database. The old 24-prompt fixture remains as a reference;
-only the five-prompt OG fixture is seeded by startup.
+The prepared history schema remains unused by M2: games/results are intentionally
+live-only. Pack/content queries supply initialization. OG has 29 original prompts;
+Extended has three.
 
 ## Room game selection
 The room actor stores `gameId`, persists it through sqlc, and broadcasts it in each
 lobby projection. Only the owner may send `select_game` with `{gameId:"zinger"}`.
 Unknown/unavailable games are rejected before persistence. The UI shows Zinger and
 a disabled Coming soon option; guests see the same selector disabled. Selecting a
-game does not start it or implement M2 phases. The database constraint currently
+game chooses its registered module and the owner starts once eligible. The database constraint currently
 allows only `zinger`; adding another game requires an explicit migration and module.
 
-## Authorized M2 runtime design (implementation pending)
+## M2 runtime design — implemented
 
 The game specification is docs/games/zinger.md. M2 now includes DB prompt retrieval
 from selected packs (formerly M3). The room obtains immutable approved prompts via

@@ -303,3 +303,22 @@ but three seed tests still expected the removed file/five prompts. Point fixture
 coverage at the surviving OG and strengthen duplicate checks with normalized text;
 assert the committed count and sufficient prompts for eight-player games. No seed
 content is changed. Verify this prerequisite separately before the M2 spec commit.
+
+## 2026-11-10 — Zinger runtime integration
+
+Keep game state live inside the existing room actor and register Zinger through the
+generic games.Module registry. The room loads approved prompts from every selected
+pack through sqlc before entering the actor, then revalidates owner/lobby eligibility
+when applying the result. Engine state/results are not written to the prepared history
+schema. This preserves the requested M2 persistence boundary and keeps I/O outside
+pure transitions.
+
+Interpret exactly one engine deadline timer per room, separate from the existing
+platform cleanup ticker. Presence, answer and vote intents become deterministic engine
+events; each socket receives a module-produced player projection. Draft updates have
+a 100ms server limit while the client debounces at 250ms. The final all-done idle timer
+is emitted by the engine and resets only on accepted final-vote submissions.
+
+Use the existing single socket and authoritative snapshots in the frontend. Local
+state is limited to typing and unsubmitted final choices. Countdown captures server
+clock offset when mounted and advances locally; it never transitions game phases.

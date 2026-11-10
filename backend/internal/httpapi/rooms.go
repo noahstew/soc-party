@@ -188,8 +188,12 @@ func (a api) socket(w http.ResponseWriter, r *http.Request) {
 			if errors.Is(err, platform.ErrUnavailable) {
 				code = "unavailable"
 			}
+			message := err.Error()
+			if code == "not_enough_prompts" {
+				message = "The selected packs do not have enough unique prompts. Select more packs and try again."
+			}
 			select {
-			case outgoing <- protocol.Message("error", envelope.ID, protocol.Error{Code: code, Message: err.Error()}):
+			case outgoing <- protocol.Message("error", envelope.ID, protocol.Error{Code: code, Message: message}):
 			case <-ctx.Done():
 				return
 			default:

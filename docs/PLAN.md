@@ -5,7 +5,7 @@ One focused task per diff; the requested MVP foundation spans four ordered commi
 Backlog, ideas in Parking lot. Refine later milestones when reached. Never begin M1 as part
 of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
-## Current milestone: M2
+## Current milestone: M4
 
 M0 and M1 are verified. User authorized M1 and MVP persistence design on 2026-11-07.
 The requested four-stage foundation is implemented and verified. M2 gameplay and selected-pack retrieval are authorized on 2026-11-10.
@@ -55,7 +55,7 @@ Implement the ordered tasks below with one focused commit and green checks per t
 
 **Done when:** Two independent browsers create/join, owner can kick, valid reconnect restores identity, expired rooms disappear, race and check suites pass.
 
-### M2, Zinger engine and UI [status: in progress]
+### M2, Zinger engine and UI [status: done]
 
 **Goal:** Play the three-round original answer-and-vote game specified in docs/games/zinger.md.
 
@@ -79,7 +79,7 @@ mobile player views, privacy and full-game verification. No game/result persiste
 - [x] 10. Frontend snapshot handling, countdown, container and answering views
 - [x] 11. Frontend head-to-head voting/reveal and round scoreboard
 - [x] 12. Frontend final voting/reveal, podium and return to lobby
-- [ ] 13. Hardening, final checks/integration, clean-stack smoke and accurate docs
+- [x] 13. Hardening, final checks/integration, clean-stack smoke and accurate docs
 
 Tests ship with each behavior task: deterministic seeded/fake-time rules, N=3..8
 assignment/simulation, scoring, forfeits, invalid intents, disconnects, privacy,

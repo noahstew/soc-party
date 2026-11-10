@@ -1,3 +1,4 @@
 # Zinger
 
-Empty placeholder for the first original game module, planned in M2.
+Deterministic Zinger engine, module adapter and per-player privacy projections.
+Rules and tunables are documented in `docs/games/zinger.md`.

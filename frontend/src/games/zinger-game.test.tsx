@@ -45,6 +45,22 @@ describe("Zinger answering", () => {
     expect(screen.getByText("Waiting on 1 player")).toBeInTheDocument();
     expect(screen.getByLabelText(/seconds remaining/)).toBeInTheDocument();
   });
+  it("advances the server-corrected countdown", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000);
+    render(
+      <ZingerGame
+        state={{ ...state, deadlineMs: 4_000, serverNowMs: 1_000 }}
+        youId="p1"
+        ownerId="p1"
+        onSend={() => {}}
+      />,
+    );
+    expect(screen.getByLabelText("3 seconds remaining")).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(1_000));
+    expect(screen.getByLabelText("2 seconds remaining")).toBeInTheDocument();
+    vi.useRealTimers();
+  });
   it("debounces drafts and submits the current answer", () => {
     vi.useFakeTimers();
     const send = vi.fn();

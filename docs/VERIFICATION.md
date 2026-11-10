@@ -451,3 +451,19 @@ M2 task 12: `make check` passed with 74 frontend tests. Final voting enforces th
 visible pick limit and sends complete resubmissions, zero-choice voters get a ready
 state, ranked reveal shows authors/votes/points, and game over uses shared competition
 ranks with an owner-only return-to-lobby action.
+
+## 2026-11-10 — M2 final verification
+
+- `make integration` passed, including migrations/seed, DB constraints and race-tested
+  packages. The authenticated three-client actor test completes all three rounds and
+  owner return; existing HTTP/WebSocket tests cover the wire boundary and origin/auth.
+- Production `pnpm build` passed (Next.js 16.4.5), and backend/frontend Docker images
+  rebuilt successfully.
+- `make seed` loaded the current 29-prompt OG idempotently. An isolated
+  `soc-party-m2-smoke` Compose project started from fresh volumes with `up --build
+  -d --wait`; migration, seed, database, backend and frontend all succeeded and both
+  health endpoints responded. Only the isolated smoke volumes were then removed, and
+  the original development stack was restored healthy with its database preserved.
+- Engine tests verify 100/150/200 scoring, unanimous bonuses, final pick limits,
+  forfeits, prompt uniqueness, privacy, disconnect/reconnect and deterministic N=3..8
+  complete games. UI tests cover every phase, countdown, debounce, limits and placeholders.

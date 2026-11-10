@@ -657,7 +657,7 @@ func (r *Registry) run(a *actor, s Record) {
 		}
 		gameTimerC = nil
 		if !s.GameDeadline.IsZero() {
-			delay := time.Until(s.GameDeadline)
+			delay := s.GameDeadline.Sub(r.now())
 			if delay < 0 {
 				delay = 0
 			}
@@ -692,7 +692,7 @@ func (r *Registry) run(a *actor, s Record) {
 			if changed && r.persist(next) == nil {
 				s = next
 				resetGameTimer()
-				broadcast(s, subs)
+				r.broadcast(s, subs)
 			}
 		case <-gameTimerC:
 			gameTimerC = nil
@@ -700,7 +700,7 @@ func (r *Registry) run(a *actor, s Record) {
 			if err := r.applyGame(&next, zinger.Tick{}); err == nil {
 				s = next
 				resetGameTimer()
-				broadcast(s, subs)
+				r.broadcast(s, subs)
 			}
 		case req := <-a.requests:
 			if !r.now().Before(s.Expires) || r.now().Sub(s.Activity) >= Idle {
@@ -731,7 +731,7 @@ func (r *Registry) run(a *actor, s Record) {
 						delete(subs, effect.id)
 					}
 				}
-				broadcast(s, subs)
+				r.broadcast(s, subs)
 			}
 			req.reply <- result{value: value, err: err}
 			if s.Status == "closed" {
@@ -740,7 +740,7 @@ func (r *Registry) run(a *actor, s Record) {
 		}
 	}
 }
-func broadcast(s Record, subs map[string]chan []byte) {
+func (r *Registry) broadcast(s Record, subs map[string]chan []byte) {
 	active := make(map[string]bool)
 	for _, p := range s.Members {
 		if p.Status == "active" {
@@ -759,10 +759,12 @@ func broadcast(s Record, subs map[string]chan []byte) {
 		default:
 		}
 		if s.Status == "game" && s.GameState != nil {
-			moduleView, err := zinger.Module{}.Project(s.GameState, id, time.Now())
-			if err == nil {
-				ch <- protocol.Message("game_state", "", moduleView)
-				continue
+			if module, ok := r.modules.Lookup(s.GameID); ok {
+				moduleView, err := module.Project(s.GameState, id, r.now())
+				if err == nil {
+					ch <- protocol.Message("game_state", "", moduleView)
+					continue
+				}
 			}
 		}
 		ch <- protocol.Message("lobby_state", "", project(s, id))

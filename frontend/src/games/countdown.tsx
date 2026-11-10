@@ -10,13 +10,13 @@ export function Countdown({
   serverNowMs: number;
 }) {
   const [now, setNow] = useState(() => Date.now());
+  const [serverOffset] = useState(() => serverNowMs - Date.now());
   useEffect(() => {
     if (!deadlineMs) return;
     const timer = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(timer);
   }, [deadlineMs]);
   if (!deadlineMs) return null;
-  const serverOffset = serverNowMs - now;
   const seconds = Math.max(
     0,
     Math.ceil((deadlineMs - (now + serverOffset)) / 1000),
