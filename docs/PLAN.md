@@ -72,7 +72,7 @@ mobile player views, privacy and full-game verification. No game/result persiste
 - [x] 4. Head-to-head votes, reveals, scoring and forfeits
 - [x] 5. Two-round loop, multipliers and round scoreboards
 - [x] 6. Final round, idle close, zero-eligible voters and game over
-- [ ] 7. Per-player projections and explicit privacy tests
+- [x] 7. Per-player projections and explicit privacy tests
 - [ ] 8. Validated Go protocol, TS mirror and docs/PROTOCOL.md
 - [ ] 9. Room/module registration, provider, single game timer, reconnect/leave,
   owner return to lobby and full-game WebSocket bot test

@@ -421,3 +421,7 @@ M2 task 6: `make check` passed. Tests cover final vote validation/resubmission,
 the five-second all-done inactivity window and reconnect cancellation, zero-eligible
 automatic completion, the absolute deadline, 200-point picks without a bonus,
 insufficient-player grace, and deterministic full-game simulations for N=3..8.
+
+M2 task 7: `make check` passed. Per-player projection tests assert that answering
+shows only the requesting player's drafts, head-to-head and final voting omit author
+and vote metadata, authors are ineligible, and reveal views include attributed scores.
