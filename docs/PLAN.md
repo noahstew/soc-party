@@ -8,8 +8,8 @@ of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 ## Current milestone: M2
 
 M0 and M1 are verified. User authorized M1 and MVP persistence design on 2026-11-07.
-The requested four-stage foundation is implemented and verified. M2 gameplay is next;
-its schema is prepared but rules are not implemented or authorized by this request.
+The requested four-stage foundation is implemented and verified. M2 gameplay and selected-pack retrieval are authorized on 2026-11-10.
+Implement the ordered tasks below with one focused commit and green checks per task.
 
 ## Milestones
 
@@ -55,45 +55,46 @@ its schema is prepared but rules are not implemented or authorized by this reque
 
 **Done when:** Two independent browsers create/join, owner can kick, valid reconnect restores identity, expired rooms disappear, race and check suites pass.
 
-### M2, Zinger engine and UI [status: not started]
+### M2, Zinger engine and UI [status: in progress]
 
-**Goal:** Play an original answer-and-vote game end to end.
+**Goal:** Play the three-round original answer-and-vote game specified in docs/games/zinger.md.
 
-**In scope:** Pure phases, scoring, projections and disconnect behavior with temporary original in-memory prompts.
+**In scope:** Pure engine, selected-pack retrieval through sqlc, protocol, room lifecycle,
+mobile player views, privacy and full-game verification. No game/result persistence.
 
-**Out of scope:** DB pack selection (M3), account features, ads.
+**Out of scope:** Accounts, ads, sound, user content, spectators and infrastructure.
 
-**Tasks:**
+**Ordered tasks (one focused commit each):**
 
-- [ ] Refine module contract and implement deterministic initialization and answer assignment
-- [ ] Implement answer intents, validation, deadlines and transition with fake clock/RNG
-- [ ] Implement head-to-head voting, eligibility, hidden identity and deadline handling
-- [ ] Implement deterministic scoring, ties, round results and final results
-- [ ] Add per-player projections with tests proving private answers/votes never leak
-- [ ] Wire module effects into room actor and render answer/vote/results player screens
-- [ ] Handle missing answers, disconnects, reconnects and insufficient-player termination
+- [x] 1. Specify rules, tunables, state machine, architecture and ordered plan
+- [ ] 2. Engine config/types, initialization, prompt selection and matchup assignment
+- [ ] 3. Answer submission/drafts, deadlines, early completion and promotion
+- [ ] 4. Head-to-head votes, reveals, scoring and forfeits
+- [ ] 5. Two-round loop, multipliers and round scoreboards
+- [ ] 6. Final round, idle close, zero-eligible voters and game over
+- [ ] 7. Per-player projections and explicit privacy tests
+- [ ] 8. Validated Go protocol, TS mirror and docs/PROTOCOL.md
+- [ ] 9. Room/module registration, provider, single game timer, reconnect/leave,
+  owner return to lobby and full-game WebSocket bot test
+- [ ] 10. Frontend snapshot handling, countdown, container and answering views
+- [ ] 11. Frontend head-to-head voting/reveal and round scoreboard
+- [ ] 12. Frontend final voting/reveal, podium and return to lobby
+- [ ] 13. Hardening, final checks/integration, clean-stack smoke and accurate docs
 
-**Tests required:** Pure table tests for phases/deadlines/scoring/ties; seeded replay; invalid/duplicate intents; privacy projections; disconnect boundaries; UI render/action tests; multi-client round integration.
+Tests ship with each behavior task: deterministic seeded/fake-time rules, N=3..8
+assignment/simulation, scoring, forfeits, invalid intents, disconnects, privacy,
+protocol, fixture-based accessible UI and a short-timer multi-client full game.
 
-**Done when:** Multiple devices complete a deterministic session with private answers, valid voting and server-owned scores; reconnect and timeout paths are tested.
+**Done when:** make check and integration pass, disposable clean-stack build works,
+full three-round gameplay and forfeits are verified, no repeats/leaks, docs match code.
+Record actual verification in docs/VERIFICATION.md; then advance the milestone.
 
-### M3, Official pack in the DB [status: not started]
+### M3, Official pack in the DB [status: incorporated into M2]
 
-**Goal:** Use curated stored prompts during games.
-
-**In scope:** Extend existing M0 schema/queries, pack selection and versioned JSON seed.
-
-**Out of scope:** User submissions and accounts.
-
-**Tasks:**
-
-- [ ] Refine content query/selection rules and seed validation
-- [ ] Add room pack settings and deterministic prompt sampling
-- [ ] Add pack selection UI and integration coverage
-
-**Tests required:** Migration/seed idempotency, sqlc drift, selection bounds and missing pack behavior.
-
-**Done when:** A room selects a published official pack and plays prompts loaded through sqlc.
+The 2026-11-10 request moves selected-pack prompt loading and deterministic sampling
+into M2. Catalog, selections and seed already exist. M2 tasks 2 and 9 deliver the
+remaining runtime retrieval/sampling with sqlc and integration coverage; do not mark
+M3 complete before those checks pass. No separate in-memory prompt implementation.
 
 ### M4, Accounts [status: not started]
 
@@ -205,6 +206,11 @@ its schema is prepared but rules are not implemented or authorized by this reque
 **Done when:** Core flows are accessible and E2E-tested with documented browser support.
 
 ## Backlog
+
+- [x] Repair seed regressions after the official-to-OG fixture merge: validate
+  the current 29-prompt OG, full-game capacity and normalized cross-pack uniqueness.
+
+- Multi-browser E2E for the full three-round game (M9; no Playwright dependency in M2).
 
 - Room audit last_seen_at currently reflects the latest persisted room snapshot;
   pass each member's injected Seen timestamp through SQL before using it for analytics.

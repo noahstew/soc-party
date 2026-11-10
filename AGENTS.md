@@ -4,8 +4,9 @@
 Browser multiplayer party games; each player uses their own device, rooms shared by
 code/link, no host screen. First game: **Zinger** (working title). Original content only.
 M0 and M1 are verified. The user authorized rooms/lobby plus MVP persistence models
-and original OG seed, now complete. M2 gameplay implementation, accounts, ads and
-infrastructure remain out of scope until explicitly authorized.
+and original OG seed, now complete. M2 gameplay and selected-pack prompt retrieval are authorized by the 2026-11-10
+request. Follow the ordered M2 tasks in docs/PLAN.md. Accounts, ads and
+infrastructure remain out of scope.
 Frontend branding is **PartiSocial** (planned domain: `parti.social`); see `frontend/AGENTS.md` for naming
 and browser-storage compatibility guidance.
 

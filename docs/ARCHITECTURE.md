@@ -105,3 +105,26 @@ Unknown/unavailable games are rejected before persistence. The UI shows Zinger a
 a disabled Coming soon option; guests see the same selector disabled. Selecting a
 game does not start it or implement M2 phases. The database constraint currently
 allows only `zinger`; adding another game requires an explicit migration and module.
+
+## Authorized M2 runtime design (implementation pending)
+
+The game specification is docs/games/zinger.md. M2 now includes DB prompt retrieval
+from selected packs (formerly M3). The room obtains immutable approved prompts via
+sqlc before start; the pure Zinger module deduplicates/samples with injected RNG.
+The existing Module contract remains state + event + supplied time/RNG -> state +
+effects, with per-player projection. No DB/network/clock reads inside the engine.
+
+Room actors route authenticated game intents and presence events, own a single
+reschedulable game deadline timer, and publish only the player's authorized snapshot.
+The existing platform expiry cleanup remains separate from scheduled game transitions.
+No new participants join after start. Fixed game rosters retain left players and
+scores while platform credentials/owner transfer keep existing security behavior.
+The room-side provider performs I/O outside the actor; admission/settings are
+revalidated when the result is applied. Failed loads/insufficient prompts leave the
+lobby intact. Game states/results are not persisted; room audit writes remain.
+
+Clients use the existing tab socket and server snapshots. Countdown uses supplied
+server time/deadlines, with local state only for current text and unsubmitted picks.
+Frontend game views preserve PartiSocial branding and the shared toast/accessibility
+conventions. Final voting has an absolute deadline and an all-done idle deadline;
+the module schedules whichever applicable deadline comes first.

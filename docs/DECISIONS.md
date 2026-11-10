@@ -275,3 +275,31 @@ matching the size/style of its peers as requested in the layout feedback. No new
 rules or prompt sampling are added. The down migration restores the former
 single-pack schema using the first selected pack, so multi-pack choices are only
 fully represented by the new schema.
+
+## 2026-11-10 — Authorized three-round Zinger specification
+
+The external M2 prompt now authorizes gameplay and selected-pack DB retrieval,
+previously planned for M3. Preserve the existing zinger ID/package and write the
+specification at docs/games/zinger.md rather than introducing a second game identity.
+Keep the existing games.Module transition/project contract with supplied time/RNG;
+resolve content through a room-side provider using existing sqlc queries. No live
+game/result persistence. Keep room audit persistence and its failure semantics.
+
+User clarification: disconnect keeps drafts editable until answering ends, replacing
+the external prompt's immediate promotion/locking rule. Final voting remains open
+for revisions, then closes after five seconds without valid vote activity once all
+connected voters are finished; the absolute deadline caps it. No-eligible voters
+finish automatically with zero picks. Only accepted final vote submission/revision
+counts as activity, avoiding heartbeat-driven extension. Shared ranks use competition
+ranking (1, 1, 3). Preserve the existing 60-second identity recovery grace.
+
+OG has 29 seed prompts, enough for 2*8+1 draws. Keep exact content from the user's
+seed; no content/dependency additions are needed for the specification task.
+
+## 2026-11-10 — Seed test prerequisite
+
+The user’s committed fixture merge removed official_pack.json and expanded OG to 29,
+but three seed tests still expected the removed file/five prompts. Point fixture
+coverage at the surviving OG and strengthen duplicate checks with normalized text;
+assert the committed count and sufficient prompts for eight-player games. No seed
+content is changed. Verify this prerequisite separately before the M2 spec commit.

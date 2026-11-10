@@ -394,3 +394,11 @@ field preservation and card resizing.
 - `make fmt` and `make check` pass, including lint/format/types, Go race/unit
   tests, sqlc drift and 60 frontend tests. Toast regressions cover message titles,
   absence of generic labels/icons and preserved event styling for all four types.
+
+## 2026-11-10 — M2 specification and seed prerequisite
+
+`make check` passed (Go lint/vet/race tests, frontend lint/format/types, 60 frontend
+tests and sqlc drift). First run exposed stale fixture tests after the user's
+official-to-OG merge; repaired fixture paths/count expectations and normalized
+uniqueness checks without changing seed content. OG contains 29 prompts.
+M2 task 1 specifies the authorized rules; engine/protocol/UI remain pending.
