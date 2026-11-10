@@ -405,3 +405,7 @@ M2 task 1 specifies the authorized rules; engine/protocol/UI remain pending.
 
 M2 task 2: make check passed, including seeded initialization, normalized prompt
 deduplication, clone isolation and assignment invariants for N=3..8.
+
+M2 task 3: make check passed. Regression tests cover draft edit after reconnect,
+deadline promotion, connected-only early completion, Unicode validation, sanitation,
+answer locking, foreign prompts and rejection without mutating prior state.
