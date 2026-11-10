@@ -78,7 +78,7 @@ mobile player views, privacy and full-game verification. No game/result persiste
   owner return to lobby and full-game WebSocket bot test
 - [x] 10. Frontend snapshot handling, countdown, container and answering views
 - [x] 11. Frontend head-to-head voting/reveal and round scoreboard
-- [ ] 12. Frontend final voting/reveal, podium and return to lobby
+- [x] 12. Frontend final voting/reveal, podium and return to lobby
 - [ ] 13. Hardening, final checks/integration, clean-stack smoke and accurate docs
 
 Tests ship with each behavior task: deterministic seeded/fake-time rules, N=3..8

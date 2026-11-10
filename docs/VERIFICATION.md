@@ -446,3 +446,8 @@ M2 task 11: `make check` passed with 71 frontend tests. Eligible voters get two
 anonymous answer cards and a locked confirmation; authors get a waiting view. Reveal
 shows empty placeholders, authors, votes, points and the original “Clean sweep” bonus,
 followed by a total/round-delta scoreboard ordered by score.
+
+M2 task 12: `make check` passed with 74 frontend tests. Final voting enforces the
+visible pick limit and sends complete resubmissions, zero-choice voters get a ready
+state, ranked reveal shows authors/votes/points, and game over uses shared competition
+ranks with an owner-only return-to-lobby action.
