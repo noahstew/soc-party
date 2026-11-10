@@ -36,19 +36,19 @@ func TestReadPack(t *testing.T) {
 }
 
 func TestOfficialPack(t *testing.T) {
-	p, err := readPack("../../data/official_pack.json")
+	p, err := readPack("../../data/og_pack.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(p.Prompts) < 20 || len(p.Prompts) > 30 {
+	if len(p.Prompts) < 2*8+1 {
 		t.Fatalf("starter pack has %d prompts", len(p.Prompts))
 	}
 	seen := map[string]bool{}
 	for _, text := range p.Prompts {
-		if seen[text] {
+		if seen[strings.ToLower(strings.Join(strings.Fields(text), " "))] {
 			t.Fatalf("duplicate prompt: %s", text)
 		}
-		seen[text] = true
+		seen[strings.ToLower(strings.Join(strings.Fields(text), " "))] = true
 	}
 }
 
@@ -57,15 +57,15 @@ func TestOGPack(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if p.Slug != "og" || p.Title != "OG" || len(p.Prompts) != 5 {
+	if p.Slug != "og" || p.Title != "OG" || len(p.Prompts) != 29 {
 		t.Fatalf("invalid OG metadata: %+v", p)
 	}
 	seen := map[string]bool{}
 	for _, prompt := range p.Prompts {
-		if seen[prompt] {
+		if seen[strings.ToLower(strings.Join(strings.Fields(prompt), " "))] {
 			t.Fatalf("duplicate OG prompt: %s", prompt)
 		}
-		seen[prompt] = true
+		seen[strings.ToLower(strings.Join(strings.Fields(prompt), " "))] = true
 	}
 }
 
@@ -78,19 +78,19 @@ func TestExtendedPack(t *testing.T) {
 		t.Fatalf("invalid Extended metadata: %+v", extended)
 	}
 	seen := map[string]bool{}
-	for _, path := range []string{"../../data/og_pack.json", "../../data/official_pack.json"} {
+	for _, path := range []string{"../../data/og_pack.json"} {
 		original, err := readPack(path)
 		if err != nil {
 			t.Fatal(err)
 		}
 		for _, text := range original.Prompts {
-			seen[text] = true
+			seen[strings.ToLower(strings.Join(strings.Fields(text), " "))] = true
 		}
 	}
 	for _, text := range extended.Prompts {
-		if seen[text] {
+		if seen[strings.ToLower(strings.Join(strings.Fields(text), " "))] {
 			t.Fatalf("duplicate Extended prompt: %s", text)
 		}
-		seen[text] = true
+		seen[strings.ToLower(strings.Join(strings.Fields(text), " "))] = true
 	}
 }
