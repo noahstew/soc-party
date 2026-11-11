@@ -361,7 +361,7 @@ func (r *Registry) Subscribe(ctx context.Context, code, token string) (string, <
 		applyCatalog(s, games)
 		p.Connected = true
 		p.Seen = r.now()
-		if s.Status == "game" {
+		if s.Status == "playing" {
 			if err := r.applyGame(s, zinger.Presence{PlayerID: p.ID, Connected: true}); err != nil {
 				return nil, err
 			}
@@ -386,7 +386,7 @@ func (r *Registry) Disconnect(code, id string, ch <-chan []byte) {
 			if s.Members[i].ID == id {
 				s.Members[i].Connected = false
 				s.Members[i].Seen = r.now()
-				if s.Status == "game" {
+				if s.Status == "playing" {
 					_ = r.applyGame(s, zinger.Presence{PlayerID: id})
 				}
 			}
@@ -444,7 +444,7 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 		case "ping":
 			return nil, nil
 		case "leave_room":
-			if s.Status == "game" {
+			if s.Status == "playing" {
 				if err := r.applyGame(s, zinger.Presence{PlayerID: p.ID, Left: true}); err != nil {
 					return nil, err
 				}
@@ -463,7 +463,7 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 			found := false
 			for i := range s.Members {
 				if s.Members[i].ID == id && s.Members[i].Status == "active" {
-					if s.Status == "game" {
+					if s.Status == "playing" {
 						if err := r.applyGame(s, zinger.Presence{PlayerID: id, Left: true}); err != nil {
 							return nil, err
 						}
@@ -546,10 +546,10 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				return nil, err
 			}
 			s.GameState = next
-			s.Status = "game"
+			s.Status = "playing"
 			s.GameDeadline = deadline(effects)
 		case "update_draft", "submit_answer":
-			if s.Status != "game" {
+			if s.Status != "playing" {
 				return nil, zinger.WrongPhase
 			}
 			if kind == "update_draft" && r.now().Sub(p.DraftAt) < 100*time.Millisecond {
@@ -615,7 +615,7 @@ func (r *Registry) cleanup(s *Record) {
 	for i := range s.Members {
 		p := &s.Members[i]
 		if p.Status == "active" && !p.Connected && now.Sub(p.Seen) >= Grace {
-			if s.Status == "game" {
+			if s.Status == "playing" {
 				_ = r.applyGame(s, zinger.Presence{PlayerID: p.ID, Left: true})
 			}
 			p.Status = "left"
@@ -758,7 +758,7 @@ func (r *Registry) broadcast(s Record, subs map[string]chan []byte) {
 		case <-ch:
 		default:
 		}
-		if s.Status == "game" && s.GameState != nil {
+		if s.Status == "playing" && s.GameState != nil {
 			if module, ok := r.modules.Lookup(s.GameID); ok {
 				moduleView, err := module.Project(s.GameState, id, r.now())
 				if err == nil {

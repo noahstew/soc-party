@@ -467,3 +467,7 @@ ranks with an owner-only return-to-lobby action.
 - Engine tests verify 100/150/200 scoring, unanimous bonuses, final pick limits,
   forfeits, prompt uniqueness, privacy, disconnect/reconnect and deterministic N=3..8
   complete games. UI tests cover every phase, countdown, debounce, limits and placeholders.
+
+Start-status regression: `make integration` passes with a real PostgreSQL assertion
+that an eligible three-player start persists room status `playing`. This covers the
+constraint failure that previously surfaced as “rooms temporarily unavailable.”

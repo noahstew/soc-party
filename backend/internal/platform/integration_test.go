@@ -4,15 +4,67 @@ package platform
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 	"time"
 
+	"example.com/soc-party/backend/internal/games/zinger"
 	"example.com/soc-party/backend/internal/protocol"
 	"example.com/soc-party/backend/internal/store"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+func TestPostgresStartPersistsPlayingStatus(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	pool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	r := NewRegistry(PostgresRepository{Pool: tx}, testCatalog)
+	defer r.Close()
+	if err := r.RegisterGame(zinger.Module{Config: zinger.DefaultConfig()}, func(context.Context, []string) ([]zinger.Prompt, error) {
+		prompts := make([]zinger.Prompt, 7)
+		for i := range prompts {
+			prompts[i] = zinger.Prompt{ID: fmt.Sprint(i), Text: fmt.Sprintf("Prompt %d", i)}
+		}
+		return prompts, nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	owner, err := r.Create(ctx, "Owner")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sessions := []protocol.Session{owner}
+	for _, name := range []string{"A", "B"} {
+		session, err := r.Join(ctx, owner.Lobby.Code, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sessions = append(sessions, session)
+	}
+	for _, session := range sessions {
+		if _, _, err := r.Subscribe(ctx, owner.Lobby.Code, session.Token); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := r.Command(ctx, owner.Lobby.Code, owner.Token, "start_game", &protocol.Empty{}); err != nil {
+		t.Fatal(err)
+	}
+	record, err := store.New(tx).GetRoom(ctx, owner.Lobby.Code)
+	if err != nil || record.Status != "playing" {
+		t.Fatalf("status=%q err=%v", record.Status, err)
+	}
+}
 
 func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

@@ -319,6 +319,12 @@ events; each socket receives a module-produced player projection. Draft updates 
 a 100ms server limit while the client debounces at 250ms. The final all-done idle timer
 is emitted by the engine and resets only on accepted final-vote submissions.
 
+Persist the active runtime phase using the schema's existing `playing` room status.
+The first implementation used the internal label `game`, which violated the database
+check constraint after an otherwise successful engine start and surfaced as the generic
+availability error. Keep runtime phase detail inside the module state rather than adding
+another platform status or migration.
+
 Use the existing single socket and authoritative snapshots in the frontend. Local
 state is limited to typing and unsubmitted final choices. Countdown captures server
 clock offset when mounted and advances locally; it never transitions game phases.
