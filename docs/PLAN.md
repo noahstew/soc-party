@@ -207,6 +207,9 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Show the prompt and both locked answers to matchup authors during voting;
+  verify regression coverage and `make check` (requested 2026-11-12).
+
 - [x] Repair seed regressions after the official-to-OG fixture merge: validate
   the current 29-prompt OG, full-game capacity and normalized cross-pack uniqueness.
 

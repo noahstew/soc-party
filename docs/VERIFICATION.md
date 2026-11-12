@@ -478,3 +478,10 @@ The game countdown now shows seconds inside an 80-pixel clock icon, with its
 accessible remaining-time label retained. `make fmt` and `make check` passed
 (77 frontend tests). Added regression coverage for the numeric display, decorative
 icon, server clock offset, expiration at zero and absent deadlines.
+
+## 2026-11-12 — Matchup author answer visibility
+
+Matchup authors now see the prompt and both anonymous answers during voting,
+with both answer buttons disabled and the waiting message retained. Regression
+coverage verifies visibility, disabled controls and no vote intent on clicks.
+`make fmt` and `make check` passed (78 frontend tests).

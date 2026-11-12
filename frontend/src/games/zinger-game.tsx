@@ -204,22 +204,18 @@ function MatchupVoting({
   onSend: (message: ClientMessage) => void;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
-  if (!state.canVote)
-    return (
-      <div className="py-10 text-center">
-        <h2 className="text-2xl font-heading">Your matchup</h2>
-        <p className="mt-3">The other players are voting.</p>
-      </div>
-    );
   return (
     <section>
       <h2 className="text-xl font-heading">{state.prompt?.text}</h2>
+      {!state.canVote && (
+        <p className="mt-3">Your matchup. The other players are voting.</p>
+      )}
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         {state.answers?.map((answer) => (
           <Button
             key={answer.id}
             variant={selected === answer.id ? "default" : "neutral"}
-            disabled={selected !== null}
+            disabled={!state.canVote || selected !== null}
             className="h-auto min-h-28 whitespace-normal p-5 text-lg"
             onClick={() => {
               setSelected(answer.id);

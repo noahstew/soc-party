@@ -85,6 +85,42 @@ describe("Zinger answering", () => {
 });
 
 describe("Zinger head-to-head views", () => {
+  it("shows the prompt and locked answers to matchup authors during voting", () => {
+    const send = vi.fn();
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          phase: "matchup_voting",
+          canVote: false,
+          matchupId: "m1",
+          prompt: { id: "q", text: "Pick one", submitted: false },
+          prompts: undefined,
+          answers: [
+            { id: "a1", text: "Alpha" },
+            { id: "a2", text: "Beta" },
+          ],
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={send}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Pick one" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/The other players are voting/),
+    ).toBeInTheDocument();
+    for (const name of ["Alpha", "Beta"]) {
+      const answer = screen.getByRole("button", { name });
+      expect(answer).toBeDisabled();
+      fireEvent.click(answer);
+    }
+    expect(send).not.toHaveBeenCalled();
+    expect(screen.queryByText("Vote locked in")).not.toBeInTheDocument();
+  });
+
   it("casts one vote and shows confirmation", () => {
     const send = vi.fn();
     render(
