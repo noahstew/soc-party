@@ -175,6 +175,9 @@ func TestMultiClientFullGameAndReturnLobby(t *testing.T) {
 				if player.ID == match.Answers[0].PlayerID || player.ID == match.Answers[1].PlayerID || match.Votes[player.ID] != "" {
 					continue
 				}
+				if err := r.Command(ctx, owner.Lobby.Code, tokens[player.ID], "update_vote", &protocol.Vote{MatchupID: match.ID, AnswerID: match.Answers[1].ID}); err != nil {
+					t.Fatal(err)
+				}
 				if err := r.Command(ctx, owner.Lobby.Code, tokens[player.ID], "cast_vote", &protocol.Vote{MatchupID: match.ID, AnswerID: match.Answers[0].ID}); err != nil {
 					t.Fatal(err)
 				}
@@ -196,7 +199,7 @@ func TestMultiClientFullGameAndReturnLobby(t *testing.T) {
 				ids := []string{}
 				for _, answer := range current.FinalAnswers {
 					if answer.PlayerID != player.ID && answer.Text != "" {
-						ids = append(ids, answer.ID)
+						ids = append(ids, answer.ID, answer.ID, answer.ID)
 						break
 					}
 				}

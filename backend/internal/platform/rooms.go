@@ -560,9 +560,13 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 				return nil, err
 			}
 			p.DraftAt = r.now()
-		case "cast_vote":
+		case "cast_vote", "update_vote":
 			v := payload.(*protocol.Vote)
-			if err := r.applyGame(s, zinger.VoteIntent{PlayerID: p.ID, MatchupID: v.MatchupID, AnswerID: v.AnswerID}); err != nil {
+			var event any = zinger.VoteIntent{PlayerID: p.ID, MatchupID: v.MatchupID, AnswerID: v.AnswerID}
+			if kind == "update_vote" {
+				event = zinger.VoteDraftIntent{PlayerID: p.ID, MatchupID: v.MatchupID, AnswerID: v.AnswerID}
+			}
+			if err := r.applyGame(s, event); err != nil {
 				return nil, err
 			}
 		case "submit_final_votes":

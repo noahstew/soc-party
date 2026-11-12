@@ -40,7 +40,7 @@ export function ZingerGame({
           <Answering prompts={state.prompts ?? []} onSend={onSend} />
         )}
         {state.phase === "matchup_voting" && (
-          <MatchupVoting state={state} onSend={onSend} />
+          <MatchupVoting key={state.matchupId} state={state} onSend={onSend} />
         )}
         {state.phase === "matchup_reveal" && <MatchupReveal state={state} />}
         {state.phase === "round_scoreboard" && (
@@ -84,9 +84,12 @@ function FinalVoting({
   state: GameState;
   onSend: (message: ClientMessage) => void;
 }) {
-  const [selected, setSelected] = useState<string[]>(
+  const [draft, setSelected] = useState<string[]>(
     state.selectedAnswerIds ?? [],
   );
+  const selected = state.voteSubmitted
+    ? (state.selectedAnswerIds ?? [])
+    : draft;
   const max = state.maxPicks ?? 0;
   if (max === 0)
     return (
@@ -95,8 +98,11 @@ function FinalVoting({
       </p>
     );
   return (
-    <section>
-      <h2 className="text-2xl font-heading">Pick up to {max} favorites</h2>
+    <section className="pb-24">
+      <h2 className="text-2xl font-heading">Distribute {max} votes</h2>
+      <p className="mt-2 text-muted-foreground">
+        Click an answer again to add another vote.
+      </p>
       <p className="mt-2 text-muted-foreground">
         Selected {selected.length}/{max}
       </p>
@@ -107,35 +113,53 @@ function FinalVoting({
             <Button
               key={answer.id}
               aria-pressed={active}
+              disabled={state.voteSubmitted}
               variant={active ? "default" : "neutral"}
               className="h-auto min-h-20 whitespace-normal p-4"
               onClick={() =>
                 setSelected((current) =>
-                  active
-                    ? current.filter((id) => id !== answer.id)
-                    : current.length < max
-                      ? [...current, answer.id]
-                      : current,
+                  current.length < max ? [...current, answer.id] : current,
                 )
               }
             >
               {answer.text}
+              <span className="ml-2">
+                {selected.filter((id) => id === answer.id).length} votes
+              </span>
             </Button>
           );
         })}
       </div>
-      <Button
-        className="mt-5 w-full"
-        disabled={selected.length === 0}
-        onClick={() =>
-          onSend({
-            type: "submit_final_votes",
-            payload: { answerIds: selected },
-          })
-        }
-      >
-        {state.selectedAnswerIds ? "Update favorites" : "Submit favorites"}
-      </Button>
+      {state.voteSubmitted ? (
+        <p className="mt-5 text-center font-heading" role="status">
+          Votes locked in
+        </p>
+      ) : (
+        selected.length > 0 && (
+          <div className="fixed inset-x-0 bottom-0 z-10 mx-auto flex max-w-3xl gap-3 border-t-2 border-border bg-secondary-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <Button
+              variant="neutral"
+              className="flex-1"
+              onClick={() => setSelected([])}
+            >
+              Clear
+            </Button>
+            {selected.length === max && (
+              <Button
+                className="flex-1"
+                onClick={() =>
+                  onSend({
+                    type: "submit_final_votes",
+                    payload: { answerIds: selected },
+                  })
+                }
+              >
+                Submit votes
+              </Button>
+            )}
+          </div>
+        )
+      )}
     </section>
   );
 }
@@ -203,7 +227,12 @@ function MatchupVoting({
   state: GameState;
   onSend: (message: ClientMessage) => void;
 }) {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [draft, setSelected] = useState<string | null>(
+    state.selectedAnswerIds?.[0] ?? null,
+  );
+  const selected = state.voteSubmitted
+    ? (state.selectedAnswerIds?.[0] ?? null)
+    : draft;
   return (
     <section>
       <h2 className="text-xl font-heading">{state.prompt?.text}</h2>
@@ -215,12 +244,13 @@ function MatchupVoting({
           <Button
             key={answer.id}
             variant={selected === answer.id ? "default" : "neutral"}
-            disabled={!state.canVote || selected !== null}
+            aria-pressed={selected === answer.id}
+            disabled={!state.canVote || state.voteSubmitted}
             className="h-auto min-h-28 whitespace-normal p-5 text-lg"
             onClick={() => {
               setSelected(answer.id);
               onSend({
-                type: "cast_vote",
+                type: "update_vote",
                 payload: {
                   matchupId: state.matchupId ?? "",
                   answerId: answer.id,
@@ -232,7 +262,20 @@ function MatchupVoting({
           </Button>
         ))}
       </div>
-      {selected && (
+      {selected && !state.voteSubmitted && state.canVote && (
+        <Button
+          className="mt-5 w-full"
+          onClick={() =>
+            onSend({
+              type: "cast_vote",
+              payload: { matchupId: state.matchupId ?? "", answerId: selected },
+            })
+          }
+        >
+          Submit vote
+        </Button>
+      )}
+      {state.voteSubmitted && (
         <p className="mt-4 text-center font-heading" aria-live="polite">
           Vote locked in
         </p>

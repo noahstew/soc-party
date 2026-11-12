@@ -209,7 +209,7 @@ describe("Zinger head-to-head views", () => {
     expect(screen.queryByText("Vote locked in")).not.toBeInTheDocument();
   });
 
-  it("casts one vote and shows confirmation", () => {
+  it("lets voters change selection before explicit submission", () => {
     const send = vi.fn();
     render(
       <ZingerGame
@@ -231,12 +231,54 @@ describe("Zinger head-to-head views", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Alpha" }));
-    expect(send).toHaveBeenCalledWith({
-      type: "cast_vote",
+    expect(send).toHaveBeenLastCalledWith({
+      type: "update_vote",
       payload: { matchupId: "m1", answerId: "a1" },
     });
+    expect(screen.queryByText("Vote locked in")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Beta" }));
+    expect(screen.getByRole("button", { name: "Beta" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Submit vote" }));
+    expect(send).toHaveBeenLastCalledWith({
+      type: "cast_vote",
+      payload: { matchupId: "m1", answerId: "a2" },
+    });
+  });
+  it("restores a submitted single vote as locked", () => {
+    const send = vi.fn();
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          phase: "matchup_voting",
+          matchupId: "m1",
+          canVote: true,
+          voteSubmitted: true,
+          selectedAnswerIds: ["a2"],
+          answers: [
+            { id: "a1", text: "Alpha" },
+            { id: "a2", text: "Beta" },
+          ],
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={send}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Beta" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Alpha" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Submit vote" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Vote locked in")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Beta" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Alpha" }));
+    expect(send).not.toHaveBeenCalled();
   });
   it("renders attributed reveal, empty placeholder and original bonus copy", () => {
     render(
@@ -300,7 +342,7 @@ describe("Zinger final views", () => {
     { id: "a3", text: "Gamma" },
     { id: "a4", text: "Delta" },
   ];
-  it("limits favorite selection and allows resubmission", () => {
+  it("requires three votes, supports stacking and clears the ballot", () => {
     const send = vi.fn();
     render(
       <ZingerGame
@@ -308,26 +350,63 @@ describe("Zinger final views", () => {
           ...state,
           phase: "final_voting",
           round: 3,
-          multiplierPermille: 2000,
-          prompts: undefined,
           answers,
           maxPicks: 3,
-          selectedAnswerIds: ["a1"],
         }}
         youId="p1"
         ownerId="p1"
         onSend={send}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Beta" }));
-    fireEvent.click(screen.getByRole("button", { name: "Gamma" }));
-    fireEvent.click(screen.getByRole("button", { name: "Delta" }));
+    expect(
+      screen.queryByRole("button", { name: "Clear" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Alpha/ }));
+    expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Submit votes" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.getByText("Selected 0/3")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Alpha/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Alpha/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Beta/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Gamma/ }));
     expect(screen.getByText("Selected 3/3")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Update favorites" }));
+    expect(screen.getByRole("button", { name: /Alpha/ })).toHaveTextContent(
+      "2 votes",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Submit votes" }));
     expect(send).toHaveBeenCalledWith({
       type: "submit_final_votes",
-      payload: { answerIds: ["a1", "a2", "a3"] },
+      payload: { answerIds: ["a1", "a1", "a2"] },
     });
+  });
+  it("restores locked final ballots from server snapshots", () => {
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          phase: "final_voting",
+          round: 3,
+          answers,
+          maxPicks: 3,
+          selectedAnswerIds: ["a1", "a1", "a1"],
+          voteSubmitted: true,
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Alpha/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Alpha/ })).toHaveTextContent(
+      "3 votes",
+    );
+    expect(screen.getByText("Votes locked in")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Clear" }),
+    ).not.toBeInTheDocument();
   });
   it("renders ranked final answers", () => {
     render(

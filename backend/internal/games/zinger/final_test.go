@@ -34,7 +34,7 @@ func TestFinalRulesIdleAndScoring(t *testing.T) {
 	}{
 		{[]string{own}, Code("cannot_pick_own_answer")},
 		{eligible, Code("too_many_picks")},
-		{[]string{eligible[0], eligible[0]}, InvalidVote},
+		{eligible[:2], InvalidVote},
 		{[]string{"missing"}, InvalidVote},
 		{nil, InvalidVote},
 	} {
@@ -42,24 +42,33 @@ func TestFinalRulesIdleAndScoring(t *testing.T) {
 			t.Fatalf("%v want %v", err, tc.code)
 		}
 	}
-	for _, p := range s.Players {
-		s = apply(t, s, FinalVoteIntent{p.ID, s.eligibleFinal(p.ID)[:3]}, now)
+	s = apply(t, s, FinalVoteIntent{"p0", []string{eligible[0], eligible[0], eligible[0]}}, now)
+	if _, err := Apply(s, FinalVoteIntent{"p0", eligible[:3]}, games.Input{Now: now}); err != Code("vote_locked") {
+		t.Fatal("submitted ballot must lock", err)
+	}
+	for _, p := range s.Players[1:] {
+		ids := s.eligibleFinal(p.ID)
+		s = apply(t, s, FinalVoteIntent{p.ID, []string{ids[0], ids[0], ids[1]}}, now)
 	}
 	if s.IdleAt != now.Add(5*time.Second) {
 		t.Fatal("idle window not armed")
-	}
-	s = apply(t, s, FinalVoteIntent{"p0", eligible[:1]}, now.Add(4*time.Second))
-	if s.IdleAt != now.Add(9*time.Second) {
-		t.Fatal("revision did not reset idle")
-	}
-	s = apply(t, s, Tick{}, now.Add(6*time.Second))
-	if s.Phase != FinalVoting {
-		t.Fatal("closed early")
 	}
 	s = apply(t, s, Tick{}, s.IdleAt)
 	if s.Phase != FinalReveal {
 		t.Fatal(s.Phase)
 	}
+	wantVotes := map[string]int{}
+	for _, ids := range s.FinalVotes {
+		for _, id := range ids {
+			wantVotes[id]++
+		}
+	}
+	for _, a := range s.FinalAnswers {
+		if a.Votes != wantVotes[a.ID] {
+			t.Fatal("stacked votes not counted", a)
+		}
+	}
+
 	sum := 0
 	for _, a := range s.FinalAnswers {
 		if a.Points != a.Votes*200 || a.Bonus != 0 {
@@ -67,8 +76,8 @@ func TestFinalRulesIdleAndScoring(t *testing.T) {
 		}
 		sum += a.Points
 	}
-	if sum != 13*200 {
-		t.Fatal("revised picks", sum)
+	if sum != 15*200 {
+		t.Fatal("all three votes counted", sum)
 	}
 	s = apply(t, s, Tick{}, s.Deadline)
 	if s.Phase != GameOver || !s.NextTick().IsZero() {
@@ -93,7 +102,7 @@ func TestFinalEmptyAndReconnectIdle(t *testing.T) {
 	now := s.Deadline.Add(-time.Second * 20)
 	s = apply(t, s, Presence{PlayerID: "p2"}, now)
 	for _, pid := range []string{"p0", "p1"} {
-		s = apply(t, s, FinalVoteIntent{pid, s.eligibleFinal(pid)[:1]}, now)
+		s = apply(t, s, FinalVoteIntent{pid, []string{s.eligibleFinal(pid)[0], s.eligibleFinal(pid)[0], s.eligibleFinal(pid)[0]}}, now)
 	}
 	if s.IdleAt.IsZero() {
 		t.Fatal("not armed")
@@ -156,9 +165,9 @@ func TestFullGameSimulation(t *testing.T) {
 							}
 						}
 					case FinalVoting:
-						for i, p := range s.Players {
+						for _, p := range s.Players {
 							ids := s.eligibleFinal(p.ID)
-							s = apply(t, s, FinalVoteIntent{p.ID, ids[:min(1+i%3, len(ids))]}, now)
+							s = apply(t, s, FinalVoteIntent{p.ID, []string{ids[0], ids[0], ids[len(ids)-1]}}, now)
 						}
 						s = apply(t, s, Tick{}, s.NextTick())
 					default:

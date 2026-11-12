@@ -77,7 +77,7 @@ func TestRevealAndFinalViews(t *testing.T) {
 			t.Fatalf("final voting leaked metadata: %+v", a)
 		}
 	}
-	if v.MaxPicks != 2 || len(v.Answers) != 2 {
+	if v.MaxPicks != 3 || len(v.Answers) != 2 {
 		t.Fatalf("wrong final choices: %+v", v)
 	}
 }

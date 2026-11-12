@@ -36,6 +36,10 @@ func Apply(state *State, event any, input games.Input) (*State, error) {
 		if err := s.finalVote(e, input.Now); err != nil {
 			return nil, err
 		}
+	case VoteDraftIntent:
+		if err := s.selectVote(VoteIntent(e), input.Now, false); err != nil {
+			return nil, err
+		}
 	case VoteIntent:
 		if err := s.vote(e, input.Now); err != nil {
 			return nil, err

@@ -37,23 +37,27 @@ func (s *State) finalVote(e FinalVoteIntent, now time.Time) error {
 		return NotEligible
 	}
 	eligible := s.eligibleFinal(e.PlayerID)
-	if len(e.AnswerIDs) > min(s.Config.MaxFinalPicks, len(eligible)) {
+	if len(e.AnswerIDs) > s.Config.MaxFinalPicks {
 		return Code("too_many_picks")
 	}
 	if len(e.AnswerIDs) == 0 && len(eligible) > 0 {
 		return InvalidVote
 	}
-	seen := map[string]bool{}
 	for _, id := range e.AnswerIDs {
 		for _, a := range s.FinalAnswers {
 			if a.ID == id && a.PlayerID == e.PlayerID {
 				return Code("cannot_pick_own_answer")
 			}
 		}
-		if seen[id] || !slices.Contains(eligible, id) {
+		if !slices.Contains(eligible, id) {
 			return InvalidVote
 		}
-		seen[id] = true
+	}
+	if _, locked := s.FinalVotes[e.PlayerID]; locked {
+		return Code("vote_locked")
+	}
+	if len(eligible) > 0 && len(e.AnswerIDs) != s.Config.MaxFinalPicks {
+		return InvalidVote
 	}
 	s.FinalVotes[e.PlayerID] = slices.Clone(e.AnswerIDs)
 	s.updateIdle(now, true)
@@ -79,8 +83,10 @@ func (s *State) revealFinal(now time.Time) {
 	for i := range s.FinalAnswers {
 		a := &s.FinalAnswers[i]
 		for _, p := range s.Players {
-			if slices.Contains(s.FinalVotes[p.ID], a.ID) {
-				a.Votes++
+			for _, id := range s.FinalVotes[p.ID] {
+				if id == a.ID {
+					a.Votes++
+				}
 			}
 		}
 		a.Points = a.Votes * s.Config.BasePoints * s.Config.Multipliers[2] / 1000

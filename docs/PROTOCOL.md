@@ -25,8 +25,9 @@ deadlines, scores and authorized per-player projections.
 | `start_game` | `{}` | Connected owner, eligible lobby only. |
 | `update_draft` | `{promptId, text}` | Assigned prompt, answering phase; rate limited by room runtime. |
 | `submit_answer` | `{promptId, text}` | Assigned prompt, answering phase; locks the answer. |
-| `cast_vote` | `{matchupId, answerId}` | Eligible non-author during the active matchup. |
-| `submit_final_votes` | `{answerIds}` | Complete unique list of 0–3 opaque IDs; engine applies eligibility/minimum rules. |
+| `update_vote` | `{matchupId, answerId}` | Replace the eligible non-author’s private selection; does not finish voting. |
+| `cast_vote` | `{matchupId, answerId}` | Submit and lock an eligible non-author’s vote during the active matchup. |
+| `submit_final_votes` | `{answerIds}` | Three opaque IDs, with repetitions allowed to stack votes; submits and locks the ballot. Zero picks only for players with no eligible answers. |
 | `return_to_lobby` | `{}` | Owner only, game-over only. |
 
 ## Server messages
@@ -35,7 +36,9 @@ deadlines, scores and authorized per-player projections.
 the per-player game projection: `phase`, `round`, `multiplierPermille`, `deadlineMs`,
 `serverNowMs`, scores/presence/finished state and only the phase-specific prompts,
 answers, voting controls or reveal data that player may see. During voting, answers
-contain no author or vote metadata. Other players' drafts never appear.
+contain no author or vote metadata. `selectedAnswerIds` restores only the recipient’s
+selection (including repetitions in finals); `voteSubmitted` identifies a locked ballot.
+Other players' drafts never appear.
 
 `error` carries `{code, message}` and echoes a supplied envelope `id`. Stable gameplay
 codes include `not_enough_prompts`, `wrong_phase`, `invalid_answer`,

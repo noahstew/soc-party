@@ -44,6 +44,7 @@ type GameView struct {
 	Prompt             *PromptView  `json:"prompt,omitempty"`
 	MatchupID          string       `json:"matchupId,omitempty"`
 	Answers            []AnswerView `json:"answers,omitempty"`
+	VoteSubmitted      bool         `json:"voteSubmitted,omitempty"`
 	CanVote            bool         `json:"canVote,omitempty"`
 	MaxPicks           int          `json:"maxPicks,omitempty"`
 	SelectedAnswerIDs  []string     `json:"selectedAnswerIds,omitempty"`
@@ -82,6 +83,14 @@ func (s *State) View(playerID string, now time.Time) (GameView, error) {
 		m := s.currentMatch()
 		v.MatchupID = m.ID
 		v.Prompt = &PromptView{ID: m.Prompt.ID, Text: m.Prompt.Text}
+		id, locked := m.Votes[playerID]
+		v.VoteSubmitted = locked
+		if !locked {
+			id = m.DraftVotes[playerID]
+		}
+		if id != "" {
+			v.SelectedAnswerIDs = []string{id}
+		}
 		v.CanVote = m.Answers[0].PlayerID != playerID && m.Answers[1].PlayerID != playerID
 		for _, a := range m.Answers {
 			v.Answers = append(v.Answers, AnswerView{ID: a.ID, Text: displayAnswer(a.Text)})
@@ -101,8 +110,11 @@ func (s *State) View(playerID string, now time.Time) (GameView, error) {
 				v.Answers = append(v.Answers, AnswerView{ID: a.ID, Text: a.Text})
 			}
 		}
-		v.MaxPicks = min(s.Config.MaxFinalPicks, len(v.Answers))
+		if len(v.Answers) > 0 {
+			v.MaxPicks = s.Config.MaxFinalPicks
+		}
 		v.SelectedAnswerIDs = slices.Clone(s.FinalVotes[playerID])
+		_, v.VoteSubmitted = s.FinalVotes[playerID]
 	case FinalReveal, GameOver:
 		v.Prompt = &PromptView{ID: s.FinalPrompt.ID, Text: s.FinalPrompt.Text}
 		for _, a := range s.FinalAnswers {

@@ -3,6 +3,7 @@ package zinger
 import "time"
 
 type VoteIntent struct{ PlayerID, MatchupID, AnswerID string }
+type VoteDraftIntent struct{ PlayerID, MatchupID, AnswerID string }
 
 func (s *State) currentMatch() *Matchup { return &s.Rounds[s.Round-1][s.MatchIndex] }
 func (s *State) beginMatchup(now time.Time) {
@@ -15,6 +16,9 @@ func (s *State) beginMatchup(now time.Time) {
 	s.finishVoting(now)
 }
 func (s *State) vote(e VoteIntent, now time.Time) error {
+	return s.selectVote(e, now, true)
+}
+func (s *State) selectVote(e VoteIntent, now time.Time, submit bool) error {
 	if s.Phase != MatchupVoting || !now.Before(s.Deadline) {
 		return WrongPhase
 	}
@@ -41,6 +45,13 @@ func (s *State) vote(e VoteIntent, now time.Time) error {
 	if _, exists := m.Votes[e.PlayerID]; exists {
 		return Code("vote_locked")
 	}
+	if !submit {
+		if m.DraftVotes == nil {
+			m.DraftVotes = map[string]string{}
+		}
+		m.DraftVotes[e.PlayerID] = e.AnswerID
+		return nil
+	}
 	m.Votes[e.PlayerID] = e.AnswerID
 	s.finishVoting(now)
 	return nil
@@ -63,6 +74,11 @@ func (s *State) finishVoting(now time.Time) {
 func (s *State) revealMatchup(now time.Time, forfeit bool) {
 	m := s.currentMatch()
 	if !m.Decided {
+		for pid, id := range m.DraftVotes {
+			if _, locked := m.Votes[pid]; !locked {
+				m.Votes[pid] = id
+			}
+		}
 		eligible := len(s.Players) - 2
 		for i := range m.Answers {
 			a := &m.Answers[i]

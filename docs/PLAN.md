@@ -207,6 +207,10 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Refactor head-to-head selection/submission with deadline promotion and final
+  three-vote stacked ballots, Clear/Submit controls, regression coverage and
+  `make check` (requested 2026-11-12).
+
 - [x] Show answering questions one at a time, advance on confirmed submission,
   and wait after the last answer; verify regression coverage and `make check`
   (requested 2026-11-12).

@@ -59,6 +59,7 @@ export type GameState = {
   matchupId?: string;
   answers?: GameAnswer[];
   canVote?: boolean;
+  voteSubmitted?: boolean;
   maxPicks?: number;
   selectedAnswerIds?: string[];
 };
@@ -84,7 +85,7 @@ export type ClientMessage =
       payload: { promptId: string; text: string };
     }
   | {
-      type: "cast_vote";
+      type: "cast_vote" | "update_vote";
       id?: string;
       payload: { matchupId: string; answerId: string };
     }

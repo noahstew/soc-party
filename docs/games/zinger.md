@@ -36,7 +36,9 @@ answering ends can continue. Leaving also preserves drafts for phase-end promoti
 A decided matchup never reopens.
 
 Show head-to-head matchups sequentially, anonymous during voting. N−2 non-authors
-may cast one irrevocable vote. End early when all connected eligible voters finish.
+may select and change one vote until pressing Submit vote, which locks it. The server
+preserves selections for reconnect and counts the latest unsubmitted selection at
+the deadline. End early when all connected eligible voters submit.
 Reveal authors, vote counts and awarded points, never voter identities. Each vote
 is 100 points in round 1, 150 in round 2. A unanimous win earns another 100 or 150,
 only when all N−2 eligible players voted for that answer. Missing voters prevent the
@@ -48,12 +50,15 @@ answer slots with a clear empty placeholder. Show totals and round deltas after
 each head-to-head round.
 
 Round 3 uses one shared prompt, followed by anonymous final voting. Empty answers
-have no final entry. Pick 1..min(3, eligible answers), excluding self, without
-duplicates. Submit the complete selection and revise it until voting closes.
+have no final entry. Distribute exactly three votes among eligible answers, excluding
+self: 3, 2–1, or 1–1–1. Each click adds one vote; the per-answer count shows the
+distribution. Clear resets the selection and spans the action row after the first
+pick; at three picks, a distinct Submit votes action shares half the row. Submission
+locks the ballot. Unsubmitted final ballots do not count.
 Players with no eligible answers are automatically finished with zero picks.
 Once all connected players have submitted (or have no eligible answers), close after
-5 seconds without a valid final-vote submission/revision. Such activity resets the
-idle window; rejected messages, heartbeats and unrelated messages do not. A reconnect
+the existing five-second reveal delay. Locked ballots cannot be revised; rejected
+messages, heartbeats and unrelated messages do not reset the delay. A reconnect
 that introduces an unfinished voter cancels the idle window. The absolute 30-second
 deadline always wins. Each pick awards 200; no bonus. Reveal ranked answers, authors,
 counts and points; then final totals/podium with shared competition ranks on ties.

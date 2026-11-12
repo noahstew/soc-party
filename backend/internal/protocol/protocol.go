@@ -116,7 +116,7 @@ func Decode(data []byte) (Envelope, any, error) {
 		payload = &PackSelection{}
 	case "update_draft", "submit_answer":
 		payload = &Draft{}
-	case "cast_vote":
+	case "cast_vote", "update_vote":
 		payload = &Vote{}
 	case "submit_final_votes":
 		payload = &FinalVotes{}
@@ -149,12 +149,10 @@ func validatePayload(payload any) error {
 		if p.AnswerIDs == nil || len(p.AnswerIDs) > 3 {
 			return fmt.Errorf("invalid final votes payload")
 		}
-		seen := make(map[string]bool, len(p.AnswerIDs))
 		for _, id := range p.AnswerIDs {
-			if !validID(id) || seen[id] {
+			if !validID(id) {
 				return fmt.Errorf("invalid final votes payload")
 			}
-			seen[id] = true
 		}
 	}
 	return nil

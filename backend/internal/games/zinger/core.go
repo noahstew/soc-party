@@ -81,11 +81,12 @@ type Answer struct {
 	Votes, Points, Bonus                int
 }
 type Matchup struct {
-	ID      string
-	Prompt  Prompt
-	Answers [2]Answer
-	Votes   map[string]string
-	Decided bool
+	ID         string
+	Prompt     Prompt
+	Answers    [2]Answer
+	Votes      map[string]string
+	DraftVotes map[string]string
+	Decided    bool
 }
 type State struct {
 	Config                     Config
@@ -207,6 +208,10 @@ func (s *State) Clone() *State {
 	for r := range s.Rounds {
 		next.Rounds[r] = slices.Clone(s.Rounds[r])
 		for i, m := range s.Rounds[r] {
+			next.Rounds[r][i].DraftVotes = map[string]string{}
+			for k, v := range m.DraftVotes {
+				next.Rounds[r][i].DraftVotes[k] = v
+			}
 			next.Rounds[r][i].Votes = map[string]string{}
 			for k, v := range m.Votes {
 				next.Rounds[r][i].Votes[k] = v

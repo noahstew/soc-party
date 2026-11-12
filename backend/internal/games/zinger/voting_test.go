@@ -112,3 +112,50 @@ func TestVoteEligibilityAndForfeits(t *testing.T) {
 		}
 	}
 }
+
+func TestVoteSelectionsPromoteAtDeadlineAndStayPrivate(t *testing.T) {
+	s := voting(t, 4)
+	m := s.currentMatch()
+	now := s.Deadline.Add(-time.Second)
+	var voters []string
+	for _, p := range s.Players {
+		if p.ID != m.Answers[0].PlayerID && p.ID != m.Answers[1].PlayerID {
+			voters = append(voters, p.ID)
+		}
+	}
+	original := s
+	s = apply(t, s, VoteDraftIntent{voters[0], m.ID, m.Answers[0].ID}, now)
+	s = apply(t, s, VoteDraftIntent{voters[0], m.ID, m.Answers[1].ID}, now)
+	if len(original.currentMatch().DraftVotes) != 0 {
+		t.Fatal("draft mutated prior state")
+	}
+	s = apply(t, s, VoteDraftIntent{voters[1], m.ID, m.Answers[0].ID}, now)
+	if s.Phase != MatchupVoting || s.finished(voters[0]) {
+		t.Fatal("draft prematurely finished voting")
+	}
+	own, _ := s.View(voters[0], now)
+	other, _ := s.View(m.Answers[0].PlayerID, now)
+	if len(own.SelectedAnswerIDs) != 1 || own.SelectedAnswerIDs[0] != m.Answers[1].ID || own.VoteSubmitted || len(other.SelectedAnswerIDs) != 0 {
+		t.Fatal("draft projection/privacy")
+	}
+	s = apply(t, s, Presence{PlayerID: voters[0]}, now)
+	s = apply(t, s, Presence{PlayerID: voters[0], Connected: true}, now)
+	own, _ = s.View(voters[0], now)
+	if len(own.SelectedAnswerIDs) != 1 {
+		t.Fatal("reconnect lost draft")
+	}
+	s = apply(t, s, VoteIntent{voters[1], m.ID, m.Answers[1].ID}, now)
+	if _, err := Apply(s, VoteDraftIntent{voters[1], m.ID, m.Answers[0].ID}, games.Input{Now: now}); err != Code("vote_locked") {
+		t.Fatal("locked vote changed", err)
+	}
+	if s.Phase != MatchupVoting {
+		t.Fatal("unsubmitted draft ended phase")
+	}
+	if _, err := Apply(s, VoteDraftIntent{voters[0], m.ID, m.Answers[0].ID}, games.Input{Now: s.Deadline}); err != WrongPhase {
+		t.Fatal("late selection accepted", err)
+	}
+	s = apply(t, s, Tick{}, s.Deadline)
+	if s.Phase != MatchupReveal || s.currentMatch().Answers[1].Votes != 2 {
+		t.Fatal("latest draft or submitted vote not counted")
+	}
+}

@@ -494,3 +494,20 @@ waiting state. The shared round deadline stays in place. Regression tests cover
 one-question visibility, confirmation-driven advancement, retained next-question drafts,
 reconnect recovery and final-round waiting. `make fmt` and `make check` passed
 (81 frontend tests).
+
+
+## 2026-11-12 — Voting selection, submission and stacked final votes
+
+Head-to-head voters can change selections before explicit submission, which locks
+the vote. Server-owned drafts survive reconnect and the latest unsubmitted choice
+counts at the deadline. Private projection, immutable state, lock enforcement,
+deadline rejection and deadline scoring have regression coverage.
+
+Final ballots require exactly three votes, allowing 3, 2–1 or 1–1–1 distributions.
+Repeated IDs score individually. UI coverage verifies per-answer counts, the
+three-vote limit, clearing, conditional Submit and server-confirmed locked ballots.
+The Clear/Submit row is fixed to the bottom with safe-area spacing. The full-game
+room test exercises draft selection followed by submission and stacked final votes.
+
+`make fmt` and `make check` passed: backend lint/vet, TypeScript, Go race/unit
+tests, 83 frontend tests and sqlc drift verification. No schema/store changes.

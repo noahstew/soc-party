@@ -328,3 +328,18 @@ another platform status or migration.
 Use the existing single socket and authoritative snapshots in the frontend. Local
 state is limited to typing and unsubmitted final choices. Countdown captures server
 clock offset when mounted and advances locally; it never transitions game phases.
+
+
+## 2026-11-12 — Voting selection and stacked final ballots
+
+Head-to-head selection uses `update_vote` for a private server-owned draft and
+`cast_vote` for explicit submission. Submission locks the vote; the phase deadline
+promotes the latest unsubmitted selection, so client timers do not decide votes.
+The per-player projection restores selection and lock status after reconnect.
+
+The requested final voting clarification replaces unique favorites with exactly
+three votes that may stack on one answer or split across answers. Repeated IDs in
+`submit_final_votes` represent individual votes and score individually. Self votes
+remain excluded, and zero eligible answers still finish automatically. Final
+submission locks the ballot; the existing five-second all-finished reveal delay
+remains. This supersedes the earlier revision/unique-pick rules.
