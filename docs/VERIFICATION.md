@@ -471,3 +471,10 @@ ranks with an owner-only return-to-lobby action.
 Start-status regression: `make integration` passes with a real PostgreSQL assertion
 that an eligible three-player start persists room status `playing`. This covers the
 constraint failure that previously surfaced as “rooms temporarily unavailable.”
+
+## 2026-11-12 — Countdown clock
+
+The game countdown now shows seconds inside an 80-pixel clock icon, with its
+accessible remaining-time label retained. `make fmt` and `make check` passed
+(77 frontend tests). Added regression coverage for the numeric display, decorative
+icon, server clock offset, expiration at zero and absent deadlines.
