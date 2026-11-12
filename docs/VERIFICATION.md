@@ -485,3 +485,12 @@ Matchup authors now see the prompt and both anonymous answers during voting,
 with both answer buttons disabled and the waiting message retained. Regression
 coverage verifies visibility, disabled controls and no vote intent on clicks.
 `make fmt` and `make check` passed (78 frontend tests).
+
+## 2026-11-12 — Sequential answering
+
+Answering now displays only the first unanswered question, with a question counter.
+Server-confirmed submissions advance to the next prompt or an all-answers-submitted
+waiting state. The shared round deadline stays in place. Regression tests cover
+one-question visibility, confirmation-driven advancement, retained next-question drafts,
+reconnect recovery and final-round waiting. `make fmt` and `make check` passed
+(81 frontend tests).

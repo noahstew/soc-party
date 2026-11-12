@@ -36,12 +36,14 @@ const state: GameState = {
 };
 
 describe("Zinger answering", () => {
-  it("renders prompts, countdown, counters and waiting status", () => {
+  it("renders only the unanswered prompt, countdown, counters and waiting status", () => {
     render(
       <ZingerGame state={state} youId="p1" ownerId="p1" onSend={() => {}} />,
     );
     expect(screen.getByLabelText("First prompt")).toBeEnabled();
-    expect(screen.getByLabelText("Second prompt")).toBeDisabled();
+    expect(screen.queryByLabelText("Second prompt")).not.toBeInTheDocument();
+    expect(screen.getByText("Question 1 of 2")).toBeInTheDocument();
+    expect(screen.getByText("0/100")).toBeInTheDocument();
     expect(screen.getByText("Waiting on 1 player")).toBeInTheDocument();
     expect(screen.getByLabelText(/seconds remaining/)).toBeInTheDocument();
   });
@@ -81,6 +83,92 @@ describe("Zinger answering", () => {
       payload: { promptId: "a", text: "hello" },
     });
     vi.useRealTimers();
+  });
+  it("advances after server confirmation and waits after the last submission", () => {
+    const send = vi.fn();
+    const prompts = [
+      {
+        id: "a",
+        text: "First prompt",
+        draft: "First answer",
+        submitted: false,
+      },
+      {
+        id: "b",
+        text: "Second prompt",
+        draft: "Saved draft",
+        submitted: false,
+      },
+    ];
+    const view = (nextPrompts: typeof prompts) => (
+      <ZingerGame
+        state={{ ...state, prompts: nextPrompts }}
+        youId="p1"
+        ownerId="p1"
+        onSend={send}
+      />
+    );
+    const { rerender } = render(view(prompts));
+    expect(screen.queryByLabelText("Second prompt")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Submit answer" }));
+    expect(send).toHaveBeenLastCalledWith({
+      type: "submit_answer",
+      payload: { promptId: "a", text: "First answer" },
+    });
+    // Keep the answer available for retry until the server accepts it.
+    expect(screen.getByLabelText("First prompt")).toHaveValue("First answer");
+    const confirmed = [{ ...prompts[0], submitted: true }, prompts[1]];
+    rerender(view(confirmed));
+    expect(screen.queryByLabelText("First prompt")).not.toBeInTheDocument();
+    expect(screen.getByText("Question 2 of 2")).toBeInTheDocument();
+    expect(screen.getByLabelText("Second prompt")).toHaveValue("Saved draft");
+    fireEvent.click(screen.getByRole("button", { name: "Submit answer" }));
+    expect(send).toHaveBeenLastCalledWith({
+      type: "submit_answer",
+      payload: { promptId: "b", text: "Saved draft" },
+    });
+    rerender(view(confirmed.map((prompt) => ({ ...prompt, submitted: true }))));
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "All answers submitted",
+    );
+  });
+  it("resumes at the next unanswered prompt after reconnecting", () => {
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          prompts: [
+            { ...state.prompts![0], submitted: true },
+            { ...state.prompts![1], submitted: false },
+          ],
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={() => {}}
+      />,
+    );
+    expect(screen.queryByLabelText("First prompt")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Second prompt")).toHaveValue("locked");
+    expect(screen.getByText("Question 2 of 2")).toBeInTheDocument();
+  });
+  it("shows a waiting state for a confirmed final-round answer", () => {
+    render(
+      <ZingerGame
+        state={{
+          ...state,
+          phase: "final_answering",
+          prompts: [{ ...state.prompts![0], submitted: true }],
+        }}
+        youId="p1"
+        ownerId="p1"
+        onSend={() => {}}
+      />,
+    );
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "All answers submitted",
+    );
   });
 });
 

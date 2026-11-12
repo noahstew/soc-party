@@ -317,11 +317,19 @@ function Answering({
   prompts: GamePrompt[];
   onSend: (message: ClientMessage) => void;
 }) {
+  const nextIndex = prompts.findIndex((prompt) => !prompt.submitted);
+  if (nextIndex === -1) {
+    return (
+      <p role="status">All answers submitted. Waiting for the other players…</p>
+    );
+  }
+  const prompt = prompts[nextIndex];
   return (
     <div className="space-y-6">
-      {prompts.map((prompt) => (
-        <AnswerEditor key={prompt.id} prompt={prompt} onSend={onSend} />
-      ))}
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        Question {nextIndex + 1} of {prompts.length}
+      </p>
+      <AnswerEditor key={prompt.id} prompt={prompt} onSend={onSend} />
     </div>
   );
 }

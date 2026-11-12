@@ -27,6 +27,8 @@ where possible (unavoidable for 3 players). Randomize anonymous answer order onc
 
 One answering deadline covers both assignments. Strip control characters, trim and
 validate 1–100 Unicode code points. Drafts may be empty; submission locks one answer.
+The player UI shows one unanswered question at a time, advancing after server-confirmed
+submission and showing a waiting state once all assigned answers are submitted.
 Only the player sees their prompts/drafts during answering. End early when every
 connected player submits all assigned answers; at phase end promote nonempty drafts.
 Disconnect preserves editable drafts, with no immediate locking: reconnect before
