@@ -66,8 +66,9 @@ No additional package is required.
 
 ## Branding
 
-`brand.tsx` shares the tilted PartiSocial badge between admission and the lobby.
-Keep its theme and typography consistent when replacing the text with future art.
+`brand.tsx` shares the PartiSocial logo from `public/logo.png` between admission
+and the lobby. It owns the accessible name, aspect ratio and responsive sizing;
+update this component to change branding consistently across those views.
 
 ## Select
 

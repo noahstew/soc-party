@@ -22,8 +22,12 @@ describe("home", () => {
       screen.queryByRole("button", { name: "Create Room" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+    expect(screen.getByRole("heading", { level: 1 })).toHaveAccessibleName(
       "PartiSocial",
+    );
+    expect(screen.getByRole("img", { name: "PartiSocial" })).toHaveAttribute(
+      "width",
+      "1024",
     );
     expect(screen.queryByText(/Great game nights/)).not.toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();
