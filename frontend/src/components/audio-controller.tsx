@@ -9,7 +9,17 @@ export function AudioController({ track }: { track: AudioTrack | null }) {
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  useAudio(track, volume, muted);
+  const [effectsVolume, setEffectsVolume] = useState(() => {
+    try {
+      const saved = localStorage.getItem("partisocial.effects-volume");
+      if (saved !== null && Number.isFinite(Number(saved)))
+        return Math.max(0, Math.min(1, Number(saved)));
+    } catch {
+      /* Storage is optional. */
+    }
+    return 1;
+  });
+  useAudio(track, volume, muted, effectsVolume);
 
   return (
     <div
@@ -49,7 +59,7 @@ export function AudioController({ track }: { track: AudioTrack | null }) {
           id="audio-settings"
           role="group"
           aria-label="Audio controls"
-          className="absolute top-full right-0 mt-2 flex items-center gap-3 rounded-base border-2 border-border bg-secondary-background p-3 shadow-shadow"
+          className="absolute top-full right-0 mt-2 flex flex-wrap items-center gap-3 rounded-base border-2 border-border bg-secondary-background p-3 shadow-shadow"
         >
           <Button
             variant="neutral"
@@ -82,6 +92,39 @@ export function AudioController({ track }: { track: AudioTrack | null }) {
             className="w-28 accent-main"
             onChange={(event) => setVolume(Number(event.target.value) / 100)}
           />
+          <label className="flex w-full items-center gap-3 text-sm">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="size-6 shrink-0"
+            >
+              <path d="m13 2-3 8H5l6 12 3-8h5Z" />
+            </svg>
+            <span>Sound effects</span>
+            <input
+              aria-label="Sound effects volume"
+              type="range"
+              min="0"
+              max="100"
+              value={effectsVolume * 100}
+              className="w-28 accent-main"
+              onChange={(event) => {
+                const value = Number(event.target.value) / 100;
+                setEffectsVolume(value);
+                try {
+                  localStorage.setItem(
+                    "partisocial.effects-volume",
+                    String(value),
+                  );
+                } catch {
+                  /* Storage is optional. */
+                }
+              }}
+            />
+          </label>
         </div>
       )}
     </div>

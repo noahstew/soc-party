@@ -573,3 +573,11 @@ formatting, TypeScript and sqlc drift). Coverage includes phase/track mapping,
 one-shot voting, buffer caching, volume/mute retention, keyboard dismissal,
 autoplay retries, cleanup, failed/late downloads and lobby/game/leave controls.
 No schema changes; real-browser listening/visual acceptance was not performed.
+
+### Zinger interaction sound effects (2026-11-13)
+
+`make fmt` and `make check` passed: lint/format, TypeScript, backend race tests,
+98 frontend tests and sqlc drift. Regression coverage verifies answer submission
+triggers a sound, cached one-shot playback, independent saved effects volume,
+shared mute and source cleanup. No schema changes; integration was not required.
+Browser listening acceptance was not performed.

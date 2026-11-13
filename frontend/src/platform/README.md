@@ -106,3 +106,10 @@ interaction. Audio failures do not block play. Seamless sound requires clean
 recording endpoints; silence within a track is preserved.
 Keep songs under `public/audio/songs/`; the sibling `sound-effects/` folder ignores
 local effects until they are explicitly selected for inclusion.
+
+Sound effects use the shared Web Audio context with a separate gain channel.
+`playSoundEffect` and the named `zingerEffects` catalog provide reusable one-shot
+playback. Zinger selections and answer/vote submission clicks play `select.mp3`;
+other effects are catalogued for future use. Settings include a Sound effects
+slider saved under `partisocial.effects-volume`; the mute button covers both
+channels. Failed downloads never block game intents.

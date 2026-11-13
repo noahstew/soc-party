@@ -5,6 +5,7 @@ import type { ClientMessage, GamePrompt, GameState } from "@/lib/protocol";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Countdown } from "./countdown";
+import { playSoundEffect, zingerEffects } from "@/lib/sound-effects";
 import { ZingerLogo } from "@/components/zinger-logo";
 
 export function ZingerGame({
@@ -18,6 +19,18 @@ export function ZingerGame({
   ownerId: string;
   onSend: (message: ClientMessage) => void;
 }) {
+  const sendWithSound = (message: ClientMessage) => {
+    if (
+      [
+        "update_vote",
+        "cast_vote",
+        "submit_final_votes",
+        "submit_answer",
+      ].includes(message.type)
+    )
+      playSoundEffect(zingerEffects.select);
+    onSend(message);
+  };
   const waiting = state.players.filter(
     (player) => player.connected && !player.finished,
   ).length;
@@ -40,17 +53,21 @@ export function ZingerGame({
           <Intro state={state} />
         )}
         {(state.phase === "answering" || state.phase === "final_answering") && (
-          <Answering prompts={state.prompts ?? []} onSend={onSend} />
+          <Answering prompts={state.prompts ?? []} onSend={sendWithSound} />
         )}
         {state.phase === "matchup_voting" && (
-          <MatchupVoting key={state.matchupId} state={state} onSend={onSend} />
+          <MatchupVoting
+            key={state.matchupId}
+            state={state}
+            onSend={sendWithSound}
+          />
         )}
         {state.phase === "matchup_reveal" && <MatchupReveal state={state} />}
         {state.phase === "round_scoreboard" && (
           <Scoreboard state={state} title="Round scores" />
         )}
         {state.phase === "final_voting" && (
-          <FinalVoting state={state} onSend={onSend} />
+          <FinalVoting state={state} onSend={sendWithSound} />
         )}
         {state.phase === "final_reveal" && <FinalReveal state={state} />}
         {state.phase === "game_over" && <GameOver state={state} />}
@@ -119,11 +136,11 @@ function FinalVoting({
               disabled={state.voteSubmitted}
               variant={active ? "default" : "neutral"}
               className="h-auto min-h-20 whitespace-normal p-4"
-              onClick={() =>
-                setSelected((current) =>
-                  current.length < max ? [...current, answer.id] : current,
-                )
-              }
+              onClick={() => {
+                if (selected.length >= max) return;
+                playSoundEffect(zingerEffects.select);
+                setSelected((current) => [...current, answer.id]);
+              }}
             >
               {answer.text}
               <span className="ml-2">

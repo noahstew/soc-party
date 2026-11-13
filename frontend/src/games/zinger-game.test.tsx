@@ -68,6 +68,8 @@ describe("Zinger answering", () => {
   });
   it("debounces drafts and submits the current answer", () => {
     vi.useFakeTimers();
+    const effect = vi.fn();
+    window.addEventListener("partisocial:sound-effect", effect);
     const send = vi.fn();
     render(<ZingerGame state={state} youId="p1" ownerId="p1" onSend={send} />);
     fireEvent.change(screen.getByLabelText("First prompt"), {
@@ -85,6 +87,8 @@ describe("Zinger answering", () => {
       type: "submit_answer",
       payload: { promptId: "a", text: "hello" },
     });
+    expect(effect).toHaveBeenCalledOnce();
+    window.removeEventListener("partisocial:sound-effect", effect);
     vi.useRealTimers();
   });
   it("advances after server confirmation and waits after the last submission", () => {

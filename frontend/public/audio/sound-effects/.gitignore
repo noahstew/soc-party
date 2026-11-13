@@ -1,2 +1,5 @@
 *
 !.gitignore
+!zinger/
+zinger/*
+!zinger/*.mp3

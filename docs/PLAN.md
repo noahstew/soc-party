@@ -207,6 +207,10 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Add modular Zinger selection/submission sound effects and an independent,
+  saved effects volume with an icon in audio settings; verify regression coverage
+  and `make check` (requested 2026-11-13).
+
 - [x] Share a modular audio controller across lobby/gameplay, loop Zinger answering
   music and play voting once per voting phase; replace the music button with a
   gear menu containing volume and mute controls, with regression coverage and

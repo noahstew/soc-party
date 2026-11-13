@@ -6,6 +6,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { playSoundEffect, zingerEffects } from "@/lib/sound-effects";
 import { AudioController } from "./audio-controller";
 import { zingerAudio } from "@/games/zinger-audio";
 import type { GameState } from "@/lib/protocol";
@@ -25,9 +26,11 @@ class FakeAudio {
   state = "suspended";
   destination = {};
   volume = { connect: vi.fn(), disconnect: vi.fn(), gain: { value: 1 } };
+  effects = { connect: vi.fn(), disconnect: vi.fn(), gain: { value: 1 } };
+  gains = 0;
   sources: ReturnType<typeof fakeSource>[] = [];
   decodeAudioData = vi.fn().mockResolvedValue({ duration: 30 });
-  createGain = () => this.volume;
+  createGain = () => (this.gains++ === 0 ? this.volume : this.effects);
   createBufferSource = () => {
     const source = fakeSource();
     this.sources.push(source);
@@ -48,6 +51,7 @@ const state: GameState = {
 };
 
 beforeEach(() => {
+  localStorage.clear();
   audio = new FakeAudio();
   vi.stubGlobal("AudioContext", function () {
     return audio;
@@ -62,6 +66,35 @@ beforeEach(() => {
 });
 
 describe("audio controller", () => {
+  it("plays cached one-shot effects with independent saved volume and shared mute", async () => {
+    const view = render(<AudioController track={waiting} />);
+    await waitFor(() => expect(audio.sources).toHaveLength(1));
+    fireEvent.click(screen.getByRole("button", { name: "Audio settings" }));
+    fireEvent.change(
+      screen.getByRole("slider", { name: "Sound effects volume" }),
+      { target: { value: "25" } },
+    );
+    expect(audio.effects.gain.value).toBe(0.25);
+    expect(audio.volume.gain.value).toBe(1);
+    expect(localStorage.getItem("partisocial.effects-volume")).toBe("0.25");
+    act(() => playSoundEffect(zingerEffects.select));
+    await waitFor(() => expect(audio.sources).toHaveLength(2));
+    expect(audio.sources[1].loop).toBe(false);
+    act(() => playSoundEffect(zingerEffects.select));
+    await waitFor(() => expect(audio.sources).toHaveLength(3));
+    expect(fetch).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole("button", { name: "Mute audio" }));
+    act(() => playSoundEffect(zingerEffects.select));
+    expect(audio.effects.gain.value).toBe(0);
+    expect(audio.sources).toHaveLength(3);
+    view.unmount();
+    expect(audio.sources[1].stop).toHaveBeenCalledOnce();
+    render(<AudioController track={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Audio settings" }));
+    expect(
+      screen.getByRole("slider", { name: "Sound effects volume" }),
+    ).toHaveValue("25");
+  });
   it("opens gear controls, changes volume, toggles mute and closes with Escape", async () => {
     render(<AudioController track={waiting} />);
     await waitFor(() => expect(audio.sources).toHaveLength(1));
@@ -78,7 +111,9 @@ describe("audio controller", () => {
     expect(audio.volume.gain.value).toBe(0);
     fireEvent.click(screen.getByRole("button", { name: "Unmute audio" }));
     expect(audio.volume.gain.value).toBe(0.35);
-    fireEvent.keyDown(screen.getByRole("slider"), { key: "Escape" });
+    fireEvent.keyDown(screen.getByRole("slider", { name: "Audio volume" }), {
+      key: "Escape",
+    });
     expect(screen.queryByRole("slider")).not.toBeInTheDocument();
     expect(gear).toHaveFocus();
     expect(audio.sources[0].start).toHaveBeenCalledOnce();
@@ -193,7 +228,7 @@ describe("audio controller", () => {
     await act(async () => {});
     expect(audio.sources).toHaveLength(0);
     fireEvent.click(screen.getByRole("button", { name: "Audio settings" }));
-    expect(screen.getByRole("slider")).toBeVisible();
+    expect(screen.getByRole("slider", { name: "Audio volume" })).toBeVisible();
     rerender(<AudioController track={zingerAudio(state)} />);
     await waitFor(() => expect(audio.sources).toHaveLength(1));
   });
