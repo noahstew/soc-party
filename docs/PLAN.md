@@ -207,6 +207,15 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Share a modular audio controller across lobby/gameplay, loop Zinger answering
+  music and play voting once per voting phase; replace the music button with a
+  gear menu containing volume and mute controls, with regression coverage and
+  `make check` (requested 2026-11-13).
+
+- [x] Add gapless lobby waiting music, stop on game start/leave, provide a mute
+  control and organize bundled audio; verify regression coverage and `make check`
+  (requested 2026-11-13; explicitly authorized sound work ahead of M9).
+
 - [x] Refactor head-to-head selection/submission with deadline promotion and final
   three-vote stacked ballots, Clear/Submit controls, regression coverage and
   `make check` (requested 2026-11-12).

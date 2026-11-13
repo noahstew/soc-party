@@ -541,3 +541,35 @@ responses contain valid avatar IDs; the live creation response passes the actual
 frontend isLobby validator. make check passed with 90 frontend tests and the
 temporary generated-store index described above. Removed the lobby avatar border
 per the follow-up request; the player card retains its existing styling.
+
+## 2026-11-13 Lobby waiting music
+
+Moved the supplied `waiting.mp3.mp3` to
+`frontend/public/audio/songs/waiting.mp3` and added the ignored sibling
+`sound-effects/` directory. Lobby-only Web Audio buffer playback loops without
+media-element restart gaps and tears down on gameplay/leave. A music button
+controls mute and allows browser-required user activation.
+
+`make fmt` and `make check` passed: lint, formatting, TypeScript, Go race/unit
+tests, 95 frontend tests and sqlc drift. Regression coverage checks decoded buffer
+looping, mute/unmute, blocked autoplay recovery, late downloads, audio failures,
+cleanup and lobby/game/return/leave transitions. No schema/store changes.
+Real-browser audible seam quality was not verified; silence or mismatched endpoints
+within the supplied recording are preserved.
+
+## 2026-11-13 Zinger audio and gear controls
+
+Replaced the lobby-only music component with reusable `AudioController` UI and
+`useAudio` playback. One context/cache spans lobby and gameplay; game-specific
+track selection lives in `games/zinger-audio.ts`. Answering/final answering loop
+the supplied gameplay track; each voting/final voting phase plays the supplied
+voting track once. Other gameplay phases are silent. Snapshot updates do not
+restart a track; transitions stop the previous source and suppress stale downloads.
+Gear controls expose a volume slider and speaker/mute toggle, preserve preferences
+through phase changes, and close with Escape while restoring focus.
+
+`make fmt` and `make check` passed (97 frontend tests, Go race/unit tests, lint,
+formatting, TypeScript and sqlc drift). Coverage includes phase/track mapping,
+one-shot voting, buffer caching, volume/mute retention, keyboard dismissal,
+autoplay retries, cleanup, failed/late downloads and lobby/game/leave controls.
+No schema changes; real-browser listening/visual acceptance was not performed.

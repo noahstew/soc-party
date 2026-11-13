@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { RoomEntry } from "./room-entry";
 import { useToast } from "@/lib/use-toast";
 import { LobbyView } from "./lobby-view";
+import { AudioController } from "@/components/audio-controller";
+import { zingerAudio } from "@/games/zinger-audio";
 import {
   isGameState,
   isLobby,
@@ -402,29 +404,40 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     );
   }
 
-  if (game) {
-    return (
-      <ZingerGame
-        state={game}
-        youId={lobby.youId}
-        ownerId={lobby.ownerId}
-        onSend={send}
-      />
-    );
-  }
-
   return (
-    <LobbyView
-      lobby={lobby}
-      connection={connection}
-      shareURL={shareURL}
-      onCopyLink={() => void copyRoomLink()}
-      onSend={send}
-      onLeave={leave}
-      onReconnect={() => {
-        dismiss();
-        setRetry((v) => v + 1);
-      }}
-    />
+    <>
+      <AudioController
+        track={
+          game
+            ? zingerAudio(game)
+            : {
+                url: "/audio/songs/waiting.mp3",
+                loop: true,
+                key: "lobby",
+              }
+        }
+      />
+      {game ? (
+        <ZingerGame
+          state={game}
+          youId={lobby.youId}
+          ownerId={lobby.ownerId}
+          onSend={send}
+        />
+      ) : (
+        <LobbyView
+          lobby={lobby}
+          connection={connection}
+          shareURL={shareURL}
+          onCopyLink={() => void copyRoomLink()}
+          onSend={send}
+          onLeave={leave}
+          onReconnect={() => {
+            dismiss();
+            setRetry((v) => v + 1);
+          }}
+        />
+      )}
+    </>
   );
 }

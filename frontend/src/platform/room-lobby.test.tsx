@@ -87,6 +87,47 @@ afterEach(() => {
 });
 
 describe("room lobby", () => {
+  it("keeps audio settings across lobby and gameplay and removes them on leave", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(response({ token, lobby })),
+    );
+    render(<RoomLobby apiURL="http://localhost:8080" />);
+    expect(
+      screen.queryByRole("button", { name: "Audio settings" }),
+    ).not.toBeInTheDocument();
+    const socket = await createRoom();
+    expect(
+      screen.getByRole("button", { name: "Audio settings" }),
+    ).toBeVisible();
+    act(() =>
+      socket.onmessage?.({
+        data: JSON.stringify({
+          type: "game_state",
+          payload: {
+            phase: "answering",
+            round: 1,
+            multiplierPermille: 1000,
+            serverNowMs: Date.now(),
+            players: [],
+            prompts: [],
+          },
+        }),
+      }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Audio settings" }),
+    ).toBeVisible();
+    act(() => socket.update(lobby));
+    expect(
+      screen.getByRole("button", { name: "Audio settings" }),
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Leave room" }));
+    expect(
+      screen.queryByRole("button", { name: "Audio settings" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("copies the room URL beside the code and shows a success toast", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });

@@ -88,3 +88,21 @@ offline players still show Reconnecting when relevant.
 The active lobby card slides down from above the viewport on mount over 550ms.
 Room updates and tab changes reuse the card and do not replay the entrance.
 Reduced-motion preferences disable the entrance; the badge remains stationary.
+
+## Room audio
+
+`AudioController` stays mounted across lobby and gameplay and provides a gear
+menu with a volume slider and mute toggle. `useAudio` owns a single Web Audio
+context, gain and decoded-buffer cache for each room visit; tracks specify URL,
+loop and playback key. Stable keys prevent snapshot updates from restarting music.
+Phase changes stop the old source and discard late starts; leaving closes the
+context. Volume and mute survive phase changes without restarting playback.
+
+The lobby loops `public/audio/songs/waiting.mp3`. `games/zinger-audio.ts` maps
+normal/final answering to looping `songs/zinger/gameplay.mp3` and each normal/final
+voting phase to one play of `songs/zinger/voting.mp3`. Reveals, intros, scoreboards
+and game over are silent. Browsers blocking autoplay retry on pointer/keyboard
+interaction. Audio failures do not block play. Seamless sound requires clean
+recording endpoints; silence within a track is preserved.
+Keep songs under `public/audio/songs/`; the sibling `sound-effects/` folder ignores
+local effects until they are explicitly selected for inclusion.
