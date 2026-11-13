@@ -34,6 +34,7 @@ type PromptView struct {
 }
 
 type GameView struct {
+	VotingOpensAtMs    int64        `json:"votingOpensAtMs,omitempty"`
 	Phase              Phase        `json:"phase"`
 	Round              int          `json:"round"`
 	MultiplierPermille int          `json:"multiplierPermille"`
@@ -80,6 +81,9 @@ func (s *State) View(playerID string, now time.Time) (GameView, error) {
 			}
 		})
 	case MatchupVoting:
+		if s.Config.VotingIntro > 0 {
+			v.VotingOpensAtMs = s.Deadline.Add(-s.Config.Voting).UnixMilli()
+		}
 		m := s.currentMatch()
 		v.MatchupID = m.ID
 		v.Prompt = &PromptView{ID: m.Prompt.ID, Text: m.Prompt.Text}

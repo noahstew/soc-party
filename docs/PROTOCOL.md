@@ -41,6 +41,14 @@ contain no author or vote metadata. `selectedAnswerIds` restores only the recipi
 selection (including repetitions in finals); `voteSubmitted` identifies a locked ballot.
 Other players' drafts never appear.
 
+Head-to-head voting includes optional `votingOpensAtMs` (server epoch milliseconds).
+The default presentation starts four seconds before voting opens; `deadlineMs`
+includes that presentation plus the full 20-second voting window. Vote intents
+before `votingOpensAtMs` fail with `wrong_phase`. Reconnecting clients skip past
+entrances using `serverNowMs`. Omission means voting is already open (zero-intro
+test/custom configurations). Avatar IDs remain in the platform lobby projection;
+reveals associate them using the authorized answer `authorId`.
+
 `error` carries `{code, message}` and echoes a supplied envelope `id`. Stable gameplay
 codes include `not_enough_prompts`, `wrong_phase`, `invalid_answer`,
 `unassigned_prompt`, `answer_locked`, `not_eligible_to_vote`, `invalid_vote`,

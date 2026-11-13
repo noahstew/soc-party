@@ -581,3 +581,14 @@ No schema changes; real-browser listening/visual acceptance was not performed.
 triggers a sound, cached one-shot playback, independent saved effects volume,
 shared mute and source cleanup. No schema changes; integration was not required.
 Browser listening acceptance was not performed.
+
+### Zinger voting and reveal scenes (2026-11-13)
+
+`make fmt` and `make check` passed: lint/format, TypeScript, backend race/unit
+tests, 101 frontend tests and sqlc drift. New coverage checks the three-second
+question hold, half-second answer staggering and sound cues, full 20-second vote
+countdown, snapshot deduplication, reconnect skipping, unmount cleanup, staged
+vote counts/avatars/points and their effects. Engine regression verifies early
+votes are rejected and presentation time is added before the full voting window.
+No schema/store changes; integration was not required. Real-browser visual and
+listening acceptance has not been performed.

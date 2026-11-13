@@ -16,6 +16,36 @@ func voting(t *testing.T, n int) *State {
 	}
 	return s
 }
+
+func TestVotingScenePreservesVotingWindow(t *testing.T) {
+	s := voting(t, 4)
+	s.Config.VotingIntro = 4 * time.Second
+	now := input().Now
+	s.beginMatchup(now)
+	opens := now.Add(s.Config.VotingIntro)
+	if !s.Deadline.Equal(opens.Add(s.Config.Voting)) {
+		t.Fatal("presentation consumed voting time")
+	}
+	v, err := s.View("p2", now)
+	if err != nil || v.VotingOpensAtMs != opens.UnixMilli() {
+		t.Fatalf("missing scene timing: %+v, %v", v, err)
+	}
+	m := s.currentMatch()
+	var voter string
+	for _, p := range s.Players {
+		if p.ID != m.Answers[0].PlayerID && p.ID != m.Answers[1].PlayerID {
+			voter = p.ID
+			break
+		}
+	}
+	intent := VoteDraftIntent{voter, m.ID, m.Answers[0].ID}
+	if err := s.selectVote(VoteIntent(intent), opens.Add(-time.Millisecond), false); err != WrongPhase {
+		t.Fatalf("accepted vote during presentation: %v", err)
+	}
+	if err := s.selectVote(VoteIntent(intent), opens, false); err != nil {
+		t.Fatalf("rejected vote at opening: %v", err)
+	}
+}
 func TestVoteScoring(t *testing.T) {
 	for _, round := range []int{1, 2} {
 		for _, scenario := range []string{"unanimous", "tie", "missing"} {

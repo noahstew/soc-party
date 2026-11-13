@@ -354,3 +354,14 @@ Authenticated members may select only their own avatar while in the lobby. The r
 actor persists changes before broadcasting snapshots, preserving the choice across
 reconnects and rejecting invalid IDs or failed saves. Existing audit rows default
 to ID 1; the existing process-reset policy remains unchanged.
+
+## 2026-11-13 - Zinger voting scenes
+
+Reserve the four-second head-to-head presentation on the server using optional
+`Config.VotingIntro` (default four seconds, zero allowed for short simulations).
+Expose `votingOpensAtMs` and reject early vote intents instead of consuming players'
+20-second voting window with client animation. Snapshots retain the same opening
+time; client scenes do not replay cues on private vote updates. Final voting keeps
+its existing multi-answer ballot; both reveal types share staged results. Keep
+avatar ownership in platform membership and use the roster at game entry for
+attribution even if an author later leaves.

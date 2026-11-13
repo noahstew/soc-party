@@ -1,7 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GameState } from "@/lib/protocol";
 import { ZingerGame } from "./zinger-game";
+
+afterEach(() => vi.useRealTimers());
 
 const state: GameState = {
   phase: "answering",
@@ -288,6 +290,7 @@ describe("Zinger head-to-head views", () => {
     expect(send).not.toHaveBeenCalled();
   });
   it("renders attributed reveal, empty placeholder and original bonus copy", () => {
+    vi.useFakeTimers();
     render(
       <ZingerGame
         state={{
@@ -319,8 +322,10 @@ describe("Zinger head-to-head views", () => {
       />,
     );
     expect(screen.getByText("No answer submitted")).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(2500));
     expect(screen.getByText("Clean sweep! +100")).toBeInTheDocument();
-    expect(screen.getByText("1 votes · +200 points")).toBeInTheDocument();
+    expect(screen.getByText("1 votes")).toBeInTheDocument();
+    expect(screen.getByText("+200 points")).toBeInTheDocument();
   });
   it("orders the round scoreboard by total score", () => {
     render(
@@ -416,6 +421,7 @@ describe("Zinger final views", () => {
     ).not.toBeInTheDocument();
   });
   it("renders ranked final answers", () => {
+    vi.useFakeTimers();
     render(
       <ZingerGame
         state={{
@@ -440,8 +446,11 @@ describe("Zinger final views", () => {
         onSend={() => {}}
       />,
     );
-    expect(screen.getByText("#1 · Winner")).toBeInTheDocument();
-    expect(screen.getByText("Alex · 2 votes · +400")).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(2500));
+    expect(screen.getByText("Winner")).toBeInTheDocument();
+    expect(screen.getByText("Alex")).toBeInTheDocument();
+    expect(screen.getByText("2 votes")).toBeInTheDocument();
+    expect(screen.getByText("+400 points")).toBeInTheDocument();
   });
   it("shares competition ranks on tied final scores and limits return to owner", () => {
     const send = vi.fn();

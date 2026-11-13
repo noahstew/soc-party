@@ -12,14 +12,14 @@ func (s *State) beginMatchup(now time.Time) {
 		s.revealMatchup(now, true)
 		return
 	}
-	s.enter(MatchupVoting, now, s.Config.Voting)
+	s.enter(MatchupVoting, now, s.Config.Voting+s.Config.VotingIntro)
 	s.finishVoting(now)
 }
 func (s *State) vote(e VoteIntent, now time.Time) error {
 	return s.selectVote(e, now, true)
 }
 func (s *State) selectVote(e VoteIntent, now time.Time, submit bool) error {
-	if s.Phase != MatchupVoting || !now.Before(s.Deadline) {
+	if s.Phase != MatchupVoting || !now.Before(s.Deadline) || now.Before(s.Deadline.Add(-s.Config.Voting)) {
 		return WrongPhase
 	}
 	p := s.player(e.PlayerID)

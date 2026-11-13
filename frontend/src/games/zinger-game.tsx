@@ -1,24 +1,35 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ClientMessage, GamePrompt, GameState } from "@/lib/protocol";
+import type {
+  ClientMessage,
+  GamePrompt,
+  GameState,
+  Player,
+} from "@/lib/protocol";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Countdown } from "./countdown";
 import { playSoundEffect, zingerEffects } from "@/lib/sound-effects";
 import { ZingerLogo } from "@/components/zinger-logo";
 
+import { RevealScene, useVotingScene } from "./zinger-scene";
+
 export function ZingerGame({
   state,
   youId,
   ownerId,
+  players,
   onSend,
 }: {
   state: GameState;
   youId: string;
   ownerId: string;
+  players?: Player[];
   onSend: (message: ClientMessage) => void;
 }) {
+  // Avatar choices are locked during play; retain the starting roster for leavers.
+  const [gamePlayers] = useState(players);
   const sendWithSound = (message: ClientMessage) => {
     if (
       [
@@ -44,10 +55,14 @@ export function ZingerGame({
               <ZingerLogo />
             </h1>
           </div>
-          <Countdown
-            deadlineMs={state.deadlineMs}
-            serverNowMs={state.serverNowMs}
-          />
+          {["answering", "final_answering", "final_voting"].includes(
+            state.phase,
+          ) && (
+            <Countdown
+              deadlineMs={state.deadlineMs}
+              serverNowMs={state.serverNowMs}
+            />
+          )}
         </header>
         {(state.phase === "round_intro" || state.phase === "final_intro") && (
           <Intro state={state} />
@@ -62,14 +77,22 @@ export function ZingerGame({
             onSend={sendWithSound}
           />
         )}
-        {state.phase === "matchup_reveal" && <MatchupReveal state={state} />}
+        {state.phase === "matchup_reveal" && (
+          <RevealScene
+            key={`reveal:${state.round}:${state.matchupId}`}
+            state={state}
+            players={gamePlayers}
+          />
+        )}
         {state.phase === "round_scoreboard" && (
           <Scoreboard state={state} title="Round scores" />
         )}
         {state.phase === "final_voting" && (
           <FinalVoting state={state} onSend={sendWithSound} />
         )}
-        {state.phase === "final_reveal" && <FinalReveal state={state} />}
+        {state.phase === "final_reveal" && (
+          <RevealScene key="final-reveal" state={state} players={gamePlayers} />
+        )}
         {state.phase === "game_over" && <GameOver state={state} />}
         {waiting > 0 &&
           [
@@ -184,30 +207,6 @@ function FinalVoting({
   );
 }
 
-function FinalReveal({ state }: { state: GameState }) {
-  return (
-    <section>
-      <h2 className="text-2xl font-heading">Final favorites</h2>
-      <ol className="mt-5 space-y-4">
-        {state.answers?.map((answer, index) => (
-          <li
-            key={answer.id}
-            className="rounded-base border-2 border-border bg-secondary-background p-4"
-          >
-            <p className="font-heading">
-              #{index + 1} · {answer.text}
-            </p>
-            <p className="mt-2">
-              {answer.author} · {answer.votes ?? 0} votes · +
-              {answer.points ?? 0}
-            </p>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
 function GameOver({ state }: { state: GameState }) {
   const players = [...state.players].sort(
     (a, b) => b.score - a.score || a.name.localeCompare(b.name),
@@ -247,6 +246,7 @@ function MatchupVoting({
   state: GameState;
   onSend: (message: ClientMessage) => void;
 }) {
+  const stage = useVotingScene(state);
   const [draft, setSelected] = useState<string | null>(
     state.selectedAnswerIds?.[0] ?? null,
   );
@@ -255,34 +255,50 @@ function MatchupVoting({
     : draft;
   return (
     <section>
-      <h2 className="text-xl font-heading">{state.prompt?.text}</h2>
-      {!state.canVote && (
+      <h2
+        className={`scene-question font-heading ${stage === 0 ? "scene-question-large" : "text-center text-xl"}`}
+      >
+        {state.prompt?.text}
+      </h2>
+      <div
+        hidden={stage !== 3}
+        className={stage === 3 ? "mt-3 flex justify-end" : "hidden"}
+      >
+        <Countdown
+          deadlineMs={state.deadlineMs}
+          serverNowMs={state.serverNowMs}
+        />
+      </div>
+      {stage === 3 && !state.canVote && (
         <p className="mt-3">Your matchup. The other players are voting.</p>
       )}
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        {state.answers?.map((answer) => (
-          <Button
-            key={answer.id}
-            variant={selected === answer.id ? "default" : "neutral"}
-            aria-pressed={selected === answer.id}
-            disabled={!state.canVote || state.voteSubmitted}
-            className="h-auto min-h-28 whitespace-normal p-5 text-lg"
-            onClick={() => {
-              setSelected(answer.id);
-              onSend({
-                type: "update_vote",
-                payload: {
-                  matchupId: state.matchupId ?? "",
-                  answerId: answer.id,
-                },
-              });
-            }}
-          >
-            {answer.text}
-          </Button>
-        ))}
+        {state.answers?.map(
+          (answer, index) =>
+            stage > index && (
+              <Button
+                key={answer.id}
+                variant={selected === answer.id ? "default" : "neutral"}
+                aria-pressed={selected === answer.id}
+                disabled={stage < 3 || !state.canVote || state.voteSubmitted}
+                className={`h-auto min-h-28 whitespace-normal p-5 text-lg ${index === 0 ? "scene-answer-left" : "scene-answer-right"}`}
+                onClick={() => {
+                  setSelected(answer.id);
+                  onSend({
+                    type: "update_vote",
+                    payload: {
+                      matchupId: state.matchupId ?? "",
+                      answerId: answer.id,
+                    },
+                  });
+                }}
+              >
+                {answer.text}
+              </Button>
+            ),
+        )}
       </div>
-      {selected && !state.voteSubmitted && state.canVote && (
+      {stage === 3 && selected && !state.voteSubmitted && state.canVote && (
         <Button
           className="mt-5 w-full"
           onClick={() =>
@@ -300,33 +316,6 @@ function MatchupVoting({
           Vote locked in
         </p>
       )}
-    </section>
-  );
-}
-
-function MatchupReveal({ state }: { state: GameState }) {
-  return (
-    <section>
-      <h2 className="text-xl font-heading">{state.prompt?.text}</h2>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        {state.answers?.map((answer) => (
-          <article
-            key={answer.id}
-            className="rounded-base border-2 border-border bg-secondary-background p-5"
-          >
-            <p className="text-lg">{answer.text}</p>
-            <p className="mt-4 font-heading">{answer.author}</p>
-            <p>
-              {answer.votes ?? 0} votes · +{answer.points ?? 0} points
-            </p>
-            {Boolean(answer.bonus) && (
-              <p className="mt-3 rounded-base bg-main p-2 text-center font-heading text-main-foreground">
-                Clean sweep! +{answer.bonus}
-              </p>
-            )}
-          </article>
-        ))}
-      </div>
     </section>
   );
 }

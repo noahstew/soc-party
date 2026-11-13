@@ -11,6 +11,7 @@ import (
 
 func fixture(n int) Start {
 	x := Start{Config: DefaultConfig()}
+	x.Config.VotingIntro = 0
 	for i := range n {
 		x.Players = append(x.Players, Player{ID: fmt.Sprintf("p%d", i), Name: fmt.Sprintf("Name %d", i), Connected: true})
 	}

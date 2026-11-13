@@ -420,6 +420,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       {game ? (
         <ZingerGame
           state={game}
+          players={lobby.players}
           youId={lobby.youId}
           ownerId={lobby.ownerId}
           onSend={send}

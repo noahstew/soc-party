@@ -207,6 +207,11 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Stage head-to-head question/answer entrances, voting-only scene countdown,
+  vote/author/avatar/points reveals and sound cues; preserve the full server voting
+  window, respect reduced motion and verify regression coverage plus `make check`
+  (requested 2026-11-13; authorized presentation work ahead of M9).
+
 - [x] Add modular Zinger selection/submission sound effects and an independent,
   saved effects volume with an icon in audio settings; verify regression coverage
   and `make check` (requested 2026-11-13).

@@ -53,6 +53,7 @@ export type GamePrompt = {
   submitted: boolean;
 };
 export type GameState = {
+  votingOpensAtMs?: number;
   phase: GamePhase;
   round: number;
   multiplierPermille: number;
@@ -195,6 +196,9 @@ export function isGameState(value: unknown): value is GameState {
     state.round <= 3 &&
     typeof state.multiplierPermille === "number" &&
     typeof state.serverNowMs === "number" &&
+    (state.votingOpensAtMs === undefined ||
+      (typeof state.votingOpensAtMs === "number" &&
+        Number.isFinite(state.votingOpensAtMs))) &&
     (state.deadlineMs === undefined || typeof state.deadlineMs === "number") &&
     Array.isArray(state.players) &&
     state.players.every(

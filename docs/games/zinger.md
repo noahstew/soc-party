@@ -39,6 +39,13 @@ Show head-to-head matchups sequentially, anonymous during voting. N−2 non-auth
 may select and change one vote until pressing Submit vote, which locks it. The server
 preserves selections for reconnect and counts the latest unsubmitted selection at
 the deadline. End early when all connected eligible voters submit.
+The default voting scene reserves four additional seconds: a large prompt for
+three seconds, then left and right answer entrances at 3 and 3.5 seconds. Voting
+opens at four seconds with the full 20-second countdown; early intents are rejected.
+Reveal scenes hide the countdown, pop vote counts at 0.5 seconds, show authors and
+their selected avatars at 1.5 seconds, and insert awarded points at 2.5 seconds.
+Answer, vote and point animations use their matching optional sound effects;
+reduced motion removes spatial animation while retaining the scene order.
 Reveal authors, vote counts and awarded points, never voter identities. Each vote
 is 100 points in round 1, 150 in round 2. A unanimous win earns another 100 or 150,
 only when all N−2 eligible players voted for that answer. Missing voters prevent the

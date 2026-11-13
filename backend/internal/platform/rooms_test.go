@@ -46,6 +46,7 @@ func readGame(t *testing.T, ch <-chan []byte) zinger.GameView {
 func TestStartGameLoadsSelectedPromptsAndLocksLobby(t *testing.T) {
 	r, _, owner := fixture(t)
 	config := zinger.DefaultConfig()
+	config.VotingIntro = 0
 	config.Intro = time.Hour
 	loaded := []string{}
 	if err := r.RegisterGame(zinger.Module{Config: config}, func(_ context.Context, slugs []string) ([]zinger.Prompt, error) {
@@ -113,6 +114,7 @@ func TestStartGameLoadsSelectedPromptsAndLocksLobby(t *testing.T) {
 func TestMultiClientFullGameAndReturnLobby(t *testing.T) {
 	r, _, owner := fixture(t)
 	config := zinger.DefaultConfig()
+	config.VotingIntro = 0
 	config.Intro, config.Answering, config.Voting = 2*time.Millisecond, 200*time.Millisecond, 200*time.Millisecond
 	config.Reveal, config.Scoreboard = 2*time.Millisecond, 2*time.Millisecond
 	config.FinalAnswering, config.FinalVoting, config.FinalReveal, config.FinalIdle = 200*time.Millisecond, 200*time.Millisecond, 2*time.Millisecond, 2*time.Millisecond
