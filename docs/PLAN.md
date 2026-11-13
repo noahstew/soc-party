@@ -395,3 +395,7 @@ if production catalogs exceed practical snapshot/rendering sizes.
   reusable platform membership avatar ID with a migration and generated queries;
   verify reconnect, save rollback, two-socket broadcasts, UI and DB coverage,
   `make check` and `make integration` (requested 2026-11-13). Avatar borders were removed per the follow-up request.
+
+- [x] Fix stale Windows backend hot reload causing invalid-room responses after
+  avatar updates; enable Air polling, restart and verify live create/join and
+  source-triggered rebuilds (2026-11-13).

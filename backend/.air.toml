@@ -1,6 +1,9 @@
 root = "."
 tmp_dir = "tmp"
 [build]
+# Windows bind mounts may not forward filesystem notifications.
+poll = true
+poll_interval = 1000
 cmd = "go build -o ./tmp/server ./cmd/server"
 entrypoint = ["./tmp/server"]
 include_ext = ["go"]

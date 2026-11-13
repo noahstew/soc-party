@@ -530,3 +530,14 @@ check used a temporary Git index containing this task's regenerated store files;
 regeneration produced no drift and the real staging area was unchanged. A normal
 unstaged `make check` flags the intentional generated store diff against HEAD.
 Visual browser acceptance was not performed.
+
+## 2026-11-13 — Windows backend reload repair
+
+The live backend served players without avatarId because filesystem events did
+not reach Air through the Windows bind mount. Enabled one-second source polling
+using the installed Air configuration, restarted the backend, and confirmed a
+source timestamp change triggered a rebuild and server restart. Live create/join
+responses contain valid avatar IDs; the live creation response passes the actual
+frontend isLobby validator. make check passed with 90 frontend tests and the
+temporary generated-store index described above. Removed the lobby avatar border
+per the follow-up request; the player card retains its existing styling.

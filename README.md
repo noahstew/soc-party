@@ -21,6 +21,9 @@ Backend: http://localhost:8080/healthz and http://localhost:8080/api/packs.
 First build downloads pinned tools/dependencies and can take several minutes.
 Postgres becomes healthy, one-shot migrate and seed succeed, then the backend and frontend start.
 The seed is idempotent. Source bind mounts + Air/Next dev provide hot reload.
+Air polls Go sources every second so Windows bind-mount edits rebuild the backend.
+After changing `backend/.air.toml`, run `docker compose restart backend` once;
+restarts and rebuilds close active development rooms.
 The Docker frontend uses Webpack with one-second file polling so Windows bind-mount
 edits trigger Fast Refresh even when filesystem notifications are missing. Save a
 frontend file and allow a moment for compilation; no restart is needed for normal
