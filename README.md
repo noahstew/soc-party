@@ -21,6 +21,12 @@ Backend: http://localhost:8080/healthz and http://localhost:8080/api/packs.
 First build downloads pinned tools/dependencies and can take several minutes.
 Postgres becomes healthy, one-shot migrate and seed succeed, then the backend and frontend start.
 The seed is idempotent. Source bind mounts + Air/Next dev provide hot reload.
+The Docker frontend uses Webpack with one-second file polling so Windows bind-mount
+edits trigger Fast Refresh even when filesystem notifications are missing. Save a
+frontend file and allow a moment for compilation; no restart is needed for normal
+TSX/CSS edits. After changing Compose settings, apply them once with
+`docker compose up -d --no-deps --force-recreate frontend`. Polling adds some CPU
+overhead. Direct `pnpm dev` outside Docker retains the default Next.js bundler.
 
 ```sh
 docker compose down               # preserve database
