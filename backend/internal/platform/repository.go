@@ -47,7 +47,7 @@ func (p PostgresRepository) Save(ctx context.Context, s Record, create bool) err
 				return err
 			}
 		}
-		if err = q.SavePlayer(ctx, store.SavePlayerParams{ID: p.ID, TokenHash: p.Hash[:], Connected: p.Connected, Status: p.Status}); err != nil {
+		if err = q.SavePlayer(ctx, store.SavePlayerParams{ID: p.ID, TokenHash: p.Hash[:], Connected: p.Connected, Status: p.Status, AvatarID: int32(p.AvatarID)}); err != nil {
 			return err
 		}
 	}

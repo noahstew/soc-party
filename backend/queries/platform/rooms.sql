@@ -5,7 +5,7 @@ INSERT INTO rooms(id, code, owner_id, expires_at) VALUES ($1, $2, $3, $4);
 INSERT INTO room_players(id, room_id, name, token_hash) VALUES ($1, $2, $3, $4);
 
 -- name: SavePlayer :exec
-UPDATE room_players SET token_hash = $2, connected = $3, status = $4, last_seen_at = now()
+UPDATE room_players SET token_hash = $2, connected = $3, status = $4, avatar_id = $5, last_seen_at = now()
 WHERE id = $1;
 
 -- name: SaveRoom :exec

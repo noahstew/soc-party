@@ -97,6 +97,9 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 	if err = r.Command(ctx, owner.Lobby.Code, owner.Token, "select_game", &protocol.GameSelection{GameID: "zinger"}); err != nil {
 		t.Fatal(err)
 	}
+	if err := r.Command(ctx, owner.Lobby.Code, guest.Token, "select_avatar", &protocol.AvatarSelection{AvatarID: 7}); err != nil {
+		t.Fatal(err)
+	}
 	q := store.New(tx)
 	record, err := q.GetRoom(ctx, owner.Lobby.Code)
 	if err != nil {
@@ -110,6 +113,12 @@ func TestPostgresRoomMembershipAndRollback(t *testing.T) {
 		t.Fatal("membership/owner not persisted")
 	}
 	for _, p := range players {
+		if p.AvatarID < 1 || p.AvatarID > protocol.AvatarCount {
+			t.Fatal("invalid persisted avatar")
+		}
+		if p.ID == guest.Lobby.YouID && p.AvatarID != 7 {
+			t.Fatal("avatar selection not persisted")
+		}
 		if len(p.TokenHash) != 32 || string(p.TokenHash) == guest.Token {
 			t.Fatal("raw or missing token")
 		}

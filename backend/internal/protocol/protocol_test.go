@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -47,5 +48,16 @@ func TestDecode(t *testing.T) {
 				t.Fatalf("valid=%v err=%v", tc.valid, err)
 			}
 		})
+	}
+}
+
+func TestAvatarSelection(t *testing.T) {
+	for _, payload := range []string{`{"avatarId":0}`, `{"avatarId":9}`, `{"avatarId":1.5}`, `{}`, `{"avatarId":2,"playerId":"someone"}`} {
+		if _, _, err := Decode(Message("select_avatar", "", json.RawMessage(payload))); err == nil {
+			t.Fatalf("accepted %s", payload)
+		}
+	}
+	if _, _, err := Decode(Message("select_avatar", "", AvatarSelection{AvatarID: 8})); err != nil {
+		t.Fatal(err)
 	}
 }

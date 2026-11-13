@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useSyncExternalStore } from "react";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { Brand } from "@/components/brand";
 import { ZingerLogo } from "@/components/zinger-logo";
 import { ChoiceGrid } from "@/components/choice-grid";
@@ -122,10 +123,8 @@ export function LobbyView({
       <div
         className={`flex items-center gap-3 rounded-base border-2 p-3 ${self ? "border-main bg-main/5" : "border-border bg-input-background"}`}
       >
-        <span
-          className={`flex size-11 shrink-0 items-center justify-center rounded-base border-2 ${self ? "border-main text-main-ink" : "border-border text-muted-foreground"}`}
-        >
-          <Icon name="person" />
+        <span className="flex size-11 shrink-0 items-center justify-center">
+          <PlayerAvatar avatarId={player.avatarId} name={player.name} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -145,6 +144,43 @@ export function LobbyView({
             <p className="mt-1 text-xs text-muted-foreground">Reconnecting…</p>
           )}
         </div>
+        {self && (
+          <div className="flex shrink-0 gap-1">
+            {([-1, 1] as const).map((direction) => (
+              <Button
+                key={direction}
+                variant="neutral"
+                size="icon"
+                className="shadow-none"
+                aria-label={
+                  direction === -1 ? "Previous avatar" : "Next avatar"
+                }
+                disabled={connection !== "connected"}
+                onClick={() =>
+                  onSend({
+                    type: "select_avatar",
+                    payload: {
+                      avatarId: ((player.avatarId - 1 + direction + 8) % 8) + 1,
+                    },
+                  })
+                }
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="size-5"
+                >
+                  <path
+                    d={direction === -1 ? "m15 6-6 6 6 6" : "m9 6 6 6-6 6"}
+                  />
+                </svg>
+              </Button>
+            ))}
+          </div>
+        )}
         {owner && !self && (
           <Button
             variant="neutral"

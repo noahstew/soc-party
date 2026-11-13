@@ -117,6 +117,19 @@ func TestRoomHTTPAndSockets(t *testing.T) {
 	if lobby := read(guestSocket); lobby.YouID != guest.Lobby.YouID || len(lobby.Players) != 2 {
 		t.Fatal("wrong guest projection")
 	}
+	// Both devices receive an authenticated player's avatar change.
+	read(ownerSocket) // Subscription presence update.
+	if err = guestSocket.Write(ctx, websocket.MessageText, protocol.Message("select_avatar", "a1", protocol.AvatarSelection{AvatarID: 6})); err != nil {
+		t.Fatal(err)
+	}
+	for _, conn := range []*websocket.Conn{ownerSocket, guestSocket} {
+		lobby := read(conn)
+		for _, player := range lobby.Players {
+			if player.ID == guest.Lobby.YouID && player.AvatarID != 6 {
+				t.Fatal("avatar not shared over WebSocket")
+			}
+		}
+	}
 	// Owner can remove a guest; its socket closes and its token cannot reconnect.
 	if err = ownerSocket.Write(ctx, websocket.MessageText, protocol.Message("kick_player", "k1", protocol.Kick{PlayerID: guest.Lobby.YouID})); err != nil {
 		t.Fatal(err)

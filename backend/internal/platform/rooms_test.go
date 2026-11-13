@@ -553,3 +553,66 @@ func TestPackSelectionAuthorizationEligibilityAndRollback(t *testing.T) {
 		t.Fatal("pack selection bypassed player requirement")
 	}
 }
+
+func TestAvatarsAreSharedAndPreservedOnReconnect(t *testing.T) {
+	r, repo, owner := fixture(t)
+	ctx := context.Background()
+	code := owner.Lobby.Code
+	guest, err := r.Join(ctx, code, "Guest")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range guest.Lobby.Players {
+		if p.AvatarID < 1 || p.AvatarID > protocol.AvatarCount {
+			t.Fatalf("invalid random avatar: %d", p.AvatarID)
+		}
+	}
+	_, ownerCh, err := r.Subscribe(ctx, code, owner.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	readLobby(t, ownerCh)
+	_, guestCh, err := r.Subscribe(ctx, code, guest.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	readLobby(t, ownerCh)
+	readLobby(t, guestCh)
+	if err := r.Command(ctx, code, guest.Token, "select_avatar", &protocol.AvatarSelection{AvatarID: 8}); err != nil {
+		t.Fatal(err)
+	}
+	for _, ch := range []<-chan []byte{ownerCh, guestCh} {
+		lobby := readLobby(t, ch)
+		for _, p := range lobby.Players {
+			if p.ID == guest.Lobby.YouID && p.AvatarID != 8 {
+				t.Fatal("avatar not broadcast")
+			}
+			if p.ID == owner.Lobby.YouID && p.AvatarID != owner.Lobby.Players[0].AvatarID {
+				t.Fatal("another player's avatar changed")
+			}
+		}
+	}
+	for _, id := range []int{0, 9, -1} {
+		if err := r.Command(ctx, code, guest.Token, "select_avatar", &protocol.AvatarSelection{AvatarID: id}); err == nil {
+			t.Fatal("invalid avatar accepted")
+		}
+	}
+	repo.mu.Lock()
+	repo.fail = true
+	repo.mu.Unlock()
+	if err := r.Command(ctx, code, guest.Token, "select_avatar", &protocol.AvatarSelection{AvatarID: 2}); err == nil {
+		t.Fatal("save failure ignored")
+	}
+	repo.mu.Lock()
+	repo.fail = false
+	repo.mu.Unlock()
+	recovered, err := r.Reconnect(ctx, code, guest.Token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range recovered.Lobby.Players {
+		if p.ID == guest.Lobby.YouID && p.AvatarID != 8 {
+			t.Fatal("reconnect lost avatar or failed save leaked")
+		}
+	}
+}

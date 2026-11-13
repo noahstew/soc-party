@@ -511,3 +511,22 @@ room test exercises draft selection followed by submission and stacked final vot
 
 `make fmt` and `make check` passed: backend lint/vet, TypeScript, Go race/unit
 tests, 83 frontend tests and sqlc drift verification. No schema/store changes.
+
+## 2026-11-13 - Shared player avatars
+
+Create/join assigns one of the eight bundled avatars; each lobby member renders
+its server-owned avatar. Local previous/next arrows wrap 1-8 and send intents;
+confirmed snapshots animate images for all viewers with reduced motion respected.
+The shared component and platform membership ID support reuse in later views.
+
+Regression coverage verifies bounded random assignment, invalid IDs/extra fields,
+self-only changes, reconnect retention, save rollback, actual two-WebSocket
+broadcasts, UI wrapping/remote updates/disconnected controls, and PostgreSQL
+persistence. Migration 00006 was applied to the development DB by `make integration`.
+
+`make fmt`, `make integration`, and `make check` passed (90 frontend tests plus Go
+race/unit tests, lint/vet, formatting and types). For the sqlc comparison, the final
+check used a temporary Git index containing this task's regenerated store files;
+regeneration produced no drift and the real staging area was unchanged. A normal
+unstaged `make check` flags the intentional generated store diff against HEAD.
+Visual browser acceptance was not performed.

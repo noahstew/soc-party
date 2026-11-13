@@ -343,3 +343,14 @@ three votes that may stack on one answer or split across answers. Repeated IDs i
 remain excluded, and zero eligible answers still finish automatically. Final
 submission locks the ballot; the existing five-second all-finished reveal delay
 remains. This supersedes the earlier revision/unique-pick rules.
+
+## 2026-11-13 - Shared player avatars
+
+Store the bounded avatar ID on platform room membership (`room_players.avatar_id`),
+rather than Zinger game state, so future views and games can reuse it. The current
+eight assets live at `/zinger/players/1.png` through `8.png`; clients map IDs to these
+bundled paths. Create/join assigns a random ID; duplicate choices are allowed.
+Authenticated members may select only their own avatar while in the lobby. The room
+actor persists changes before broadcasting snapshots, preserving the choice across
+reconnects and rejecting invalid IDs or failed saves. Existing audit rows default
+to ID 1; the existing process-reset policy remains unchanged.

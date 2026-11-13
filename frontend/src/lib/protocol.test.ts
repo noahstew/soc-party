@@ -20,7 +20,7 @@ const valid = {
   maxPlayers: 8,
   canStart: false,
   expiresAt: "2026-11-09T12:00:00Z",
-  players: [{ id: "owner", name: "Alex", connected: true }],
+  players: [{ id: "owner", name: "Alex", avatarId: 1, connected: true }],
 };
 
 describe("catalog lobby protocol", () => {
@@ -84,3 +84,12 @@ describe("game state protocol", () => {
     expect(isGameState({ ...state, ...change })).toBe(false);
   });
 });
+
+it.each([undefined, 0, 9, -1, 1.5, "1"])(
+  "rejects invalid avatar ID %s",
+  (avatarId) => {
+    expect(
+      isLobby({ ...valid, players: [{ ...valid.players[0], avatarId }] }),
+    ).toBe(false);
+  },
+);

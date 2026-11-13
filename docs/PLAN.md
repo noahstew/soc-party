@@ -386,3 +386,12 @@ This request authorizes catalog/selection plumbing only; actual game engines,
 DB prompt sampling and gameplay phases remain outside scope. Catalog entries are
 included in room projections; pagination/virtualized rendering can be introduced
 if production catalogs exceed practical snapshot/rendering sizes.
+
+## Requested shared player avatars
+
+- [x] Assign a random bundled avatar on create/join, replace lobby profile icons,
+  add previous/next controls to the local player card with reduced-motion-aware
+  entrance animation, and share validated changes over WebSockets. Persist the
+  reusable platform membership avatar ID with a migration and generated queries;
+  verify reconnect, save rollback, two-socket broadcasts, UI and DB coverage,
+  `make check` and `make integration` (requested 2026-11-13). Avatar borders were removed per the follow-up request.

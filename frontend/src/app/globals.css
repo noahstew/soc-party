@@ -266,3 +266,21 @@
     animation: none;
   }
 }
+@keyframes avatar-enter {
+  from {
+    opacity: 0;
+    transform: translateX(35%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+.player-avatar {
+  animation: avatar-enter 220ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-avatar {
+    animation: none;
+  }
+}

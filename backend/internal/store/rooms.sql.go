@@ -93,7 +93,7 @@ func (q *Queries) InsertRoom(ctx context.Context, arg InsertRoomParams) error {
 }
 
 const listRoomPlayers = `-- name: ListRoomPlayers :many
-SELECT id, room_id, name, token_hash, connected, status, joined_at, last_seen_at FROM room_players WHERE room_id = $1 ORDER BY joined_at, id
+SELECT id, room_id, name, token_hash, connected, status, joined_at, last_seen_at, avatar_id FROM room_players WHERE room_id = $1 ORDER BY joined_at, id
 `
 
 func (q *Queries) ListRoomPlayers(ctx context.Context, roomID string) ([]RoomPlayer, error) {
@@ -114,6 +114,7 @@ func (q *Queries) ListRoomPlayers(ctx context.Context, roomID string) ([]RoomPla
 			&i.Status,
 			&i.JoinedAt,
 			&i.LastSeenAt,
+			&i.AvatarID,
 		); err != nil {
 			return nil, err
 		}
@@ -126,7 +127,7 @@ func (q *Queries) ListRoomPlayers(ctx context.Context, roomID string) ([]RoomPla
 }
 
 const savePlayer = `-- name: SavePlayer :exec
-UPDATE room_players SET token_hash = $2, connected = $3, status = $4, last_seen_at = now()
+UPDATE room_players SET token_hash = $2, connected = $3, status = $4, avatar_id = $5, last_seen_at = now()
 WHERE id = $1
 `
 
@@ -135,6 +136,7 @@ type SavePlayerParams struct {
 	TokenHash []byte `json:"token_hash"`
 	Connected bool   `json:"connected"`
 	Status    string `json:"status"`
+	AvatarID  int32  `json:"avatar_id"`
 }
 
 func (q *Queries) SavePlayer(ctx context.Context, arg SavePlayerParams) error {
@@ -143,6 +145,7 @@ func (q *Queries) SavePlayer(ctx context.Context, arg SavePlayerParams) error {
 		arg.TokenHash,
 		arg.Connected,
 		arg.Status,
+		arg.AvatarID,
 	)
 	return err
 }

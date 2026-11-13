@@ -38,6 +38,7 @@ const Idle = 30 * time.Minute
 
 // Records never enter JSON responses. Raw bearer tokens exist only in session replies.
 type Member struct {
+	AvatarID         int
 	ID, Name, Status string
 	Hash             [32]byte
 	Connected        bool
@@ -151,8 +152,12 @@ func newMember(name string, now time.Time) (Member, string, error) {
 	if err != nil {
 		return Member{}, "", err
 	}
+	avatar, err := rand.Int(rand.Reader, big.NewInt(protocol.AvatarCount))
+	if err != nil {
+		return Member{}, "", err
+	}
 	token, err := randomHex(32)
-	return Member{ID: id, Name: name, Status: "active", Hash: sha256.Sum256([]byte(token)), Seen: now}, token, err
+	return Member{AvatarID: int(avatar.Int64()) + 1, ID: id, Name: name, Status: "active", Hash: sha256.Sum256([]byte(token)), Seen: now}, token, err
 }
 func (r *Registry) Create(ctx context.Context, name string) (protocol.Session, error) {
 	games, err := r.loadCatalog(ctx)
@@ -253,7 +258,7 @@ func project(s Record, you string) protocol.Lobby {
 		if m.Status != "active" {
 			continue
 		}
-		p.Players = append(p.Players, protocol.Player{ID: m.ID, Name: m.Name, Connected: m.Connected})
+		p.Players = append(p.Players, protocol.Player{AvatarID: m.AvatarID, ID: m.ID, Name: m.Name, Connected: m.Connected})
 		if m.Connected {
 			connected++
 		}
@@ -441,6 +446,15 @@ func (r *Registry) Command(ctx context.Context, code, token, kind string, payloa
 		p.Seen = r.now()
 		s.Activity = r.now()
 		switch kind {
+		case "select_avatar":
+			selection, ok := payload.(*protocol.AvatarSelection)
+			if !ok || selection.AvatarID < 1 || selection.AvatarID > protocol.AvatarCount {
+				return nil, ErrConflict
+			}
+			if s.Status != "lobby" {
+				return nil, ErrConflict
+			}
+			p.AvatarID = selection.AvatarID
 		case "ping":
 			return nil, nil
 		case "leave_room":

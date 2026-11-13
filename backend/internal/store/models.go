@@ -49,4 +49,5 @@ type RoomPlayer struct {
 	Status     string             `json:"status"`
 	JoinedAt   pgtype.Timestamptz `json:"joined_at"`
 	LastSeenAt pgtype.Timestamptz `json:"last_seen_at"`
+	AvatarID   int32              `json:"avatar_id"`
 }

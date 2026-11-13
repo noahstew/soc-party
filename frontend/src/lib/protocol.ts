@@ -1,5 +1,10 @@
 // Mirror backend/internal/protocol. Envelope names use snake_case; payloads use camelCase.
-export type Player = { id: string; name: string; connected: boolean };
+export type Player = {
+  id: string;
+  name: string;
+  avatarId: number;
+  connected: boolean;
+};
 export type PackChoice = { slug: string; title: string };
 export type GameChoice = { id: string; title: string; packs: PackChoice[] };
 export type Lobby = {
@@ -26,7 +31,7 @@ export type GamePhase =
   | "final_voting"
   | "final_reveal"
   | "game_over";
-export type GamePlayer = Player & {
+export type GamePlayer = Omit<Player, "avatarId"> & {
   left: boolean;
   score: number;
   roundDelta: number;
@@ -64,6 +69,7 @@ export type GameState = {
   selectedAnswerIds?: string[];
 };
 export type ClientMessage =
+  | { type: "select_avatar"; id?: string; payload: { avatarId: number } }
   | { type: "select_game"; id?: string; payload: { gameId: string } }
   | {
       type: "select_pack";
@@ -155,6 +161,10 @@ export function isLobby(value: unknown): value is Lobby {
       return (
         typeof v.id === "string" &&
         typeof v.name === "string" &&
+        typeof v.avatarId === "number" &&
+        Number.isInteger(v.avatarId) &&
+        v.avatarId >= 1 &&
+        v.avatarId <= 8 &&
         typeof v.connected === "boolean"
       );
     })

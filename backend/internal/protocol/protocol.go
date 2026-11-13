@@ -44,7 +44,15 @@ type Vote struct {
 type FinalVotes struct {
 	AnswerIDs []string `json:"answerIds"`
 }
+
+const AvatarCount = 8
+
+type AvatarSelection struct {
+	AvatarID int `json:"avatarId"`
+}
+
 type Player struct {
+	AvatarID  int    `json:"avatarId"`
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Connected bool   `json:"connected"`
@@ -104,6 +112,8 @@ func Decode(data []byte) (Envelope, any, error) {
 	}
 	var payload any
 	switch e.Type {
+	case "select_avatar":
+		payload = &AvatarSelection{}
 	case "session_auth":
 		payload = &Auth{}
 	case "kick_player":
@@ -137,6 +147,10 @@ func Decode(data []byte) (Envelope, any, error) {
 func validatePayload(payload any) error {
 	validID := func(value string) bool { return len(value) > 0 && len(value) <= 128 }
 	switch p := payload.(type) {
+	case *AvatarSelection:
+		if p.AvatarID < 1 || p.AvatarID > AvatarCount {
+			return fmt.Errorf("invalid avatar")
+		}
 	case *Draft:
 		if !validID(p.PromptID) || len(p.Text) > 400 {
 			return fmt.Errorf("invalid answer payload")

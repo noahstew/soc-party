@@ -85,3 +85,11 @@ bounded height and one disabled Coming Soon button as the final grid tile, match
 the other buttons in size and style. Pass any number of game/pack buttons as
 children; use `tileSize="lg"` for pack tiles. Use stable catalog IDs/slugs as keys
 and let long labels wrap.
+
+## Player avatars
+
+`PlayerAvatar` renders a server-selected `avatarId` from the eight bundled
+`public/zinger/players/*.png` assets. Keep membership IDs independent of image
+paths so future views can reuse this component. Lobby arrow controls change only
+the authenticated player's avatar; each confirmed image animates in, with reduced
+motion respected. Room snapshots remain authoritative.

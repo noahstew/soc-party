@@ -20,6 +20,7 @@ deadlines, scores and authorized per-player projections.
 | `ping`, `leave_room` | `{}` | Existing room lifecycle. |
 | `kick_player` | `{playerId}` | Owner only. |
 | `update_settings` | `{maxPlayers}` | Owner/lobby only. |
+| `select_avatar` | `{avatarId}` | Lobby only; own avatar, integer 1–8. |
 | `select_game` | `{gameId}` | Owner/lobby only. |
 | `select_pack` | `{gameId, packSlug, selected}` | Owner/lobby only. |
 | `start_game` | `{}` | Connected owner, eligible lobby only. |
@@ -32,7 +33,7 @@ deadlines, scores and authorized per-player projections.
 
 ## Server messages
 
-`lobby_state` carries the existing per-player lobby projection. `game_state` carries
+`lobby_state` carries the per-player lobby projection. Each member includes `avatarId` (1–8), assigned randomly on create/join and preserved on reconnect. Avatar changes persist before broadcasting to all room subscribers. `game_state` carries
 the per-player game projection: `phase`, `round`, `multiplierPermille`, `deadlineMs`,
 `serverNowMs`, scores/presence/finished state and only the phase-specific prompts,
 answers, voting controls or reveal data that player may see. During voting, answers

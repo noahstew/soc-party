@@ -31,7 +31,7 @@ const lobby: Lobby = {
   maxPlayers: 8,
   canStart: false,
   expiresAt: "2026-11-08T01:00:00Z",
-  players: [{ id: "owner", name: "Alex", connected: true }],
+  players: [{ id: "owner", name: "Alex", avatarId: 1, connected: true }],
 };
 const token = "a".repeat(64);
 class FakeSocket {
@@ -176,7 +176,7 @@ describe("room lobby", () => {
         youId,
         players: [
           ...lobby.players,
-          { id: "guest", name: "Sam", connected: true },
+          { id: "guest", name: "Sam", avatarId: 1, connected: true },
         ],
       };
       sessionStorage.setItem(
@@ -200,7 +200,7 @@ describe("room lobby", () => {
         ...initial,
         players: [
           ...initial.players,
-          { id: "new", name: "Charlie", connected: false },
+          { id: "new", name: "Charlie", avatarId: 1, connected: false },
         ],
       };
       act(() => socket.update(joined));
@@ -251,8 +251,8 @@ describe("room lobby", () => {
         ...lobby,
         players: [
           ...lobby.players,
-          { id: "sam", name: "Sam", connected: true },
-          { id: "jo", name: "Jo", connected: true },
+          { id: "sam", name: "Sam", avatarId: 1, connected: true },
+          { id: "jo", name: "Jo", avatarId: 1, connected: true },
         ],
       }),
     );
@@ -339,7 +339,7 @@ describe("room lobby", () => {
       youId: "guest",
       players: [
         ...lobby.players,
-        { id: "guest", name: "Sam", connected: true },
+        { id: "guest", name: "Sam", avatarId: 1, connected: true },
       ],
     };
     vi.stubGlobal(
@@ -528,7 +528,7 @@ describe("room lobby", () => {
         ...lobby,
         players: [
           ...lobby.players,
-          { id: "guest", name: "Sam", connected: true },
+          { id: "guest", name: "Sam", avatarId: 1, connected: true },
         ],
       }),
     );
@@ -590,6 +590,7 @@ describe("room lobby", () => {
           ...[1, 2, 3].map((id) => ({
             id: String(id),
             name: `Guest ${id}`,
+            avatarId: 1,
             connected: true,
           })),
         ],
@@ -617,7 +618,7 @@ describe("room lobby", () => {
       youId: "guest",
       players: [
         ...lobby.players,
-        { id: "guest", name: "Sam", connected: false },
+        { id: "guest", name: "Sam", avatarId: 1, connected: false },
       ],
     };
     const fetch = vi
@@ -858,3 +859,45 @@ describe("room lobby", () => {
 function render(ui: ReactNode) {
   return rtlRender(<ToastProvider>{ui}</ToastProvider>);
 }
+
+it("cycles only your avatar and renders server changes for everyone", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({ token, lobby })));
+  render(<RoomLobby apiURL="http://localhost:8080" />);
+  const socket = await createRoom();
+  expect(screen.getByRole("img", { name: "Alex avatar" })).toHaveAttribute(
+    "src",
+    expect.stringContaining("1.png"),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Previous avatar" }));
+  expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toMatchObject({
+    type: "select_avatar",
+    payload: { avatarId: 8 },
+  });
+  act(() =>
+    socket.update({
+      ...lobby,
+      players: [
+        { ...lobby.players[0], avatarId: 8 },
+        { id: "guest", name: "Sam", avatarId: 3, connected: true },
+      ],
+    }),
+  );
+  expect(screen.getByRole("img", { name: "Alex avatar" })).toHaveAttribute(
+    "src",
+    expect.stringContaining("8.png"),
+  );
+  expect(screen.getByRole("img", { name: "Sam avatar" })).toHaveAttribute(
+    "src",
+    expect.stringContaining("3.png"),
+  );
+  expect(screen.getAllByRole("button", { name: "Next avatar" })).toHaveLength(
+    1,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Next avatar" }));
+  expect(JSON.parse(socket.send.mock.calls.at(-1)![0])).toMatchObject({
+    type: "select_avatar",
+    payload: { avatarId: 1 },
+  });
+  act(() => socket.onclose?.({ code: 1006 }));
+  expect(screen.getByRole("button", { name: "Next avatar" })).toBeDisabled();
+});
