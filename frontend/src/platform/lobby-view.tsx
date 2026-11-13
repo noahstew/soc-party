@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import { Brand } from "@/components/brand";
+import { ZingerLogo } from "@/components/zinger-logo";
 import { ChoiceGrid } from "@/components/choice-grid";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -312,7 +313,7 @@ export function LobbyView({
                       }
                       className="relative h-24 min-w-0 px-3 pr-8 text-lg whitespace-normal [overflow-wrap:anywhere]"
                     >
-                      {game.title}
+                      {game.id === "zinger" ? <ZingerLogo /> : game.title}
                       {lobby.gameId === game.id && (
                         <SelectionCheck label="Game selected" />
                       )}

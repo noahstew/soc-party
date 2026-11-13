@@ -314,6 +314,10 @@ One commit per task; gameplay remains outside this request.
 
 ## Requested frontend branding
 
+- [x] Replace Zinger text branding in the lobby game tile and gameplay heading
+  with `/zinger/logo.png`, preserve accessible names, and verify `make check`
+  (83 frontend tests; requested 2026-11-13).
+
 - [x] Rename frontend branding and package to PartiSocial, document planned domain
   `parti.social` and compatibility guidance for future agents, and verify `make check`.
 

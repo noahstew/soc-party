@@ -41,6 +41,9 @@ describe("Zinger answering", () => {
       <ZingerGame state={state} youId="p1" ownerId="p1" onSend={() => {}} />,
     );
     expect(screen.getByLabelText("First prompt")).toBeEnabled();
+    expect(screen.getByRole("heading", { name: "Zinger" })).toContainElement(
+      screen.getByRole("img", { name: "Zinger" }),
+    );
     expect(screen.queryByLabelText("Second prompt")).not.toBeInTheDocument();
     expect(screen.getByText("Question 1 of 2")).toBeInTheDocument();
     expect(screen.getByText("0/100")).toBeInTheDocument();

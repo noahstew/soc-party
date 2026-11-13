@@ -5,6 +5,7 @@ import type { ClientMessage, GamePrompt, GameState } from "@/lib/protocol";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Countdown } from "./countdown";
+import { ZingerLogo } from "@/components/zinger-logo";
 
 export function ZingerGame({
   state,
@@ -26,7 +27,9 @@ export function ZingerGame({
         <header className="mb-6 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Round {state.round}</p>
-            <h1 className="text-3xl font-heading">Zinger</h1>
+            <h1>
+              <ZingerLogo />
+            </h1>
           </div>
           <Countdown
             deadlineMs={state.deadlineMs}
