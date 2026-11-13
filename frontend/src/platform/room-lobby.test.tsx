@@ -541,6 +541,7 @@ describe("room lobby", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Room" }));
     const game = screen.getByRole("button", { name: /Zinger/ });
     expect(game).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByLabelText("Game selected")).not.toBeInTheDocument();
     expect(game).toBeEnabled();
     expect(screen.getAllByRole("button", { name: "Coming Soon" })).toHaveLength(
       1,

@@ -311,12 +311,9 @@ export function LobbyView({
                           payload: { gameId: game.id },
                         })
                       }
-                      className="relative h-24 min-w-0 px-3 pr-8 text-lg whitespace-normal [overflow-wrap:anywhere]"
+                      className="relative h-24 min-w-0 px-3 text-lg whitespace-normal [overflow-wrap:anywhere]"
                     >
                       {game.id === "zinger" ? <ZingerLogo /> : game.title}
-                      {lobby.gameId === game.id && (
-                        <SelectionCheck label="Game selected" />
-                      )}
                     </Button>
                   ))}
                 </ChoiceGrid>
@@ -353,7 +350,7 @@ export function LobbyView({
                           },
                         })
                       }
-                      className="relative h-28 min-w-0 px-3 pr-8 text-lg whitespace-normal [overflow-wrap:anywhere]"
+                      className="relative h-28 min-w-0 px-3 text-lg whitespace-normal [overflow-wrap:anywhere]"
                     >
                       {pack.title}
                       {selectedPacks.has(pack.slug) && (

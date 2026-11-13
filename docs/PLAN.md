@@ -314,6 +314,12 @@ One commit per task; gameplay remains outside this request.
 
 ## Requested frontend branding
 
+- [x] Keep Game tab pack checks absolutely positioned at the top right and remove
+  asymmetric padding so content stays centered; verify `make check` (2026-11-13).
+
+- [x] Remove the green selection indicator from Room tab game cards and center
+  their content; verify regression coverage and `make check` (2026-11-13).
+
 - [x] Replace Zinger text branding in the lobby game tile and gameplay heading
   with `/zinger/logo.png`, preserve accessible names, and verify `make check`
   (83 frontend tests; requested 2026-11-13).
