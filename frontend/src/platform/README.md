@@ -100,8 +100,9 @@ context. Volume and mute survive phase changes without restarting playback.
 
 The lobby loops `public/audio/songs/waiting.mp3`. `games/zinger-audio.ts` maps
 normal/final answering to looping `songs/zinger/gameplay.mp3` and each normal/final
-voting phase to one play of `songs/zinger/voting.mp3`. Reveals, intros, scoreboards
-and game over are silent. Browsers blocking autoplay retry on pointer/keyboard
+voting phase to one play of `songs/zinger/voting.mp3`. Round 1 and 2 scoreboards
+play `songs/zinger/leaderboards.mp3` once each. Reveals, intros and game over
+have no music. Browsers blocking autoplay retry on pointer/keyboard
 interaction. Audio failures do not block play. Seamless sound requires clean
 recording endpoints; silence within a track is preserved.
 Keep songs under `public/audio/songs/`; the sibling `sound-effects/` folder ignores

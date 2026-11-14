@@ -207,6 +207,10 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Play leaderboard music once on each round 1/2 scoreboard, preserving
+  snapshot stability, volume/mute and phase cleanup; verify regression coverage
+  and `make check` (104 frontend tests; requested 2026-11-13).
+
 - [x] Play the show-question effect on the voting question entrance, without
   snapshot replays or late reconnect cues; verify regression coverage and
   `make check` (requested 2026-11-13).

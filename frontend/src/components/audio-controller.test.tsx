@@ -184,13 +184,46 @@ describe("audio controller", () => {
     for (const phase of [
       "round_intro",
       "matchup_reveal",
-      "round_scoreboard",
       "final_intro",
       "final_reveal",
       "game_over",
     ] as const) {
       expect(zingerAudio({ ...state, phase })).toBeNull();
     }
+  });
+
+  it("plays leaderboards once per round scoreboard and stops on exit", async () => {
+    const scoreboard = { ...state, phase: "round_scoreboard" as const };
+    const { rerender, unmount } = render(
+      <AudioController track={zingerAudio(scoreboard)} />,
+    );
+    await waitFor(() => expect(audio.sources).toHaveLength(1));
+    expect(fetch).toHaveBeenCalledWith(
+      "/audio/songs/zinger/leaderboards.mp3",
+      expect.anything(),
+    );
+    expect(audio.sources[0].loop).toBe(false);
+    rerender(
+      <AudioController
+        track={zingerAudio({ ...scoreboard, serverNowMs: 2000 })}
+      />,
+    );
+    expect(audio.sources).toHaveLength(1);
+    rerender(
+      <AudioController
+        track={zingerAudio({ ...state, phase: "round_intro" })}
+      />,
+    );
+    expect(audio.sources[0].stop).toHaveBeenCalledOnce();
+    rerender(
+      <AudioController track={zingerAudio({ ...scoreboard, round: 2 })} />,
+    );
+    await waitFor(() => expect(audio.sources).toHaveLength(2));
+    expect(audio.sources[1].loop).toBe(false);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(zingerAudio({ ...scoreboard, round: 3 })).toBeNull();
+    unmount();
+    expect(audio.sources[1].stop).toHaveBeenCalledOnce();
   });
 
   it("retries blocked autoplay on pointer and keyboard interaction", async () => {
