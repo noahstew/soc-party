@@ -453,6 +453,7 @@ describe("Zinger final views", () => {
     expect(screen.getByText("+400 points")).toBeInTheDocument();
   });
   it("shares competition ranks on tied final scores and limits return to owner", () => {
+    vi.useFakeTimers();
     const send = vi.fn();
     const players = [
       { ...state.players[0], score: 500 },
@@ -474,6 +475,7 @@ describe("Zinger final views", () => {
         onSend={send}
       />,
     );
+    act(() => vi.advanceTimersByTime(7500));
     expect(screen.getByText("#1 Alex ★")).toBeInTheDocument();
     expect(screen.getByText("#1 Bea ★")).toBeInTheDocument();
     expect(screen.getByText("#3 Cam ★")).toBeInTheDocument();

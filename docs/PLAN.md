@@ -207,6 +207,15 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Show retained player avatars in the final podium reveal and full rankings;
+  verify reveal timing and image IDs with regression coverage and `make check`
+  (requested 2026-11-13).
+
+- [x] Add a 7.5-second final podium reveal in third-to-first order with placement
+  sounds and a drumroll before first; then show the full rankings with pastel
+  medal cards. Verify ties, snapshot stability, cleanup and `make check`
+  (requested 2026-11-13; authorized presentation work ahead of M9).
+
 - [x] Stage head-to-head question/answer entrances, voting-only scene countdown,
   vote/author/avatar/points reveals and sound cues; preserve the full server voting
   window, respect reduced motion and verify regression coverage plus `make check`

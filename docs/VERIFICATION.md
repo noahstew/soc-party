@@ -592,3 +592,17 @@ vote counts/avatars/points and their effects. Engine regression verifies early
 votes are rejected and presentation time is added before the full voting window.
 No schema/store changes; integration was not required. Real-browser visual and
 listening acceptance has not been performed.
+
+### Zinger final podium (2026-11-13)
+
+make fmt and make check passed: lint/format, TypeScript, backend race/unit tests,
+103 frontend tests and sqlc drift. Regression coverage verifies third/second/first
+reveal timing, drumroll and placement sound order, complete rankings after 7.5
+seconds, tied competition ranks, snapshot stability and cleanup on leaving.
+Reduced motion removes podium animations; existing effects volume/mute applies.
+No schema changes. Real-browser visual/listening acceptance was not performed.
+
+Podium avatar follow-up: pass the retained room roster into final results and
+render shared player avatars at each reveal and in all ranking rows. Regression
+coverage checks correct image IDs, hidden winner before reveal and all four
+ranked avatars afterward. make fmt and make check passed (103 frontend tests).

@@ -14,6 +14,7 @@ import { playSoundEffect, zingerEffects } from "@/lib/sound-effects";
 import { ZingerLogo } from "@/components/zinger-logo";
 
 import { RevealScene, useVotingScene } from "./zinger-scene";
+import { GameOver } from "./zinger-podium";
 
 export function ZingerGame({
   state,
@@ -93,7 +94,9 @@ export function ZingerGame({
         {state.phase === "final_reveal" && (
           <RevealScene key="final-reveal" state={state} players={gamePlayers} />
         )}
-        {state.phase === "game_over" && <GameOver state={state} />}
+        {state.phase === "game_over" && (
+          <GameOver state={state} players={gamePlayers} />
+        )}
         {waiting > 0 &&
           [
             "answering",
@@ -203,38 +206,6 @@ function FinalVoting({
           </div>
         )
       )}
-    </section>
-  );
-}
-
-function GameOver({ state }: { state: GameState }) {
-  const players = [...state.players].sort(
-    (a, b) => b.score - a.score || a.name.localeCompare(b.name),
-  );
-  const ranked = players.map((player) => ({
-    ...player,
-    rank:
-      players.findIndex((candidate) => candidate.score === player.score) + 1,
-  }));
-  return (
-    <section>
-      <h2 className="text-center text-3xl font-heading">Final scores</h2>
-      <ol className="mt-6 space-y-3">
-        {ranked.map((player) => {
-          return (
-            <li
-              key={player.id}
-              className="flex items-center justify-between rounded-base border-2 border-border bg-secondary-background p-4"
-            >
-              <span className="font-heading">
-                #{player.rank} {player.name}
-                {player.rank <= 3 ? " ★" : ""}
-              </span>
-              <span>{player.score} points</span>
-            </li>
-          );
-        })}
-      </ol>
     </section>
   );
 }
