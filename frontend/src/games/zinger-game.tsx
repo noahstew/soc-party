@@ -31,6 +31,16 @@ export function ZingerGame({
 }) {
   // Avatar choices are locked during play; retain the starting roster for leavers.
   const [gamePlayers] = useState(players);
+  const lastIntroRound = useRef<number | null>(null);
+  useEffect(() => {
+    if (
+      (state.phase === "round_intro" || state.phase === "final_intro") &&
+      lastIntroRound.current !== state.round
+    ) {
+      lastIntroRound.current = state.round;
+      playSoundEffect(zingerEffects.roundStart);
+    }
+  }, [state.phase, state.round]);
   const sendWithSound = (message: ClientMessage) => {
     if (
       [

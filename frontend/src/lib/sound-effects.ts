@@ -1,5 +1,5 @@
 export const zingerEffects = {
-  showQuestion: "/audio/sound-effects/zinger/show-question.mp3",
+  roundStart: "/audio/sound-effects/zinger/round-start.mp3",
   select: "/audio/sound-effects/zinger/select.mp3",
   addPoints: "/audio/sound-effects/zinger/add-points.mp3",
   drumroll: "/audio/sound-effects/zinger/drumroll.mp3",

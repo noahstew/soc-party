@@ -207,6 +207,11 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Play `round-start.mp3` once at the start of rounds 1, 2 and 3, without
+  snapshot replays; remove the voting question entrance sound as requested.
+  Verify regression coverage and `make check`
+  (105 frontend tests; requested 2026-11-13).
+
 - [x] Play leaderboard music once on each round 1/2 scoreboard, preserving
   snapshot stability, volume/mute and phase cleanup; verify regression coverage
   and `make check` (104 frontend tests; requested 2026-11-13).

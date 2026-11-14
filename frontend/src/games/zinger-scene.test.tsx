@@ -5,6 +5,35 @@ import type { GameState } from "@/lib/protocol";
 import { SOUND_EFFECT_EVENT, zingerEffects } from "@/lib/sound-effects";
 
 afterEach(() => vi.useRealTimers());
+it("plays round-start once for each of the three round intros, without snapshot replays", () => {
+  const sound = vi.fn();
+  window.addEventListener(SOUND_EFFECT_EVENT, sound);
+  const view = (round: number, phase: GameState["phase"]) => (
+    <ZingerGame
+      state={{ ...state, round, phase }}
+      youId="v"
+      ownerId="o"
+      onSend={() => {}}
+    />
+  );
+  const { rerender, unmount } = render(view(1, "round_intro"));
+  for (const round of [1, 2, 3]) {
+    const phase = round === 3 ? "final_intro" : "round_intro";
+    rerender(view(round, phase));
+    rerender(view(round, phase));
+    expect(sound).toHaveBeenCalledTimes(round);
+    rerender(view(round, round === 3 ? "final_answering" : "answering"));
+    expect(sound).toHaveBeenCalledTimes(round);
+  }
+  expect(sound.mock.calls.map(([event]) => event.detail)).toEqual([
+    zingerEffects.roundStart,
+    zingerEffects.roundStart,
+    zingerEffects.roundStart,
+  ]);
+  unmount();
+  window.removeEventListener(SOUND_EFFECT_EVENT, sound);
+});
+
 const state: GameState = {
   phase: "matchup_voting",
   round: 1,
@@ -35,13 +64,13 @@ it("stages the question and answers before the full voting window, without repla
   );
   expect(screen.queryByRole("button", { name: "Left answer" })).toBeNull();
   expect(screen.queryByLabelText(/seconds remaining/)).not.toBeVisible();
+  expect(sound).not.toHaveBeenCalled();
   act(() => vi.advanceTimersByTime(3000));
   expect(screen.getByRole("button", { name: "Left answer" })).toBeDisabled();
   expect(screen.queryByRole("button", { name: "Right answer" })).toBeNull();
   act(() => vi.advanceTimersByTime(500));
   expect(screen.getByRole("button", { name: "Right answer" })).toBeDisabled();
   expect(sound.mock.calls.map(([event]) => event.detail)).toEqual([
-    zingerEffects.showQuestion,
     zingerEffects.revealAnswer,
     zingerEffects.revealAnswer,
   ]);
@@ -55,7 +84,7 @@ it("stages the question and answers before the full voting window, without repla
   );
   act(() => vi.advanceTimersByTime(500));
   expect(screen.getByLabelText("20 seconds remaining")).toBeVisible();
-  expect(sound).toHaveBeenCalledTimes(3);
+  expect(sound).toHaveBeenCalledTimes(2);
   fireEvent.click(screen.getByRole("button", { name: "Right answer" }));
   expect(send).toHaveBeenCalledWith({
     type: "update_vote",

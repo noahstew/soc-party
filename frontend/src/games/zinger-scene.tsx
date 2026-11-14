@@ -16,8 +16,6 @@ export function useVotingScene(state: GameState) {
     remaining() > 1000 ? 0 : remaining() > 500 ? 1 : remaining() > 0 ? 2 : 3,
   );
   useEffect(() => {
-    if (origin.opens - origin.server - (Date.now() - origin.local) > 1000)
-      playSoundEffect(zingerEffects.showQuestion);
     const timers = [1000, 500, 0].map((offset, index) => {
       const delay =
         origin.opens - origin.server - (Date.now() - origin.local) - offset;
