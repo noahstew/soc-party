@@ -41,6 +41,7 @@ it("stages the question and answers before the full voting window, without repla
   act(() => vi.advanceTimersByTime(500));
   expect(screen.getByRole("button", { name: "Right answer" })).toBeDisabled();
   expect(sound.mock.calls.map(([event]) => event.detail)).toEqual([
+    zingerEffects.showQuestion,
     zingerEffects.revealAnswer,
     zingerEffects.revealAnswer,
   ]);
@@ -54,6 +55,7 @@ it("stages the question and answers before the full voting window, without repla
   );
   act(() => vi.advanceTimersByTime(500));
   expect(screen.getByLabelText("20 seconds remaining")).toBeVisible();
+  expect(sound).toHaveBeenCalledTimes(3);
   fireEvent.click(screen.getByRole("button", { name: "Right answer" }));
   expect(send).toHaveBeenCalledWith({
     type: "update_vote",

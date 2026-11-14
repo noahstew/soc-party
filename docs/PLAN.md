@@ -207,6 +207,10 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Play the show-question effect on the voting question entrance, without
+  snapshot replays or late reconnect cues; verify regression coverage and
+  `make check` (requested 2026-11-13).
+
 - [x] Show retained player avatars in the final podium reveal and full rankings;
   verify reveal timing and image IDs with regression coverage and `make check`
   (requested 2026-11-13).
