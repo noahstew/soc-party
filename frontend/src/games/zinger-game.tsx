@@ -382,7 +382,10 @@ function AnswerEditor({
     },
     [],
   );
-  const update = (value: string) => {
+  const update = (raw: string) => {
+    const value = Array.from(raw.replace(/[\r\n\u2028\u2029]/g, ""))
+      .slice(0, 45)
+      .join("");
     setText(value);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(
@@ -399,17 +402,18 @@ function AnswerEditor({
       <label className="block font-heading" htmlFor={`answer-${prompt.id}`}>
         {prompt.text}
       </label>
-      <textarea
+      <input
+        type="text"
         id={`answer-${prompt.id}`}
         value={text}
         disabled={prompt.submitted}
-        maxLength={100}
+        maxLength={90}
         onChange={(event) => update(event.target.value)}
-        className="mt-2 min-h-28 w-full rounded-base border-2 border-border bg-input-background p-3 focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="mt-2 w-full rounded-base border-2 border-border bg-input-background p-3 focus-visible:outline-2 focus-visible:outline-offset-2"
       />
       <div className="mt-2 flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
-          {Array.from(text).length}/100
+          {Array.from(text).length}/45
         </span>
         <Button
           disabled={prompt.submitted || text.trim().length === 0}

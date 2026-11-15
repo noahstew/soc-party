@@ -133,7 +133,7 @@ func ValidCode(code string) bool {
 	return true
 }
 func validName(name string) bool {
-	if !utf8.ValidString(name) || utf8.RuneCountInString(name) < 1 || utf8.RuneCountInString(name) > 24 {
+	if !utf8.ValidString(name) || utf8.RuneCountInString(name) < 1 || utf8.RuneCountInString(name) > 12 {
 		return false
 	}
 	for _, c := range name {
@@ -146,7 +146,7 @@ func validName(name string) bool {
 func newMember(name string, now time.Time) (Member, string, error) {
 	name = strings.TrimSpace(name)
 	if !validName(name) {
-		return Member{}, "", fmt.Errorf("name must contain 1–24 characters without control characters")
+		return Member{}, "", fmt.Errorf("name must contain 1–12 characters without control characters")
 	}
 	id, err := randomHex(16)
 	if err != nil {

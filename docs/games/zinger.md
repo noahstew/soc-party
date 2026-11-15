@@ -26,7 +26,8 @@ where possible (unavoidable for 3 players). Randomize anonymous answer order onc
 ## Answers, voting and points
 
 One answering deadline covers both assignments. Strip control characters, trim and
-validate 1–100 Unicode code points. Drafts may be empty; submission locks one answer.
+validate 1–45 Unicode code points on a single line (also strip Unicode line/paragraph
+separators). Drafts may be empty; submission locks one answer.
 The player UI shows one unanswered question at a time, advancing after server-confirmed
 submission and showing a waiting state once all assigned answers are submitted.
 Only the player sees their prompts/drafts during answering. End early when every
@@ -106,7 +107,7 @@ All game defaults live in zinger.Config, overridable in tests. Integer scoring:
 | Setting | Default |
 | --- | --- |
 | Players | 3–8 |
-| Answer length | 1–100 code points after sanitation |
+| Answer length | 1–45 code points after sanitation |
 | Base vote points / unanimous bonus base | 100 / 100 |
 | Multipliers, per mille | 1000 / 1500 / 2000 |
 | Maximum final picks | 3 |

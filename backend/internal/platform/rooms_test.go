@@ -21,6 +21,21 @@ type memoryRepo struct {
 	fail    bool
 }
 
+func TestPlayerNameLengthBoundary(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		valid bool
+	}{
+		{strings.Repeat("😀", 12), true},
+		{strings.Repeat("😀", 13), false},
+	} {
+		_, _, err := newMember(tc.name, time.Now())
+		if (err == nil) != tc.valid {
+			t.Fatalf("name %q: %v", tc.name, err)
+		}
+	}
+}
+
 func readGame(t *testing.T, ch <-chan []byte) zinger.GameView {
 	t.Helper()
 	select {

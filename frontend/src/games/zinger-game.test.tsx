@@ -38,6 +38,21 @@ const state: GameState = {
 };
 
 describe("Zinger answering", () => {
+  it("limits single-line answers to 45 Unicode characters", () => {
+    const send = vi.fn();
+    render(<ZingerGame state={state} youId="p1" ownerId="p1" onSend={send} />);
+    const input = screen.getByLabelText("First prompt");
+    expect(input.tagName).toBe("INPUT");
+    expect(input).toHaveAttribute("type", "text");
+    fireEvent.change(input, { target: { value: "😀".repeat(46) } });
+    expect(input).toHaveValue("😀".repeat(45));
+    expect(screen.getByText("45/45")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Submit answer" }));
+    expect(send).toHaveBeenLastCalledWith({
+      type: "submit_answer",
+      payload: { promptId: "a", text: "😀".repeat(45) },
+    });
+  });
   it("renders only the unanswered prompt, countdown, counters and waiting status", () => {
     render(
       <ZingerGame state={state} youId="p1" ownerId="p1" onSend={() => {}} />,
@@ -48,7 +63,7 @@ describe("Zinger answering", () => {
     );
     expect(screen.queryByLabelText("Second prompt")).not.toBeInTheDocument();
     expect(screen.getByText("Question 1 of 2")).toBeInTheDocument();
-    expect(screen.getByText("0/100")).toBeInTheDocument();
+    expect(screen.getByText("0/45")).toBeInTheDocument();
     expect(screen.getByText("Waiting on 1 player")).toBeInTheDocument();
     expect(screen.getByLabelText(/seconds remaining/)).toBeInTheDocument();
   });

@@ -207,6 +207,11 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Limit player names to 12 Unicode characters with an in-field counter;
+  use single-line answers capped at 45 characters, enforce server limits and
+  update remembered-name validation. Verify boundary/sanitation regression tests
+  and `make check` (107 frontend tests; requested 2026-11-14).
+
 - [x] Add the user-provided NSFW pack to the official seed/catalog with all 50
   questions. Verify metadata, normalized cross-pack uniqueness, repeated-seed
   IDs/content, make check, make integration and live catalog (2026-11-14).

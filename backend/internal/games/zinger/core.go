@@ -32,7 +32,7 @@ type Config struct {
 }
 
 func DefaultConfig() Config {
-	return Config{MinPlayers: 3, MaxPlayers: 8, MinAnswerLength: 1, MaxAnswerLength: 100,
+	return Config{MinPlayers: 3, MaxPlayers: 8, MinAnswerLength: 1, MaxAnswerLength: 45,
 		BasePoints: 100, UnanimousBonus: 100, MaxFinalPicks: 3, Multipliers: [3]int{1000, 1500, 2000},
 		VotingIntro: 4 * time.Second, Intro: 4 * time.Second, Answering: 90 * time.Second, Voting: 20 * time.Second,
 		Reveal: 7 * time.Second, Scoreboard: 8 * time.Second, FinalAnswering: 60 * time.Second,
@@ -42,7 +42,7 @@ func (c Config) Validate() error {
 	if c.VotingIntro < 0 {
 		return Code("invalid_config")
 	}
-	if c.MinPlayers < 3 || c.MaxPlayers > 8 || c.MaxPlayers < c.MinPlayers || c.MinAnswerLength < 1 || c.MaxAnswerLength < c.MinAnswerLength || c.MaxAnswerLength > 100 || c.BasePoints < 1 || c.BasePoints > 10000 || c.UnanimousBonus < 0 || c.UnanimousBonus > 10000 || c.MaxFinalPicks < 1 || c.MaxFinalPicks > 3 {
+	if c.MinPlayers < 3 || c.MaxPlayers > 8 || c.MaxPlayers < c.MinPlayers || c.MinAnswerLength < 1 || c.MaxAnswerLength < c.MinAnswerLength || c.MaxAnswerLength > 45 || c.BasePoints < 1 || c.BasePoints > 10000 || c.UnanimousBonus < 0 || c.UnanimousBonus > 10000 || c.MaxFinalPicks < 1 || c.MaxFinalPicks > 3 {
 		return Code("invalid_config")
 	}
 	for _, m := range c.Multipliers {

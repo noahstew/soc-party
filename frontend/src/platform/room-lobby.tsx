@@ -132,7 +132,7 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
       } catch {
         // Names can be entered manually when storage is disabled.
       }
-      if (!savedName || Array.from(savedName).length > 24) savedName = "";
+      if (!savedName || Array.from(savedName).length > 12) savedName = "";
       if (savedName) setName((current) => current || savedName);
       try {
         saved = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
@@ -319,8 +319,8 @@ export function RoomLobby({ apiURL }: { apiURL: string }) {
     if (busy) return;
     const cleanName = name.trim();
     const cleanCode = code.trim().toUpperCase();
-    if (!cleanName || Array.from(cleanName).length > 24) {
-      notify("Enter a name with 1–24 characters.", "error");
+    if (!cleanName || Array.from(cleanName).length > 12) {
+      notify("Enter a name with 1–12 characters.", "error");
       return;
     }
     if (action === "join" && !/^[A-Z2-9]{6}$/.test(cleanCode)) {

@@ -39,7 +39,8 @@ func TestAnswerValidationAndLocking(t *testing.T) {
 		code  Code
 	}{
 		{AnswerIntent{"p0", a.PromptID, " ", true}, InvalidAnswer},
-		{AnswerIntent{"p0", a.PromptID, strings.Repeat("é", 101), true}, InvalidAnswer},
+		{AnswerIntent{"p0", a.PromptID, strings.Repeat("é", 46), true}, InvalidAnswer},
+		{AnswerIntent{"p0", a.PromptID, strings.Repeat("😀", 46), false}, InvalidAnswer},
 		{AnswerIntent{"p0", "unknown", "answer", true}, Code("unassigned_prompt")},
 		{AnswerIntent{"outsider", a.PromptID, "answer", true}, Code("invalid_player")},
 	} {
@@ -51,7 +52,7 @@ func TestAnswerValidationAndLocking(t *testing.T) {
 			t.Fatal("error mutated input")
 		}
 	}
-	s = apply(t, s, AnswerIntent{"p0", a.PromptID, "  hello\x00 world  ", true}, now)
+	s = apply(t, s, AnswerIntent{"p0", a.PromptID, "  hello\x00 world\n\u2028\u2029  ", true}, now)
 	if assigned(s, "p0")[0].Text != "hello world" {
 		t.Fatal("sanitation")
 	}
@@ -60,6 +61,16 @@ func TestAnswerValidationAndLocking(t *testing.T) {
 	}
 	if _, e := Apply(s, AnswerIntent{"p0", a.PromptID, "late", true}, games.Input{Now: s.Deadline}); e != WrongPhase {
 		t.Fatal(e)
+	}
+}
+func TestAnswerLengthBoundary(t *testing.T) {
+	for _, submit := range []bool{false, true} {
+		s := answering(t, 3)
+		a := assigned(s, "p0")[0]
+		s = apply(t, s, AnswerIntent{"p0", a.PromptID, strings.Repeat("😀", 45), submit}, s.Deadline.Add(-time.Second))
+		if assigned(s, "p0")[0].Draft != strings.Repeat("😀", 45) {
+			t.Fatal("45-character answer rejected")
+		}
 	}
 }
 func TestDraftReconnectAndDeadline(t *testing.T) {

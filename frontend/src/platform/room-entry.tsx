@@ -52,8 +52,8 @@ export function RoomEntry({
   function continueToRoom(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    if (!name.trim() || Array.from(name.trim()).length > 24) {
-      notify("Enter a name with 1–24 characters.", "error");
+    if (!name.trim() || Array.from(name.trim()).length > 12) {
+      notify("Enter a name with 1–12 characters.", "error");
       nameInput.current?.focus();
       return;
     }
@@ -92,17 +92,30 @@ export function RoomEntry({
               <label htmlFor="player-name" className="font-heading">
                 Player Name
               </label>
-              <input
-                ref={nameInput}
-                id="player-name"
-                autoComplete="nickname"
-                maxLength={48}
-                value={name}
-                onChange={(event) => onNameChange(event.target.value)}
-                disabled={busy}
-                className={inputStyle}
-                placeholder="What other players will see you as"
-              />
+              <div className="relative">
+                <input
+                  ref={nameInput}
+                  id="player-name"
+                  autoComplete="nickname"
+                  maxLength={24}
+                  aria-describedby="player-name-count"
+                  value={name}
+                  onChange={(event) =>
+                    onNameChange(
+                      Array.from(event.target.value).slice(0, 12).join(""),
+                    )
+                  }
+                  disabled={busy}
+                  className={`${inputStyle} pr-20`}
+                  placeholder="What other players will see you as"
+                />
+                <span
+                  id="player-name-count"
+                  className="pointer-events-none absolute right-4 top-1/2 mt-1.5 -translate-y-1/2 text-sm text-muted-foreground"
+                >
+                  {Array.from(name).length}/12
+                </span>
+              </div>
             </div>
             <Button
               type="submit"

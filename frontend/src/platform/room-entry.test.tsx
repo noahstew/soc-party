@@ -22,6 +22,15 @@ function Entry({ busy = false, onEnter = vi.fn() }) {
 }
 
 describe("room entry", () => {
+  it("counts and limits names to 12 Unicode characters", () => {
+    render(<Entry />);
+    expect(screen.getByText("0/12")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Player Name"), {
+      target: { value: "😀".repeat(13) },
+    });
+    expect(screen.getByLabelText("Player Name")).toHaveValue("😀".repeat(12));
+    expect(screen.getByText("12/12")).toBeInTheDocument();
+  });
   it("validates before flipping, moves focus and preserves inputs when editing the name", async () => {
     const onEnter = vi.fn();
     render(<Entry onEnter={onEnter} />);
