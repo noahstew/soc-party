@@ -668,3 +668,13 @@ Namecheap's official DNS instructions. git diff --check passed. No domain was
 purchased, DNS changed or infrastructure provisioned. This documentation follow-up
 does not alter executable code; the preceding make check result remains the
 existing TestOriginalPack fixture-count failure. No repeat runtime checks run.
+
+## Seed CI repair (2026-11-15)
+
+Updated TestOriginalPack's stale 32-prompt expectation to the current 50-prompt
+fixture, separated metadata/count diagnostics and added an explicit eight-player
+full-game capacity assertion. Normalized within-pack and cross-pack duplicate
+checks remain intact; no content changed. Corrected the README seed count.
+`make check` passed through Docker: Go formatting/vet/lint, frontend lint/format,
+TypeScript, all Go race/unit tests, 107 frontend tests and sqlc drift checks.
+No schema/store changes; integration was not required for this test/docs repair.

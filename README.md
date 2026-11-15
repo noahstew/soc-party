@@ -105,7 +105,7 @@ creates `wit_parade` on the same PostgreSQL instance and migrates it separately.
 This legacy database name stores Zinger content; the game ID is `zinger`.
 The migration role needs CREATEDB to provision it. Existing platform content is
 preserved for data retention; new content and `/api/packs` use the game database.
-`make seed` idempotently loads **Original** with all 32 original comedy prompts.
+`make seed` idempotently loads **Original** with all 50 original comedy prompts.
 It also loads **NSFW** with 50 questions. Each pack is saved transactionally.
 
 With an allowed `Origin` header, POST `/api/rooms` with `{ "name": "Alex" }`,

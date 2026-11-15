@@ -40,8 +40,14 @@ func TestOriginalPack(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if p.Slug != "original" || p.Title != "Original" || len(p.Prompts) != 32 {
-		t.Fatalf("starter pack has %d prompts", len(p.Prompts))
+	if p.Slug != "original" || p.Title != "Original" {
+		t.Fatalf("invalid Original pack metadata: slug=%q title=%q", p.Slug, p.Title)
+	}
+	if len(p.Prompts) != 50 {
+		t.Fatalf("Original pack has %d prompts; want 50", len(p.Prompts))
+	}
+	if len(p.Prompts) < 2*8+1 {
+		t.Fatal("Original pack cannot supply a full game")
 	}
 	seen := map[string]bool{}
 	for _, text := range p.Prompts {

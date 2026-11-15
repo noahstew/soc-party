@@ -252,11 +252,9 @@ alone do not constitute a deployment or a completed playtest.
 
 ## Backlog
 
-- Deployment blocker (2026-11-14): make check fails in seed TestOriginalPack:
-  the fixture contains 50 prompts while the test expects the prior count. Reconcile
-  intended Original content and meaningful seed coverage before release; do not
-  discard content or weaken coverage merely to pass. Remaining check stages did
-  not run after this failure.
+- [x] Resolve the TestOriginalPack fixture-count blocker (2026-11-15): expect
+  the current 50 prompts, retain normalized uniqueness coverage, explicitly verify
+  full-game capacity and correct the README count. `make check` passed.
 
 
 - [x] Limit player names to 12 Unicode characters with an in-field counter;
