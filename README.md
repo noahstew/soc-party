@@ -16,7 +16,7 @@ docker compose up --build
 ```
 
 Open http://localhost:3000. The home page lets you create/join a room and shows live players.
-API/DB status and **Original** pack diagnostics are at http://localhost:3000/health.
+API/DB status and **Original** and **NSFW** pack diagnostics are at http://localhost:3000/health.
 Backend: http://localhost:8080/healthz and http://localhost:8080/api/packs.
 First build downloads pinned tools/dependencies and can take several minutes.
 Postgres becomes healthy, one-shot migrate and seed succeed, then the backend and frontend start.
@@ -97,7 +97,7 @@ This legacy database name stores Zinger content; the game ID is `zinger`.
 The migration role needs CREATEDB to provision it. Existing platform content is
 preserved for data retention; new content and `/api/packs` use the game database.
 `make seed` idempotently loads **Original** with all 32 original comedy prompts.
-The pack is saved transactionally.
+It also loads **NSFW** with 50 questions. Each pack is saved transactionally.
 
 With an allowed `Origin` header, POST `/api/rooms` with `{ "name": "Alex" }`,
 POST `/api/rooms/{code}/join` with a name, or POST `/api/rooms/{code}/reconnect`

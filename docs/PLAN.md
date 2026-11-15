@@ -207,6 +207,10 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Add the user-provided NSFW pack to the official seed/catalog with all 50
+  questions. Verify metadata, normalized cross-pack uniqueness, repeated-seed
+  IDs/content, make check, make integration and live catalog (2026-11-14).
+
 - [x] Consolidate OG and Extended into the single Original Zinger pack, preserving
   all 32 seed questions, question IDs and saved room selections. Verify migration
   regression coverage, repeated seed, make check and make integration (2026-11-14).

@@ -35,7 +35,7 @@ func TestReadPack(t *testing.T) {
 	}
 }
 
-func TestOfficialPack(t *testing.T) {
+func TestOriginalPack(t *testing.T) {
 	p, err := readPack("../../data/original_pack.json")
 	if err != nil {
 		t.Fatal(err)
@@ -49,5 +49,31 @@ func TestOfficialPack(t *testing.T) {
 			t.Fatalf("duplicate prompt: %s", text)
 		}
 		seen[strings.ToLower(strings.Join(strings.Fields(text), " "))] = true
+	}
+}
+
+func TestNSFWPack(t *testing.T) {
+	p, err := readPack("../../data/nsfw_pack.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Slug != "nsfw" || p.Title != "NSFW" || len(p.Prompts) != 50 {
+		t.Fatalf("invalid NSFW pack metadata or count: %+v", p)
+	}
+	// Either pack must support a full eight-player game by itself.
+	if len(p.Prompts) < 2*8+1 {
+		t.Fatal("NSFW pack cannot supply a full game")
+	}
+	original, err := readPack("../../data/original_pack.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]bool{}
+	for _, text := range append(original.Prompts, p.Prompts...) {
+		key := strings.ToLower(strings.Join(strings.Fields(text), " "))
+		if seen[key] {
+			t.Fatalf("duplicate prompt across official packs: %s", text)
+		}
+		seen[key] = true
 	}
 }

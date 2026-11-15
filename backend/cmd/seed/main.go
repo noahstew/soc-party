@@ -47,7 +47,7 @@ func run() error {
 }
 
 func seedPacks(ctx context.Context, pool *pgxpool.Pool, directory string) error {
-	for _, name := range []string{"original_pack.json"} {
+	for _, name := range []string{"original_pack.json", "nsfw_pack.json"} {
 		if err := seed(ctx, pool, filepath.Join(directory, name)); err != nil {
 			return fmt.Errorf("seed %s: %w", name, err)
 		}

@@ -18,7 +18,7 @@ Tests mock fetch and WebSocket boundaries and assert rendered player outcomes.
 The room game selector is visible to all members. Only the connected owner may
 choose a game or toggle packs; the Go actor validates each intent against the
 registered catalog. Zinger is currently registered with published packs loaded
-from the game database, currently Original. New game registrations supply
+from the game database, currently Original and NSFW. New game registrations supply
 their own catalog source; frontend rendering and room storage accept their IDs.
 
 Home shows only the `room-entry.tsx` admission card. Continue validates the player

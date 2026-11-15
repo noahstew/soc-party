@@ -50,7 +50,7 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 		t.Fatal(err)
 	}
 	beforePrompts := make(map[string][]gamestore.ListApprovedPromptsRow)
-	for _, slug := range []string{"original"} {
+	for _, slug := range []string{"original", "nsfw"} {
 		prompts, err := q.ListApprovedPrompts(ctx, slug)
 		if err != nil {
 			t.Fatal(err)
@@ -77,7 +77,7 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 		}
 	}
 	expected := map[string]pack{}
-	for _, name := range []string{"original_pack.json"} {
+	for _, name := range []string{"original_pack.json", "nsfw_pack.json"} {
 		content, err := readPack(directory + "/" + name)
 		if err != nil {
 			t.Fatal(err)

@@ -617,3 +617,14 @@ ranked avatars afterward. make fmt and make check passed (103 frontend tests).
   Repeated seeding preserves the resulting IDs/content and removes legacy catalog entries.
 - make fmt, make check (105 frontend tests), make integration and make seed passed.
   The live /api/packs endpoint returns only Original.
+
+## 2026-11-14 — NSFW Zinger pack
+
+- Added the user-provided nsfw_pack.json to the standard seed alongside Original.
+  Existing database-backed lobby catalogs and selected-pack prompt retrieval expose
+  NSFW without changes to the game engine or frontend.
+- Unit coverage validates its slug/title, 50 questions, full-game capacity and
+  normalized uniqueness across both official packs. Integration coverage verifies
+  published visibility, exact text/order and IDs/content after repeated seeding.
+- make fmt, make check (105 frontend tests), make integration and make seed passed.
+  The live /api/packs endpoint returns Original and NSFW.
