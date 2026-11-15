@@ -6,6 +6,10 @@ code/link, no host screen. First game: **Zinger** (working title). Original cont
 M0 through M2 are verified; M3 content retrieval was incorporated into M2.
 The 2026-11-14 request authorizes M4 ad-free playtest deployment preparation.
 Follow the ordered M4 tasks in docs/PLAN.md, keeping the current game as MVP scope.
+M4 hosting is AWS Lightsail: one Linux Compose host, Caddy and one backend, with
+GitHub Actions releases; final sizing/budget/DNS and provisioning remain pending.
+Namecheap is the planned registrar/BasicDNS provider for parti.social; Caddy owns
+HTTPS. Domain purchase/access remain unverified; no Route 53 is required for M4.
 Accounts, ads, community content and additional games remain deferred. Prepare and
 verify deployment artifacts locally before provisioning or publishing.
 Frontend branding is **PartiSocial** (planned domain: `parti.social`); see `frontend/AGENTS.md` for naming

@@ -11,6 +11,12 @@ M0 and M1 are verified. User authorized M1 and MVP persistence design on 2026-11
 The requested four-stage foundation is implemented and verified. M2 gameplay and selected-pack retrieval are authorized on 2026-11-10.
 M2 is complete. The 2026-11-14 request authorizes deployment preparation for the existing ad-free game. Follow the ordered M4 tasks; accounts, ads and additional games are deferred. Keep one focused task per diff.
 
+AWS Lightsail is selected for M4, with one Compose host and GitHub Actions releases.
+Rehearse the candidate 2 GB instance locally; final size/region, total budget and
+DNS access remain pending. Namecheap is the planned registrar and BasicDNS provider
+for parti.social; purchase is unverified. See docs/DEPLOYMENT.md. No provisioning is authorized
+by the documentation update alone.
+
 ## Milestones
 
 ### M0, Bootstrap [status: done]
@@ -118,14 +124,16 @@ horizontal scaling, seamless room recovery and a full managed AWS stack.
 - [ ] 3. Review public admission/resource limits and sensitive-data logging; fix
   demonstrated launch blockers with regression tests. Define initial concurrent
   room/player targets and bound excess work.
-- [ ] 4. Add release, migration/seed, rollback and backup/restore procedures;
+- [ ] 4. Add GitHub Actions image publication and manual, serialized Lightsail
+  releases plus migration/seed, rollback and backup/restore procedures;
   rehearse both databases on disposable data. Document maintenance and room loss.
 - [ ] 5. Establish health/log monitoring, disk/backup checks and a tester feedback
   workflow; record a short multi-room capacity rehearsal.
 - [ ] 6. Run make check, make integration, production build and clean-stack smoke;
   verify full games, invitations, reconnect, disconnect/forfeit, pack choices and
   audio controls across independent mobile/desktop browsers.
-- [ ] 7. Select hosting/budget and confirm domain/DNS access; provision the reviewed
+- [ ] 7. Confirm Lightsail size/region, total budget and Namecheap domain/BasicDNS
+  access; provision the reviewed
   configuration, verify HTTPS/WSS and operational procedures, then invite testers.
 
 **Done when:** Deployment gates in docs/DEPLOYMENT.md have recorded evidence;
@@ -336,6 +344,10 @@ alone do not constitute a deployment or a completed playtest.
   authorization boundary, and verify with `make check`.
 
 ## Requested CI repair
+
+- [x] Replace stale OG expectations with Original in API and health-page Docker
+  smoke assertions (2026-11-14). Diff checks passed; make check remains blocked
+  by the existing TestOriginalPack fixture-count failure. Smoke execution pending.
 
 - [x] Fix production mount resets on the GitHub runner's Compose version; verify
   configuration regression, dev/prod smoke and `make check` without deployment.

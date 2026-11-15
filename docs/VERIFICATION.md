@@ -640,3 +640,31 @@ then failed in backend seed TestOriginalPack (fixture has 50 prompts). Frontend
 unit tests and sqlc drift did not run in that invocation. Track reconciliation in
 the plan Backlog. Integration was not run; no schema/store change. Deployment,
 restore, capacity and real-device acceptance remain pending.
+
+## 2026-11-14 - CI Original pack expectations
+
+Updated both Docker smoke assertions to expect Original instead of OG (API pack
+title and rendered health page). git diff --check passed. make check passed
+lint, formatting and TypeScript, then failed at the existing TestOriginalPack
+fixture-count mismatch (50 prompts). Frontend tests and sqlc drift did not run;
+the full Docker smoke was not run. No schema/store changes.
+
+## 2026-11-14 - Lightsail deployment selection
+
+Updated deployment guidance, M4 release tasks, README and agent instructions for
+the selected Lightsail host and planned GitHub Actions releases. Documented
+candidate sizing, indicative CAD costs, stopped-instance billing, host operations
+and pending provisioning gates. No infrastructure or automation was created.
+git diff --check passed. make check passed lint, formatting and TypeScript, then
+failed at the existing TestOriginalPack fixture-count mismatch (50 prompts).
+Frontend unit tests and sqlc drift did not run. Integration was not run because
+this change only updates documentation; deployment acceptance remains pending.
+
+## 2026-11-14 - Namecheap domain planning
+
+Documented planned Namecheap registration/BasicDNS, apex/static-IP mapping,
+optional www redirect, Caddy TLS and pending purchase/DNS acceptance. Consulted
+Namecheap's official DNS instructions. git diff --check passed. No domain was
+purchased, DNS changed or infrastructure provisioned. This documentation follow-up
+does not alter executable code; the preceding make check result remains the
+existing TestOriginalPack fixture-count failure. No repeat runtime checks run.

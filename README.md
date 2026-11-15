@@ -82,7 +82,14 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 ```
 
-This is a local rehearsal, not an AWS deployment. No IaC exists. See [deployment plan](docs/DEPLOYMENT.md).
+This is a local rehearsal, not a public deployment. M4 targets one AWS Lightsail
+Linux host running Caddy, the production frontend/backend and PostgreSQL through
+Docker Compose. GitHub Actions will build/publish images and run manual beta
+releases. The planned parti.social domain will be registered through Namecheap,
+with BasicDNS pointing to the Lightsail static IP and Caddy managing HTTPS.
+Domain purchase/access are unverified. Hosting is selected; deployment configuration, automation and cloud
+provisioning remain pending. See the [deployment plan](docs/DEPLOYMENT.md) for
+cost estimates, maintenance policy and launch gates. No IaC exists.
 
 ## Contributing
 

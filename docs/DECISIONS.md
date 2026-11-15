@@ -386,3 +386,32 @@ outside playtests. Backups protect both durable databases, not live room state.
 The existing prod-like Compose override publishes development application ports
 and lacks TLS; it remains a rehearsal, not the public deployment artifact.
 Hosting cost/provider and DNS access remain unresolved until provisioning.
+
+## 2026-11-14 - Lightsail hosting and GitHub Actions releases
+
+The user selected AWS Lightsail after comparing DigitalOcean and Render. Use one
+Linux Docker Compose host with Caddy, Next, one Go backend and PostgreSQL for both
+databases. This preserves the existing actor ownership boundary and keeps beta
+cost/setup below a separate EC2/RDS or managed container stack. The operator retains
+responsibility for patching, monitoring and database backup/restore.
+
+This supersedes the earlier unresolved provider decision. Start with local sizing
+against a candidate 2 GB bundle; final size, region, total budget and DNS access
+remain unconfirmed. USD prices may be shown as indicative CAD conversions; CAD
+billing is not a requirement. Stopping Lightsail does not reduce instance charges.
+
+Include GitHub Actions image publication to GHCR and manual, serialized beta
+releases in M4 task 4, after deployment configuration and admission hardening.
+Build on runners and deploy immutable images through restricted SSH. OIDC applies
+if AWS APIs are used. Retain maintenance/room-loss and migration-compatible rollback
+policies. Broader IaC and EC2/RDS/ECS adoption remain M9 candidates; selecting a
+provider does not complete launch gates or authorize immediate provisioning.
+
+## 2026-11-14 - Namecheap domain registration plan
+
+The user plans to buy the domain through Namecheap. Keep registration and BasicDNS
+there, pointing the planned parti.social apex to the attached Lightsail static IP.
+Caddy provides HTTPS and an optional www-to-apex redirect; no paid SSL, Namecheap
+hosting or Route 53 is needed. Standard certificate challenges avoid storing
+Namecheap DNS API credentials in release automation. Domain availability, purchase,
+renewal cost and DNS access still need verification; no external changes were made.
