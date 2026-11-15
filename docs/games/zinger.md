@@ -16,7 +16,7 @@ Load approved prompts from selected published official packs using sqlc outside 
 engine. Deduplicate by ID and normalized text (trim, lowercase, collapse whitespace),
 shuffle with supplied RNG, draw 2N+1. Reject insufficient content with
 `not_enough_prompts`; owner sees advice to select more packs. Never repeat a prompt.
-OG now contains 29 prompts; no new seed content is needed for this request.
+Original now contains 32 prompts; no new seed content is needed for this request.
 
 For rounds 1 and 2, independently shuffle players into a cycle. Prompt k belongs to
 players k and (k+1) mod N: two prompts each, two distinct authors per prompt, no pair

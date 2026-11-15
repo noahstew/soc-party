@@ -606,3 +606,14 @@ Podium avatar follow-up: pass the retained room roster into final results and
 render shared player avatars at each reveal and in all ranking rows. Regression
 coverage checks correct image IDs, hidden winner before reveal and all four
 ranked avatars afterward. make fmt and make check passed (103 frontend tests).
+
+## 2026-11-14 — Original Zinger pack
+
+- Consolidated all 29 OG and three Extended questions into Original (original).
+- Forward migrations preserve question IDs and historical session references,
+  merge saved Zinger selections and update the default selection.
+- Integration regression builds the previous game schema in an isolated transaction,
+  loads both legacy packs and verifies migration preserves all 32 IDs, texts and order.
+  Repeated seeding preserves the resulting IDs/content and removes legacy catalog entries.
+- make fmt, make check (105 frontend tests), make integration and make seed passed.
+  The live /api/packs endpoint returns only Original.

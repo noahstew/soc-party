@@ -365,3 +365,11 @@ time; client scenes do not replay cues on private vote updates. Final voting kee
 its existing multi-answer ballot; both reveal types share staged results. Keep
 avatar ownership in platform membership and use the roster at game entry for
 attribution even if an author later leaves.
+
+## 2026-11-14 � Consolidate Zinger packs
+
+Original (slug original) replaces OG and Extended with all 32 seed questions.
+Forward migrations preserve question IDs, move historical session references and
+map saved Zinger selections to Original (including deduplication and empty selections).
+The consolidation cannot reconstruct prior ownership; rollback requires a backup.
+Catalog rendering stays data-driven and supports future packs.

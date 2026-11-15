@@ -50,7 +50,7 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 		t.Fatal(err)
 	}
 	beforePrompts := make(map[string][]gamestore.ListApprovedPromptsRow)
-	for _, slug := range []string{"og", "extended"} {
+	for _, slug := range []string{"original"} {
 		prompts, err := q.ListApprovedPrompts(ctx, slug)
 		if err != nil {
 			t.Fatal(err)
@@ -71,8 +71,13 @@ func TestMigrationsQueriesAndIdempotentSeed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	for _, p := range packs {
+		if p.Slug == "og" || p.Slug == "extended" {
+			t.Fatalf("legacy pack still published: %s", p.Slug)
+		}
+	}
 	expected := map[string]pack{}
-	for _, name := range []string{"og_pack.json", "extended_pack.json"} {
+	for _, name := range []string{"original_pack.json"} {
 		content, err := readPack(directory + "/" + name)
 		if err != nil {
 			t.Fatal(err)
@@ -227,5 +232,83 @@ func TestGameRecordsAndCrossMatchupConstraints(t *testing.T) {
 				t.Fatal("invalid record accepted")
 			}
 		})
+	}
+}
+
+func TestOriginalPackMigration(t *testing.T) {
+	ctx := context.Background()
+	url, err := database.GameURL(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pool, err := pgxpool.New(ctx, url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	// A private schema exercises an actual upgrade without touching development data.
+	if _, err := tx.Exec(ctx, `CREATE SCHEMA original_pack_upgrade_test; SET LOCAL search_path TO original_pack_upgrade_test`); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"../../game_migrations/00001_content.sql", "../../game_migrations/00002_game_records.sql"} {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tx.Exec(ctx, strings.Split(string(data), "-- +goose Down")[0]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	q := gamestore.New(tx)
+	ids := []int64{}
+	for _, slug := range []string{"og", "extended"} {
+		p, err := readPack("../../data/original_pack.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		texts := p.Prompts[:29]
+		if slug == "extended" {
+			texts = p.Prompts[29:]
+		}
+		id, err := q.CreatePack(ctx, gamestore.CreatePackParams{Slug: slug, Title: slug, IsOfficial: true, Status: "published"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, text := range texts {
+			id, err := q.CreatePrompt(ctx, gamestore.CreatePromptParams{PackID: id, Position: int32(i), Text: text, Status: "approved"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			ids = append(ids, id)
+		}
+	}
+	data, err := os.ReadFile("../../game_migrations/00003_original_pack.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.Exec(ctx, strings.Split(string(data), "-- +goose Down")[0]); err != nil {
+		t.Fatal(err)
+	}
+	packs, err := q.ListOfficialPacks(ctx)
+	if err != nil || len(packs) != 1 || packs[0].Slug != "original" || packs[0].Title != "Original" {
+		t.Fatalf("packs: %v, %v", packs, err)
+	}
+	prompts, err := q.ListApprovedPrompts(ctx, "original")
+	if err != nil || len(prompts) != len(ids) {
+		t.Fatalf("prompts: %v, %v", prompts, err)
+	}
+	content, err := readPack("../../data/original_pack.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, prompt := range prompts {
+		if prompt.ID != ids[i] || prompt.Text != content.Prompts[i] || prompt.Position != int32(i) {
+			t.Fatalf("question changed at %d: %+v", i, prompt)
+		}
 	}
 }

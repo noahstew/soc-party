@@ -1,6 +1,6 @@
 # Architecture
 
-Implemented: platform/game PostgreSQL migrations and generated stores, original OG seed,
+Implemented: platform/game PostgreSQL migrations and generated stores, Original seed,
 health/packs endpoints, create/join/reconnect HTTP intents, room actors/WebSockets and
 a general Soc Party home/lobby with live membership and owner controls.
 Health and content diagnostics live on /health, separate from room admission.
@@ -96,8 +96,8 @@ answers and votes. Goose histories and sqlc output packages are separate. The fi
 database name is derived from DATABASE_URL by replacing its database path. Migration
 bootstrap creates it, then migrates both databases. Go must validate cross-database IDs.
 The prepared history schema remains unused by M2: games/results are intentionally
-live-only. Pack/content queries supply initialization. OG has 29 original prompts;
-Extended has three.
+live-only. Pack/content queries supply initialization. Original has all 32 original prompts formerly in OG and Extended;
+the legacy packs are consolidated by migration.
 
 ## Room game selection
 The room actor stores `gameId`, persists it through sqlc, and broadcasts it in each

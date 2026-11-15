@@ -1,6 +1,6 @@
 {
-  "slug": "og",
-  "title": "OG",
+  "slug": "original",
+  "title": "Original",
   "prompts": [
     "The worst possible name for a luxury cruise ship.",
     "A suspiciously specific rule at the neighborhood swimming pool.",
@@ -30,6 +30,9 @@
     "A new holiday that would really annoy calendar makers.",
     "What a detective finds in a very boring treasure chest.",
     "The worst souvenir to bring home from the future.",
-    "The secret ingredient in a sandwich made by a nervous wizard."
+    "The secret ingredient in a sandwich made by a nervous wizard.",
+    "The apology printed on a vending machine that has become self-aware.",
+    "A completely unnecessary announcement from the captain of a shopping cart.",
+    "The secret final event at the International Blanket Fort Championships."
   ]
 }

@@ -207,6 +207,10 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 ## Backlog
 
+- [x] Consolidate OG and Extended into the single Original Zinger pack, preserving
+  all 32 seed questions, question IDs and saved room selections. Verify migration
+  regression coverage, repeated seed, make check and make integration (2026-11-14).
+
 - [x] Play `round-start.mp3` once at the start of rounds 1, 2 and 3, without
   snapshot replays; remove the voting question entrance sound as requested.
   Verify regression coverage and `make check`

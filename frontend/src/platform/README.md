@@ -18,7 +18,7 @@ Tests mock fetch and WebSocket boundaries and assert rendered player outcomes.
 The room game selector is visible to all members. Only the connected owner may
 choose a game or toggle packs; the Go actor validates each intent against the
 registered catalog. Zinger is currently registered with published packs loaded
-from the game database, including OG and Extended. New game registrations supply
+from the game database, currently Original. New game registrations supply
 their own catalog source; frontend rendering and room storage accept their IDs.
 
 Home shows only the `room-entry.tsx` admission card. Continue validates the player
@@ -71,7 +71,7 @@ packs. Switching games clears incompatible selections; reselecting the same game
 preserves selection. The server requires three connected players and at least one
 available selected pack for `canStart`. Choices refresh at room creation, socket
 subscription, reconnect and selection; unavailable packs are removed on refresh.
-The first catalog game/pack is selected for new rooms (currently Zinger/OG).
+The first catalog game/pack is selected for new rooms (currently Zinger/Original).
 
 Published packs appear automatically on catalog refresh, without adding frontend
 buttons. Registered game metadata is supplied in `backend/cmd/server/main.go`;
