@@ -628,3 +628,15 @@ ranked avatars afterward. make fmt and make check passed (103 frontend tests).
   published visibility, exact text/order and IDs/content after repeated seeding.
 - make fmt, make check (105 frontend tests), make integration and make seed passed.
   The live /api/packs endpoint returns Original and NSFW.
+
+
+## 2026-11-14 - Ad-free MVP roadmap and deployment baseline
+
+Documentation-only change: release order, single-host topology, maintenance policy
+and launch gates; no infrastructure provisioned or application behavior changed.
+Reviewed current Compose, configuration and operational documentation. git diff
+--check passed. make check passed backend/frontend lint, formatting and TypeScript,
+then failed in backend seed TestOriginalPack (fixture has 50 prompts). Frontend
+unit tests and sqlc drift did not run in that invocation. Track reconciliation in
+the plan Backlog. Integration was not run; no schema/store change. Deployment,
+restore, capacity and real-device acceptance remain pending.

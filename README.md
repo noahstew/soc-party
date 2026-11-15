@@ -3,7 +3,9 @@
 Multiplayer party-game website where every player uses their own browser; there is
 no host screen. **Zinger** (working title) is playable end to end through two
 head-to-head rounds and a shared-prompt final. Rooms support links/codes, reconnect,
-owner controls and selected official prompt packs. Accounts and ads remain planned.
+owner controls and selected official prompt packs. The current game defines the
+ad-free playtest MVP; deployment preparation is the current milestone. Accounts,
+ads and additional games are deferred.
 
 ## Quickstart — Docker only
 
@@ -124,7 +126,7 @@ other browsers/tabs with different names using the code or shared link. All play
 appear live. The owner selects packs and starts **Zinger** once three players are
 connected. **Coming soon** is disabled until another
 game is available. Anyone can leave. Refreshing within the reconnect grace restores identity.
-The page shows readiness at three connected players; game rounds are not built yet.
+The page shows readiness at three connected players; a game includes all three rounds.
 
 For phones on your LAN, set `API_PUBLIC_URL=http://YOUR_LAN_IP:8080` and
 `ALLOWED_ORIGINS=http://YOUR_LAN_IP:3000`, then rerun `make up`. Open

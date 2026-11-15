@@ -373,3 +373,16 @@ Forward migrations preserve question IDs, move historical session references and
 map saved Zinger selections to Original (including deduplication and empty selections).
 The consolidation cannot reconstruct prior ownership; rollback requires a backup.
 Catalog rendering stays data-driven and supports future packs.
+
+## 2026-11-14 - Ad-free playtest release order
+
+The user selected the current game as MVP and authorized deployment preparation.
+Insert an ad-free playtest milestone before accounts, community prompts, ads and
+another game; renumber future milestones rather than bypassing their dependencies.
+Prepare a single Docker-host topology with a TLS proxy and one backend process.
+This fits actor-owned live state and avoids introducing room routing or recovery
+before demand is measured. Backend restarts end games; maintenance is scheduled
+outside playtests. Backups protect both durable databases, not live room state.
+The existing prod-like Compose override publishes development application ports
+and lacks TLS; it remains a rehearsal, not the public deployment artifact.
+Hosting cost/provider and DNS access remain unresolved until provisioning.

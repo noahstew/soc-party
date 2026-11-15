@@ -5,11 +5,11 @@ One focused task per diff; the requested MVP foundation spans four ordered commi
 Backlog, ideas in Parking lot. Refine later milestones when reached. Never begin M1 as part
 of the bootstrap. Completion evidence lives in docs/VERIFICATION.md.
 
-## Current milestone: M4
+## Current milestone: M4, Ad-free playtest MVP
 
 M0 and M1 are verified. User authorized M1 and MVP persistence design on 2026-11-07.
 The requested four-stage foundation is implemented and verified. M2 gameplay and selected-pack retrieval are authorized on 2026-11-10.
-Implement the ordered tasks below with one focused commit and green checks per task.
+M2 is complete. The 2026-11-14 request authorizes deployment preparation for the existing ad-free game. Follow the ordered M4 tasks; accounts, ads and additional games are deferred. Keep one focused task per diff.
 
 ## Milestones
 
@@ -96,7 +96,44 @@ into M2. Catalog, selections and seed already exist. M2 tasks 2 and 9 deliver th
 remaining runtime retrieval/sampling with sqlc and integration coverage; do not mark
 M3 complete before those checks pass. No separate in-memory prompt implementation.
 
-### M4, Accounts [status: not started]
+### M4, Ad-free playtest MVP [status: in progress]
+
+**Goal:** Invited groups complete the existing Zinger on individual devices over
+HTTPS. Current gameplay, official packs, guest identities and room controls define
+MVP feature scope. No new game features are required before test plays.
+
+**In scope:** Single-host deployment preparation, TLS, secrets, release/rollback,
+backups, basic monitoring, resource-limit review and real-device acceptance.
+
+**Out of scope:** Accounts, ads, payments, community prompts, another game,
+horizontal scaling, seamless room recovery and a full managed AWS stack.
+
+**Ordered tasks (one focused diff each):**
+
+- [x] 1. Revise release order; document topology, restart/recovery policy,
+  deployment gaps and acceptance gates (2026-11-14).
+- [ ] 2. Add deployment-specific Compose and HTTPS proxy configuration: production
+  images, one backend, private application/database ports, persistent database/TLS
+  storage, explicit production secrets and exact allowed origin. Preserve dev setup.
+- [ ] 3. Review public admission/resource limits and sensitive-data logging; fix
+  demonstrated launch blockers with regression tests. Define initial concurrent
+  room/player targets and bound excess work.
+- [ ] 4. Add release, migration/seed, rollback and backup/restore procedures;
+  rehearse both databases on disposable data. Document maintenance and room loss.
+- [ ] 5. Establish health/log monitoring, disk/backup checks and a tester feedback
+  workflow; record a short multi-room capacity rehearsal.
+- [ ] 6. Run make check, make integration, production build and clean-stack smoke;
+  verify full games, invitations, reconnect, disconnect/forfeit, pack choices and
+  audio controls across independent mobile/desktop browsers.
+- [ ] 7. Select hosting/budget and confirm domain/DNS access; provision the reviewed
+  configuration, verify HTTPS/WSS and operational procedures, then invite testers.
+
+**Done when:** Deployment gates in docs/DEPLOYMENT.md have recorded evidence;
+players complete games on the deployed site; the operator can observe failures,
+restore content and release with a documented maintenance policy. Local checks
+alone do not constitute a deployment or a completed playtest.
+
+### M5, Accounts [status: not started]
 
 **Goal:** Optional registered identities with guest play intact.
 
@@ -114,7 +151,7 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 **Done when:** Users register/login/logout securely; guests can still play without an account.
 
-### M5, User-submitted prompts [status: not started]
+### M6, User-submitted prompts [status: not started]
 
 **Goal:** Support moderated original community content.
 
@@ -132,7 +169,7 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 **Done when:** Approved content is playable; unapproved content stays private; reports reach moderators.
 
-### M6, AdGate [status: not started]
+### M7, AdGate [status: not started]
 
 **Goal:** Gate eligible admission behind an interchangeable provider.
 
@@ -150,7 +187,7 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 **Done when:** Admission honors consent/provider policy without interrupting active rounds.
 
-### M7, Second game [status: not started]
+### M8, Second game [status: not started]
 
 **Goal:** Validate reusable platform boundaries.
 
@@ -168,13 +205,13 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 **Done when:** Both games use the same room/connection machinery without game-specific platform branches.
 
-### M8, AWS deployment [status: not started]
+### M9, AWS scaling and managed infrastructure [status: not started]
 
-**Goal:** Operate and measure the platform on AWS.
+**Goal:** Evolve the M4 single-host deployment when measured demand justifies managed AWS services or multiple backend processes.
 
 **In scope:** IaC, CI/CD, observability, load testing and multi-process design.
 
-**Out of scope:** Premature implementation before prior milestones.
+**Out of scope:** Blocking M4 playtests on managed services or horizontal scaling.
 
 **Tasks:**
 
@@ -187,7 +224,7 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 
 **Done when:** Staging/production deploy repeatably with measured capacity, monitoring and documented recovery.
 
-### M9, Polish [status: not started]
+### M10, Polish [status: not started]
 
 **Goal:** Improve player experience and accessibility.
 
@@ -206,6 +243,13 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 **Done when:** Core flows are accessible and E2E-tested with documented browser support.
 
 ## Backlog
+
+- Deployment blocker (2026-11-14): make check fails in seed TestOriginalPack:
+  the fixture contains 50 prompts while the test expects the prior count. Reconcile
+  intended Original content and meaningful seed coverage before release; do not
+  discard content or weaken coverage merely to pass. Remaining check stages did
+  not run after this failure.
+
 
 - [x] Limit player names to 12 Unicode characters with an in-field counter;
   use single-line answers capped at 45 characters, enforce server limits and
@@ -274,7 +318,7 @@ M3 complete before those checks pass. No separate in-memory prompt implementatio
 - [x] Repair seed regressions after the official-to-OG fixture merge: validate
   the current 29-prompt OG, full-game capacity and normalized cross-pack uniqueness.
 
-- Multi-browser E2E for the full three-round game (M9; no Playwright dependency in M2).
+- Multi-browser E2E for the full three-round game (M10; no Playwright dependency in M2).
 
 - Room audit last_seen_at currently reflects the latest persisted room snapshot;
   pass each member's injected Seen timestamp through SQL before using it for analytics.
